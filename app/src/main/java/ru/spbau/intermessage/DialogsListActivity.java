@@ -1,5 +1,6 @@
 package ru.spbau.intermessage;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -28,8 +29,11 @@ public class DialogsListActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 if (l == 0)
                     Toast.makeText(DialogsListActivity.this, "Isn't crutched dialog sufficient for everything?", Toast.LENGTH_LONG).show();
-                else
-                    Toast.makeText(DialogsListActivity.this, "It's a crutch", Toast.LENGTH_LONG).show();
+                else {
+                    Intent intent = new Intent(DialogsListActivity.this, DialogActivity.class);
+                    startActivity(intent);
+                    //Toast.makeText(DialogsListActivity.this, "It's a crutch", Toast.LENGTH_LONG).show();
+                }
             }
         });
     }
