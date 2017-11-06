@@ -22,8 +22,8 @@ public class DialogsListActivity extends AppCompatActivity {
         String name = getString(R.string.new_dialog);
         buttonNames.add(name);
         buttonNames.add("Crutched dialog");
-        final ArrayAdapter mainMenuAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, buttonNames);
-        dialogsList.setAdapter(mainMenuAdapter);
+        final ArrayAdapter dialogsAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, buttonNames);
+        dialogsList.setAdapter(dialogsAdapter);
         dialogsList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
