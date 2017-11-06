@@ -2,4 +2,5 @@
     <string name="app_name">InterMessage</string>
     <string name="menu_dialogs">Dialogs</string>
     <string name="menu_options">Options</string>
+    <string name="new_dialog">Create new dialog</string>
 </resources>
