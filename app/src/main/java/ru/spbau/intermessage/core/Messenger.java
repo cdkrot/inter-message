@@ -1,23 +1,66 @@
 package ru.spbau.intermessage.core;
 
-class Messenger {
-    int registerEventListener(EventListener listener) {
-        throw new UnsupportedOperationException("TODO");
+import ru.spbau.intermessage.net.Network;
+import ru.spbau.intermessage.net.WifiNetwork;
+
+import java.util.Set;
+import java.util.HashSet;
+
+public class Messenger extends ServiceCommon {
+    private static class ListenerRequest extends RequestCommon {
+        public ListenerRequest(boolean a, EventListener l) {
+            add = a;
+            listener = l;
+        }
+        
+        public boolean add;
+        public EventListener listener;
+    };
+
+    private static class SendMessageRequest extends RequestCommon {
+        public SendMessageRequest(User ch, Message msg) {
+            chat = ch;
+            message = msg;
+        }
+        
+        public User chat;
+        public Message message;
     }
     
-    void deleteEventListener(int id) {
-        throw new UnsupportedOperationException("TODO");
+    protected Set<EventListener> listeners = new HashSet<EventListener>();
+    protected Network network = new WifiNetwork();
+    
+    protected void handleRequest(RequestCommon req) {
+        if (req instanceof ListenerRequest) {
+            ListenerRequest reqc = (ListenerRequest)req;
+            if (reqc.add)
+                listeners.add(reqc.listener);
+            else
+                listeners.remove(reqc.listener);
+        }
+    }
+
+    protected void onClose() {
+        network.close();
     }
     
-    User[] getUsersInChat(User chat) {
+    public void registerEventListener(EventListener listener) {
+        postRequest(new ListenerRequest(true, listener));
+    }
+    
+    public void deleteEventListener(EventListener listener) {
+        postRequest(new ListenerRequest(false, listener));
+    }
+    
+    public User[] getUsersInChat(User chat) {
         throw new UnsupportedOperationException("TODO");
     }
 
-    void sendMessage(User chat, Message message) {
-        throw new UnsupportedOperationException("TODO");
+    public void sendMessage(User chat, Message message) {
+        postRequest(new SendMessageRequest(chat, message));
     }
 
-    Message[] getMessagesFromChat(User chat, Object restrictions) {
+    public Message[] getMessagesFromChat(User chat, Object restrictions) {
         throw new UnsupportedOperationException("TODO");
     }
 };
