@@ -9,7 +9,7 @@
     <ListView
         android:id="@+id/messagesList"
         android:layout_width="350dp"
-        android:layout_height="330dp"
+        android:layout_height="331dp"
         android:layout_marginBottom="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
@@ -19,7 +19,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.741" />
+        app:layout_constraintVertical_bias="0.857" />
 
     <EditText
         android:id="@+id/input"
