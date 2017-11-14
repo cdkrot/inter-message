@@ -17,7 +17,11 @@
             </intent-filter>
         </activity>
         <activity android:name=".DialogsListActivity" />
-        <activity android:name=".DialogActivity"></activity>
+        <activity android:name=".DialogActivity" />
+
+        <service
+            android:name=".Controller"
+            android:exported="false"></service>
     </application>
 
 </manifest>
