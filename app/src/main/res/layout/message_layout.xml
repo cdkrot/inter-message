@@ -10,6 +10,7 @@
         android:layout_alignBottom="@+id/Date"
         android:layout_alignParentStart="true"
         android:layout_gravity="start"
+        android:fontFamily="casual"
         android:paddingBottom="8dp"
         android:paddingLeft="10dp"
         android:paddingRight="10dp"
@@ -35,7 +36,10 @@
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_below="@+id/UserName"
-        android:text="TextView"
+        android:paddingBottom="8dp"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:paddingTop="5dp"
         android:textSize="18sp" />
 
 

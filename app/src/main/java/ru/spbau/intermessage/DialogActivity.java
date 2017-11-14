@@ -10,6 +10,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 
 import ru.spbau.intermessage.core.Message;
 import ru.spbau.intermessage.gui.MessageAdapter;
@@ -33,7 +34,11 @@ public class DialogActivity extends AppCompatActivity {
                 if (i == EditorInfo.IME_ACTION_SEND) {
                     String text = input.getText().toString();
                     Message newMessage = new Message();
-                    newMessage.date = "10:57 21 April 2014";
+                    //newMessage.date = "10:57 21 April 2014";
+                    String date = Calendar.getInstance().getTime().toString();
+                    int pos = date.indexOf(" GMT");
+                    date = date.substring(0, pos == -1 ? date.length() : pos);
+                    newMessage.date = date;
                     newMessage.userName = "Dima";
                     newMessage.messageText = text;
                     messages.add(newMessage);
