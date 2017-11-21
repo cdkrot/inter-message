@@ -42,7 +42,7 @@ public class DialogActivity extends AppCompatActivity {
                 if (i == EditorInfo.IME_ACTION_SEND) {
                     String text = input.getText().toString();
                     Message newMessage = new Message();
-]                    String date = Calendar.getInstance().getTime().toString();
+                    String date = Calendar.getInstance().getTime().toString();
                     int pos = date.indexOf(" GMT");
                     date = date.substring(0, pos == -1 ? date.length() : pos);
                     newMessage.date = date;
