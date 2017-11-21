@@ -1,23 +1,30 @@
 package ru.spbau.intermessage;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.inputmethod.EditorInfo;
-import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Objects;
 
-import ru.spbau.intermessage.core.Message;
+import ru.spbau.intermessage.gui.Message;
 import ru.spbau.intermessage.gui.MessageAdapter;
 
 public class DialogActivity extends AppCompatActivity {
 
-    static final ArrayList<Message> messages = new ArrayList<>();
+    static final private ArrayList<Message> messages = new ArrayList<>();
+    //static final private String dialogID
+    private MessageReceiver messageReceiver;
+    private final MessageAdapter messagesAdapter = new MessageAdapter(this, messages);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,7 +32,6 @@ public class DialogActivity extends AppCompatActivity {
         setContentView(R.layout.activity_dialog);
         final ListView messagesList = (ListView)findViewById(R.id.messagesList);
         final EditText input = (EditText)findViewById(R.id.input);
-        final MessageAdapter messagesAdapter = new MessageAdapter(this, messages);
         messagesList.setAdapter(messagesAdapter);
         input.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
@@ -50,4 +56,42 @@ public class DialogActivity extends AppCompatActivity {
             }
         });
     }
+
+    @Override
+    public void onResume() {
+        super.onResume();  // Always call the superclass method first
+        if (messageReceiver == null)
+            messageReceiver = new MessageReceiver();
+        IntentFilter intentFilter = new IntentFilter(messageReceiver.ACTION_RECEIVE);
+        registerReceiver(messageReceiver, intentFilter);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        if (messageReceiver != null)
+            unregisterReceiver(messageReceiver);
+    }
+
+    public class MessageReceiver extends BroadcastReceiver {
+        public static final String ACTION_RECEIVE = "receiver.action.RECEIVE";
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (Objects.equals(intent.getAction(), ACTION_RECEIVE)) {
+                String text = intent.getStringExtra("Message");
+                String date = intent.getStringExtra("Date");
+                String userName = intent.getStringExtra("User");
+                Message newMessage = new Message();
+                newMessage.date = date;
+                newMessage.messageText = text;
+                newMessage.userName = userName;
+                messages.add(newMessage);
+                messagesAdapter.notifyDataSetChanged();
+            }
+        }
+    }
+
+
 }

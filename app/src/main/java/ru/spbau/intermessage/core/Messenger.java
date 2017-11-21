@@ -1,5 +1,6 @@
 package ru.spbau.intermessage.core;
 
+import ru.spbau.intermessage.gui.Message;
 import ru.spbau.intermessage.net.Network;
 import ru.spbau.intermessage.net.WifiNetwork;
 

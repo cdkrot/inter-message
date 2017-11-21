@@ -1,4 +1,4 @@
-package ru.spbau.intermessage.core;
+package ru.spbau.intermessage.gui;
 
 public class Message {
     public String userName;

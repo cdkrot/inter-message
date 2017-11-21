@@ -4,54 +4,27 @@ import android.app.IntentService;
 import android.content.Intent;
 import android.content.Context;
 
-/**
- * An {@link IntentService} subclass for handling asynchronous task requests in
- * a service on a separate handler thread.
- * <p>
- * TODO: Customize class - update intent actions, extra parameters and static
- * helper methods.
- */
-public class Controller extends IntentService {
-    // TODO: Rename actions, choose action names that describe tasks that this
-    // IntentService can perform, e.g. ACTION_FETCH_NEW_ITEMS
-    private static final String ACTION_FOO = "ru.spbau.intermessage.action.FOO";
-    private static final String ACTION_BAZ = "ru.spbau.intermessage.action.BAZ";
+import ru.spbau.intermessage.core.Messenger;
+import ru.spbau.intermessage.gui.Message;
 
-    // TODO: Rename parameters
-    private static final String EXTRA_PARAM1 = "ru.spbau.intermessage.extra.PARAM1";
-    private static final String EXTRA_PARAM2 = "ru.spbau.intermessage.extra.PARAM2";
+public class Controller extends IntentService {
+
+    private static Messenger messenger = new Messenger();
+
+    private static final String ACTION_SEND_MESSAGE = "controller.action.SEND";
+    private static final String ACTION_RECEIVE_MESSAGE = "controller.action.RECEIVE";
+    private static final String ACTION_KILL_MESSENGER = "controller.action.KILL";
 
     public Controller() {
         super("Controller");
     }
 
-    /**
-     * Starts this service to perform action Foo with the given parameters. If
-     * the service is already performing a task this action will be queued.
-     *
-     * @see IntentService
-     */
-    // TODO: Customize helper method
-    public static void startActionFoo(Context context, String param1, String param2) {
+    public static void sendMessage(Context context, Message message) {
         Intent intent = new Intent(context, Controller.class);
-        intent.setAction(ACTION_FOO);
-        intent.putExtra(EXTRA_PARAM1, param1);
-        intent.putExtra(EXTRA_PARAM2, param2);
-        context.startService(intent);
-    }
-
-    /**
-     * Starts this service to perform action Baz with the given parameters. If
-     * the service is already performing a task this action will be queued.
-     *
-     * @see IntentService
-     */
-    // TODO: Customize helper method
-    public static void startActionBaz(Context context, String param1, String param2) {
-        Intent intent = new Intent(context, Controller.class);
-        intent.setAction(ACTION_BAZ);
-        intent.putExtra(EXTRA_PARAM1, param1);
-        intent.putExtra(EXTRA_PARAM2, param2);
+        intent.setAction(ACTION_SEND_MESSAGE);
+        intent.putExtra("User", message.userName);
+        intent.putExtra("Date", message.date);
+        intent.putExtra("Message", message.messageText);
         context.startService(intent);
     }
 
@@ -59,33 +32,23 @@ public class Controller extends IntentService {
     protected void onHandleIntent(Intent intent) {
         if (intent != null) {
             final String action = intent.getAction();
-            if (ACTION_FOO.equals(action)) {
-                final String param1 = intent.getStringExtra(EXTRA_PARAM1);
-                final String param2 = intent.getStringExtra(EXTRA_PARAM2);
-                handleActionFoo(param1, param2);
-            } else if (ACTION_BAZ.equals(action)) {
-                final String param1 = intent.getStringExtra(EXTRA_PARAM1);
-                final String param2 = intent.getStringExtra(EXTRA_PARAM2);
-                handleActionBaz(param1, param2);
+            if (ACTION_SEND_MESSAGE.equals(action)) {
+                final String userName = intent.getStringExtra("User");
+                final String date = intent.getStringExtra("Date");
+                final String textMessage = intent.getStringExtra("Message");
+                //TODO messenger.send(params...)
+            } else if (ACTION_RECEIVE_MESSAGE.equals(action)) {
+                Intent broadcastIntent = new Intent();
+                broadcastIntent.setAction(DialogActivity.MessageReceiver.ACTION_RECEIVE);
+                broadcastIntent.putExtra("User", intent.getStringExtra("User"));
+                broadcastIntent.putExtra("Date", intent.getStringExtra("Date"));
+                broadcastIntent.putExtra("Message", intent.getStringExtra("Message"));
+                sendBroadcast(broadcastIntent);
+            } else if (ACTION_KILL_MESSENGER.equals(action)) {
+                // Kill messenger and listener thread
+            } else {
+                // Should I fail?
             }
         }
-    }
-
-    /**
-     * Handle action Foo in the provided background thread with the provided
-     * parameters.
-     */
-    private void handleActionFoo(String param1, String param2) {
-        // TODO: Handle action Foo
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-
-    /**
-     * Handle action Baz in the provided background thread with the provided
-     * parameters.
-     */
-    private void handleActionBaz(String param1, String param2) {
-        // TODO: Handle action Baz
-        throw new UnsupportedOperationException("Not yet implemented");
     }
 }
