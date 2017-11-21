@@ -37,6 +37,12 @@ public class Controller extends IntentService {
                 final String date = intent.getStringExtra("Date");
                 final String textMessage = intent.getStringExtra("Message");
                 //TODO messenger.send(params...)
+
+                //ADDED FOR TEST
+                intent.setAction(ACTION_RECEIVE_MESSAGE);
+                this.startService(intent);
+                //ADDED FOR TEST
+
             } else if (ACTION_RECEIVE_MESSAGE.equals(action)) {
                 Intent broadcastIntent = new Intent();
                 broadcastIntent.setAction(DialogActivity.MessageReceiver.ACTION_RECEIVE);

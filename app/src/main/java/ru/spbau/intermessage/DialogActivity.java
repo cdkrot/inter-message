@@ -24,7 +24,7 @@ public class DialogActivity extends AppCompatActivity {
     static final private ArrayList<Message> messages = new ArrayList<>();
     //static final private String dialogID
     private MessageReceiver messageReceiver;
-    private final MessageAdapter messagesAdapter = new MessageAdapter(this, messages);
+    private MessageAdapter messagesAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,7 +32,9 @@ public class DialogActivity extends AppCompatActivity {
         setContentView(R.layout.activity_dialog);
         final ListView messagesList = (ListView)findViewById(R.id.messagesList);
         final EditText input = (EditText)findViewById(R.id.input);
+        messagesAdapter = new MessageAdapter(this, messages);
         messagesList.setAdapter(messagesAdapter);
+
         input.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
@@ -40,16 +42,18 @@ public class DialogActivity extends AppCompatActivity {
                 if (i == EditorInfo.IME_ACTION_SEND) {
                     String text = input.getText().toString();
                     Message newMessage = new Message();
-                    //newMessage.date = "10:57 21 April 2014";
-                    String date = Calendar.getInstance().getTime().toString();
+]                    String date = Calendar.getInstance().getTime().toString();
                     int pos = date.indexOf(" GMT");
                     date = date.substring(0, pos == -1 ? date.length() : pos);
                     newMessage.date = date;
                     newMessage.userName = "Dima";
                     newMessage.messageText = text;
-                    messages.add(newMessage);
                     input.setText("");
-                    messagesAdapter.notifyDataSetChanged();
+
+                    /*messages.add(newMessage);
+                    messagesAdapter.notifyDataSetChanged();*/
+
+                    Controller.sendMessage(DialogActivity.this, newMessage);
                     handled = true;
                 }
                 return handled;
