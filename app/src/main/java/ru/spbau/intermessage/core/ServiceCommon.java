@@ -30,6 +30,8 @@ public abstract class ServiceCommon {
         
         new Thread() {
             public void run() {
+                warmUp();
+                
                 while (true) {
                     RequestCommon r;
                     synchronized (queue) {
@@ -47,12 +49,14 @@ public abstract class ServiceCommon {
                     handleRequest(r);
                     r.complete();
                 }
+
+                onClose();
             }
-        };
+        }.start();
     }
 
-    protected void onClose() {
-    }
+    protected void warmUp() {}
+    protected void onClose() {}
     
     protected abstract void handleRequest(RequestCommon req);
 
