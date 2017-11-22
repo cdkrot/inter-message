@@ -160,11 +160,25 @@ public class WifiNetwork implements Network {
 
     private InetAddress getBroadcast() {
         try {
+            byte[] bts = new byte[4];
+            bts[0] = bts[1] = bts[2] = bts[3] = (byte)255;
+            return InetAddress.getByAddress(bts);
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+    
+    private InetAddress getBroadcastOld() {
+        System.out.println("Searching for broadcast");
+        
+        try {
             Enumeration<NetworkInterface> list = NetworkInterface.getNetworkInterfaces();
 
             while (list.hasMoreElements()) {
                 NetworkInterface iface = list.nextElement();
 
+                System.out.println("Found " + iface.getDisplayName());
+                
                 if (iface == null) continue;
                 if (iface.isLoopback()) continue;
                 if (!iface.isUp()) continue;
@@ -184,6 +198,8 @@ public class WifiNetwork implements Network {
     
     public WifiNetwork() {}
 
+    private UDPHelper udphelper;
+    
     public void open(IncomeListener the_listener) {
         try {
             epoll = Selector.open();
@@ -198,9 +214,11 @@ public class WifiNetwork implements Network {
             sock.register(epoll, sock.validOps(), sock);
 
             DatagramChannel udp = DatagramChannel.open();
-            udp.socket().bind(new InetSocketAddress(udpPort));
             udp.configureBlocking(false);
-            udp.register(epoll, udp.validOps(), new UDPHelper(udp));
+            udp.socket().bind(new InetSocketAddress(udpPort));
+            udp.socket().setBroadcast(true);
+            udphelper = new UDPHelper(udp);
+            udp.register(epoll, udp.validOps(), udphelper);
         } catch (IOException ex) {
             throw new RuntimeException(ex);                
         }
@@ -216,6 +234,8 @@ public class WifiNetwork implements Network {
                                 ByteVector data = queue.peek().what;
                                 Callback call = queue.peek().call;
 
+                                System.out.println("XXXX");
+                                
                                 queue.poll();
                                 
                                 if (address != null) {
@@ -226,6 +246,10 @@ public class WifiNetwork implements Network {
                                     helper.pending.add(data);
                                     helper.callbacks.add(call);
                                     helper.token = client.register(epoll, client.validOps(), helper);
+                                } else {
+                                    System.out.println("New UDP bcast");
+                                    WifiNetwork.this.udphelper.pending.add(data);
+                                    WifiNetwork.this.udphelper.callbacks.add(call);
                                 }
                             }
 
@@ -253,7 +277,7 @@ public class WifiNetwork implements Network {
                                     doWrite(helper);
                                 }
 
-                                if (s.isWritable() && s.attachment() instanceof UDPHelper) {
+                                if (s.isWritable() && (s.attachment() instanceof UDPHelper)) {
                                     UDPHelper helper = (UDPHelper)s.attachment();
                                     doWrite(helper);
                                 }
@@ -289,10 +313,30 @@ public class WifiNetwork implements Network {
     private void doWrite(UDPHelper helper) {
         if (!helper.pending.isEmpty()) {
             try {
+                System.out.println("Trying to send UDP bcast");
                 ByteVector vec = helper.pending.peek();
+
                 
-                ByteBuffer buf = ByteBuffer.wrap(vec.data(), 0, vec.size());
-                helper.sock.send(buf, new InetSocketAddress(bcast, udpPort));
+                ByteBuffer buf = ByteBuffer.allocate(vec.size() + 6);
+                buf.clear();
+                for (int i = 0; i != magic.length; ++i)
+                    buf.put(magic[i]);
+                buf.put((byte)(vec.size() / 256));
+                buf.put((byte)(vec.size() % 256));
+                
+                buf.put(vec.data(), 0, vec.size());
+
+                buf.flip();
+                
+                int r = helper.sock.send(buf, new InetSocketAddress(bcast, udpPort));
+                System.out.printf("Send %d bytes\n", r);
+
+                helper.pending.poll();
+                Callback call = helper.callbacks.poll();
+                if (call != null)
+                    call.completed(true);
+                
+                System.out.println("done");
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
@@ -305,6 +349,8 @@ public class WifiNetwork implements Network {
             InetSocketAddress addr = (InetSocketAddress)helper.sock.receive(buf);
 
             System.out.println("incoming udp");
+            for (int i = 0; i != buf.position(); ++i)
+                System.out.printf("%d ", (byte)buf.get(i));
             
             if (buf.position() >= 6) {
                 for (int i = 0; i != magic.length; ++i)
@@ -318,7 +364,7 @@ public class WifiNetwork implements Network {
                 ByteVector res = new ByteVector(len);
                 for (int i = 0; i != len; ++i)
                     res.set(i, buf.get(6 + i));
-
+                
                 listener.recieved(addr.getHostName(), true, res);
             }
         } catch (IOException ex) {
@@ -366,6 +412,7 @@ public class WifiNetwork implements Network {
     
     public void send(String address, ByteVector data, Callback call) {
         synchronized (this) {
+            System.out.println("New send");
             queue.add(new Request(address, data, call));
             epoll.wakeup();
         }

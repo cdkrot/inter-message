@@ -41,7 +41,7 @@ public abstract class ServiceCommon {
                             } catch (InterruptedException ex) {} // poor java.
                         r = queue.poll();
                     }
-
+                    
                     // process new request.
                     if (r == null)
                         break; // termination.
@@ -63,6 +63,7 @@ public abstract class ServiceCommon {
     protected void postRequest(RequestCommon req) {
         synchronized (queue) {
             queue.add(req);
+            queue.notify();
         }
     }
 

@@ -23,24 +23,27 @@ public class ReadHelper {
     }
 
     public short readShort() {
-        short b1 = readByte();
-        short b2 = readByte();
+        short res = 0;
+        for (int i = 1; i >= 0; --i)
+            res |= ((readByte() & 0xFF) << (8 * i));
 
-        return (short)((b1 << 8) | b2);
+        return res;
     }
     
     public int readInt() {
-        int b1 = readShort();
-        int b2 = readShort();
+        int res = 0;
+        for (int i = 3; i >= 0; --i)
+            res |= ((readByte() & 0xFF) << (8 * i));
 
-        return (b1 << 16) | b2;
+        return res;
     }
 
     public long readLong() {
-        long b1 = readShort();
-        long b2 = readShort();
+        long res = 0;
+        for (int i = 7; i >= 0; --i)
+            res |= ((readByte() & (long)0xFF) << (long)(8 * i));
 
-        return (b1 << 16) | b2;
+        return res;
     }
 
     public String readString() {
@@ -60,6 +63,9 @@ public class ReadHelper {
         if (available() < cnt)
             return null;
 
+        if (cnt < 0)
+            return null;
+        
         byte[] res = new byte[cnt];
         for (int i = 0; i != cnt; ++i)
             res[i] = readByte();

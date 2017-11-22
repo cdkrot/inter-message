@@ -65,6 +65,7 @@ public class Messenger extends ServiceCommon {
     // protected HashMap<User, SyncProcess> sync;
     
     protected void handleRequest(RequestCommon req) {
+        System.out.println("handling request");
         if (req instanceof ListenerRequest) {
             ListenerRequest reqc = (ListenerRequest)req;
             if (reqc.add)
@@ -74,6 +75,7 @@ public class Messenger extends ServiceCommon {
         }
 
         if (req instanceof SendMessageRequest) {
+            System.out.println("Messenger: trying to send");
             SendMessageRequest reqc = (SendMessageRequest)req;
 
             WriteHelper helper = new WriteHelper(new ByteVector());
@@ -135,20 +137,29 @@ public class Messenger extends ServiceCommon {
                     if (bcast) {
                         ReadHelper helper = new ReadHelper(dta);
                         Message msg = new Message();
-
+                        
+                        System.out.println("#1");
+                                                
                         msg.type = helper.readString();
                         if (msg.type == null)
                             return;
 
+                        System.out.printf("#2 %d\n", helper.available());
+                        
                         if (helper.available() < 8)
                             return;
                         
                         msg.timestamp = helper.readLong();
+
+                        System.out.printf("#3 %d\n", helper.available());
+                        
                         msg.data = helper.readBytes();
 
                         if (msg.data == null)
                             return;
 
+                        System.out.println("#4");
+                        
                         if (helper.available() > 0)
                             return;
 
