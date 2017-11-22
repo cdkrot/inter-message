@@ -42,16 +42,13 @@ public class DialogActivity extends AppCompatActivity {
                 if (i == EditorInfo.IME_ACTION_SEND) {
                     String text = input.getText().toString();
                     Message newMessage = new Message();
-                    String date = Calendar.getInstance().getTime().toString();
-                    int pos = date.indexOf(" GMT");
-                    date = date.substring(0, pos == -1 ? date.length() : pos);
-                    newMessage.date = date;
+                    newMessage.date = System.currentTimeMillis() / 1000L;
                     newMessage.userName = "Dima";
                     newMessage.messageText = text;
                     input.setText("");
 
-                    /*messages.add(newMessage);
-                    messagesAdapter.notifyDataSetChanged();*/
+                    messages.add(newMessage);
+                    messagesAdapter.notifyDataSetChanged();
 
                     Controller.sendMessage(DialogActivity.this, newMessage);
                     handled = true;
@@ -85,12 +82,14 @@ public class DialogActivity extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
             if (Objects.equals(intent.getAction(), ACTION_RECEIVE)) {
                 String text = intent.getStringExtra("Message");
-                String date = intent.getStringExtra("Date");
+                long date = intent.getLongExtra("Date", 0);
                 String userName = intent.getStringExtra("User");
+
                 Message newMessage = new Message();
                 newMessage.date = date;
                 newMessage.messageText = text;
                 newMessage.userName = userName;
+
                 messages.add(newMessage);
                 messagesAdapter.notifyDataSetChanged();
             }

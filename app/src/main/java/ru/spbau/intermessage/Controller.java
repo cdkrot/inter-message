@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.Context;
 
 import ru.spbau.intermessage.core.Messenger;
+import ru.spbau.intermessage.core.User;
 import ru.spbau.intermessage.gui.Message;
 
 public class Controller extends IntentService {
@@ -34,20 +35,15 @@ public class Controller extends IntentService {
             final String action = intent.getAction();
             if (ACTION_SEND_MESSAGE.equals(action)) {
                 final String userName = intent.getStringExtra("User");
-                final String date = intent.getStringExtra("Date");
+                final long date = intent.getLongExtra("Date", 0);
                 final String textMessage = intent.getStringExtra("Message");
-                //TODO messenger.send(params...)
-
-                //ADDED FOR TEST
-                intent.setAction(ACTION_RECEIVE_MESSAGE);
-                this.startService(intent);
-                //ADDED FOR TEST
+                messenger.sendMessage(null, new ru.spbau.intermessage.core.Message("text", date, textMessage.getBytes()));
 
             } else if (ACTION_RECEIVE_MESSAGE.equals(action)) {
                 Intent broadcastIntent = new Intent();
                 broadcastIntent.setAction(DialogActivity.MessageReceiver.ACTION_RECEIVE);
                 broadcastIntent.putExtra("User", intent.getStringExtra("User"));
-                broadcastIntent.putExtra("Date", intent.getStringExtra("Date"));
+                broadcastIntent.putExtra("Date", intent.getLongExtra("Date", 0));
                 broadcastIntent.putExtra("Message", intent.getStringExtra("Message"));
                 sendBroadcast(broadcastIntent);
             } else if (ACTION_KILL_MESSENGER.equals(action)) {

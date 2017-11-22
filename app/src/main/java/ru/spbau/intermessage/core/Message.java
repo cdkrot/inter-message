@@ -1,6 +1,6 @@
 package ru.spbau.intermessage.core;
 
-class Message {
+public class Message {
     public Message() {}
     public Message(String tp, long tm, byte[] dt) {
         type = tp;

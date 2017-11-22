@@ -7,7 +7,9 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 import ru.spbau.intermessage.R;
 
@@ -49,7 +51,11 @@ public class MessageAdapter extends BaseAdapter {
         Message message = (Message) getItem(i);
 
         textMessage.setText(message.messageText);
-        date.setText(message.date);
+
+        SimpleDateFormat df = new SimpleDateFormat("dd MMM yyyy hh:mm:ss zzz");
+        Date d = new Date(message.date * 1000);
+        date.setText(df.format(d));
+
         userName.setText(message.userName);
 
         return rowView;
