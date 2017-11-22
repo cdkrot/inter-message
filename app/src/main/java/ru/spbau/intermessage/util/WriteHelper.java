@@ -16,15 +16,13 @@ public class WriteHelper {
     }
 
     public void writeShort(short sh) {
-        vec.pushBack((byte)(sh >> 8));
-        vec.pushBack((byte)sh);
+        writeByte((byte)(sh >> 8));
+        writeByte((byte)sh);
     }
     
     public void writeInt(int i) {
-        vec.pushBack((byte)(i >> 24));
-        vec.pushBack((byte)(i >> 16));
-        vec.pushBack((byte)(i >> 8));
-        vec.pushBack((byte)i);
+        writeShort((short)(i >> 16));
+        writeShort((short)(i));
     }
 
     public void writeLong(long l) {
@@ -33,8 +31,12 @@ public class WriteHelper {
     }
 
     public void writeString(String str) {
-        writeInt(str.length());
-        for (byte b: Util.stringToBytes(str))
+        writeBytes(Util.stringToBytes(str));
+    }
+
+    public void writeBytes(byte[] arr) {
+        writeInt(arr.length);
+        for (byte b: arr)
             writeByte(b);
     }
 }

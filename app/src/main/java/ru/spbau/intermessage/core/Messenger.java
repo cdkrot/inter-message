@@ -72,6 +72,18 @@ public class Messenger extends ServiceCommon {
             else
                 listeners.remove(reqc.listener);
         }
+
+        if (req instanceof SendMessageRequest) {
+            SendMessageRequest reqc = (SendMessageRequest)req;
+
+            WriteHelper helper = new WriteHelper(new ByteVector());
+            
+            helper.writeString(reqc.message.type);
+            helper.writeLong(reqc.message.timestamp);
+            helper.writeBytes(reqc.message.data);
+
+            network.send(null, helper.getData(), null);
+        }
     }
     
     // protected void onData(User user, byte[] data) {
@@ -102,6 +114,13 @@ public class Messenger extends ServiceCommon {
     //     }
     // }
 
+    protected void onMessage(User chat, User user, Message msg) {
+        synchronized (this) {
+            for (EventListener listener: listeners)
+                listener.onMessage(chat, user, msg);
+        }
+    }
+    
     protected void warmUp() {
         network = new WifiNetwork();
         network.open(new Network.IncomeListener() {
@@ -114,7 +133,26 @@ public class Messenger extends ServiceCommon {
                     System.out.println("");
 
                     if (bcast) {
+                        ReadHelper helper = new ReadHelper(dta);
+                        Message msg = new Message();
+
+                        msg.type = helper.readString();
+                        if (msg.type == null)
+                            return;
+
+                        if (helper.available() < 8)
+                            return;
                         
+                        msg.timestamp = helper.readLong();
+                        msg.data = helper.readBytes();
+
+                        if (msg.data == null)
+                            return;
+
+                        if (helper.available() > 0)
+                            return;
+
+                        Messenger.this.onMessage(null, new User(from), msg);
                     }
                 };
             });

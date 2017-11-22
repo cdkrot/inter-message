@@ -23,19 +23,37 @@ public class ReadHelper {
     }
 
     public short readShort() {
-        throw new UnsupportedOperationException("");
+        short b1 = readByte();
+        short b2 = readByte();
+
+        return (short)((b1 << 8) | b2);
     }
     
     public int readInt() {
-        throw new UnsupportedOperationException("");
+        int b1 = readShort();
+        int b2 = readShort();
+
+        return (b1 << 16) | b2;
     }
 
     public long readLong() {
-        throw new UnsupportedOperationException("");
+        long b1 = readShort();
+        long b2 = readShort();
+
+        return (b1 << 16) | b2;
     }
 
-    // returns NULL if end of data reached.
     public String readString() {
-        throw new UnsupportedOperationException("");
+        byte[] bts = readBytes();
+
+        if (bts == null)
+            return null;
+
+        return Util.bytesToString(bts);
     }
+
+    public byte[] readBytes() {
+        return null;
+    }
+
 }

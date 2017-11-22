@@ -74,11 +74,4 @@ public class ByteVector {
     public byte[] data() {
         return storage;
     }
-        
-    // public int popInt() {
-    //     byte b3 = get(sz - 4);
-    //     byte b2 = get(sz - 3);
-    //     byte b1 = get(sz - 2);
-    //     byte b0 = get(sz - 1);
-    // }
 };

@@ -9,4 +9,13 @@ public class Util {
             throw new RuntimeException(ex);
         }
     }
+
+    public static String bytesToString(byte[] bt) {
+        try {
+            return new String(bt, "utf-8");
+        } catch (Exception ex) {
+            // java sucks.
+            throw new RuntimeException(ex);
+        }
+    }
 }
