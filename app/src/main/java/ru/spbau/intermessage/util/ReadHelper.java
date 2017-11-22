@@ -53,7 +53,17 @@ public class ReadHelper {
     }
 
     public byte[] readBytes() {
-        return null;
-    }
+        if (available() < 4)
+            return null;
 
+        int cnt = readInt();
+        if (available() < cnt)
+            return null;
+
+        byte[] res = new byte[cnt];
+        for (int i = 0; i != cnt; ++i)
+            res[i] = readByte();
+
+        return res;
+    }
 }
