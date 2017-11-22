@@ -41,12 +41,26 @@ public class MessageAdapter extends BaseAdapter {
     }
 
     @Override
-    public View getView(int i, View view, ViewGroup parent) {
-        View rowView = inflater.inflate(R.layout.message_layout, parent, false);
+    public View getView(int i, View convertView, ViewGroup parent) {
+        ViewHolder holder;
 
-        TextView textMessage = (TextView) rowView.findViewById(R.id.MessageText);
-        TextView date = (TextView) rowView.findViewById(R.id.Date);
-        TextView userName = (TextView) rowView.findViewById(R.id.UserName);
+        if(convertView == null) {
+
+            convertView = inflater.inflate(R.layout.message_layout, parent, false);
+
+            holder = new ViewHolder();
+            holder.date = (TextView) convertView.findViewById(R.id.Date);
+            holder.userName = (TextView) convertView.findViewById(R.id.UserName);
+            holder.text = (TextView) convertView.findViewById(R.id.MessageText);
+
+            convertView.setTag(holder);
+        } else{
+            holder = (ViewHolder) convertView.getTag();
+        }
+
+        TextView date = holder.date;
+        TextView userName = holder.userName;
+        TextView textMessage = holder.text;
 
         Message message = (Message) getItem(i);
 
@@ -58,6 +72,12 @@ public class MessageAdapter extends BaseAdapter {
 
         userName.setText(message.userName);
 
-        return rowView;
+        return convertView;
+    }
+
+    private static class ViewHolder {
+        TextView date;
+        TextView userName;
+        TextView text;
     }
 }
