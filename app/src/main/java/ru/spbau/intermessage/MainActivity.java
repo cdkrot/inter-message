@@ -32,8 +32,11 @@ public class MainActivity extends AppCompatActivity {
                     Intent intent = new Intent(MainActivity.this, DialogsListActivity.class);
                     startActivity(intent);
                     //Toast.makeText(MainActivity.this, "Dialogs", Toast.LENGTH_LONG).show();
-                } else
-                    Toast.makeText(MainActivity.this, "It's a crutch", Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(MainActivity.this, "It is point of no return.", Toast.LENGTH_SHORT).show();
+                    android.os.Process.killProcess(android.os.Process.myPid());
+
+                }
             }
         });
     }
