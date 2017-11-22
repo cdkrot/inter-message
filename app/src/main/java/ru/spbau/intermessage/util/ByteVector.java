@@ -74,14 +74,7 @@ public class ByteVector {
     public byte[] data() {
         return storage;
     }
-    
-    // public void pushInt(int v) {
-    //     pushBack((byte)(value >> 24));
-    //     pushBack((byte)(value >> 16));
-    //     pushBack((byte)(value >> 8));
-    //     pushBack((byte)value);
-    // }
-    
+        
     // public int popInt() {
     //     byte b3 = get(sz - 4);
     //     byte b2 = get(sz - 3);

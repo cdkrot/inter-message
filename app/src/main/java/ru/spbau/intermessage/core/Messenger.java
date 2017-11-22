@@ -105,13 +105,17 @@ public class Messenger extends ServiceCommon {
     protected void warmUp() {
         network = new WifiNetwork();
         network.open(new Network.IncomeListener() {
-                public void recieved(String from, boolean bcast, ByteVector dta) {
+                public void recieved(String from, boolean bcast, ByteVector dta) {         
                     System.out.printf("Incoming packet from %s, type %d, len %d\n", from, (bcast ? 1 : 0), dta.size());
 
                     for (int i = 0; i != Math.min(100, dta.size()); ++i)
                         System.out.printf("%d ", dta.get(i));
 
                     System.out.println("");
+
+                    if (bcast) {
+                        
+                    }
                 };
             });
     }

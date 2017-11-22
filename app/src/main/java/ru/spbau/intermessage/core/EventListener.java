@@ -1,5 +1,5 @@
 package ru.spbau.intermessage.core;
 
-interface EventListener {
-    void onEvent(Object event);
+public interface EventListener {
+    void onMessage(User chat, User user, Message message);
 }
