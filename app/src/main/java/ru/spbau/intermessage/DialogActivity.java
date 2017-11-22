@@ -13,7 +13,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Objects;
 
 import ru.spbau.intermessage.gui.Message;
@@ -43,7 +42,7 @@ public class DialogActivity extends AppCompatActivity {
                     String text = input.getText().toString();
                     Message newMessage = new Message();
                     newMessage.date = System.currentTimeMillis() / 1000L;
-                    newMessage.userName = "Dima";
+                    newMessage.userName = "Dima#1";
                     newMessage.messageText = text;
                     input.setText("");
 

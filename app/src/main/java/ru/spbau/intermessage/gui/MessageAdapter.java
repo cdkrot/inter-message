@@ -52,7 +52,7 @@ public class MessageAdapter extends BaseAdapter {
 
         textMessage.setText(message.messageText);
 
-        SimpleDateFormat df = new SimpleDateFormat("dd MMM yyyy hh:mm:ss zzz");
+        SimpleDateFormat df = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss");
         Date d = new Date(message.date * 1000);
         date.setText(df.format(d));
 
