@@ -351,6 +351,13 @@ public class WifiNetwork implements Network {
             System.out.println("incoming udp");
             for (int i = 0; i != buf.position(); ++i)
                 System.out.printf("%d ", (byte)buf.get(i));
+
+            for (NetworkInterface netint: Collections.list(NetworkInterface.getNetworkInterfaces())) {
+                Enumeration<InetAddress> list = netint.getInetAddresses();
+                for (InetAddress self: Collections.list(list))
+                    if (self.equals(addr.getAddress()))
+                        return;
+            }
             
             if (buf.position() >= 6) {
                 for (int i = 0; i != magic.length; ++i)
