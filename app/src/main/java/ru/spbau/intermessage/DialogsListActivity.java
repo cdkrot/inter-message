@@ -21,14 +21,14 @@ public class DialogsListActivity extends AppCompatActivity {
         final ArrayList<String> buttonNames = new ArrayList<>();
         String name = getString(R.string.new_dialog);
         buttonNames.add(name);
-        buttonNames.add("Crutched dialog");
+        buttonNames.add("Elite dialog");
         final ArrayAdapter dialogsAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, buttonNames);
         dialogsList.setAdapter(dialogsAdapter);
         dialogsList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 if (l == 0)
-                    Toast.makeText(DialogsListActivity.this, "Isn't crutched dialog sufficient for everything?", Toast.LENGTH_LONG).show();
+                    Toast.makeText(DialogsListActivity.this, "Isn't Elite dialog sufficient for everything?", Toast.LENGTH_LONG).show();
                 else {
                     Intent intent = new Intent(DialogsListActivity.this, DialogActivity.class);
                     startActivity(intent);

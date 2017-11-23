@@ -41,7 +41,7 @@ public class Controller extends IntentService {
     public static void receiveMessage(Context context, User chat, ru.spbau.intermessage.core.Message message) {
         Intent intent = new Intent(context, Controller.class);
         intent.setAction(ACTION_RECEIVE_MESSAGE);
-        intent.putExtra("User", "Dima#2");
+        intent.putExtra("User", "Dima");
         intent.putExtra("Date", message.timestamp);
         intent.putExtra("Message", Util.bytesToString(message.data));
         context.startService(intent);

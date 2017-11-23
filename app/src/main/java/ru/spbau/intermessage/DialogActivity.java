@@ -42,7 +42,7 @@ public class DialogActivity extends AppCompatActivity {
                     String text = input.getText().toString();
                     Message newMessage = new Message();
                     newMessage.date = System.currentTimeMillis() / 1000L;
-                    newMessage.userName = "Dima#1";
+                    newMessage.userName = "Alexandr";
                     newMessage.messageText = text;
                     input.setText("");
 
