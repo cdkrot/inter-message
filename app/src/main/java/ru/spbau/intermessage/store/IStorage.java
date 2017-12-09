@@ -28,6 +28,18 @@ public interface IStorage {
         public void setNull();
     };
 
+    public inteface IList {
+        public int size();
+        public IObject get(int i);
+        public IObject[] getBatch(int i, int cnt);
+        public void push(IObject obj);
+
+        public void create();
+        public void delete();
+    };
+    
     public IObject get(String key);
     public List<String> getMatching(String group);
+
+    public IList getList(String key);
 }
