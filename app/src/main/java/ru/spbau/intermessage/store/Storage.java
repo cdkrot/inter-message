@@ -116,5 +116,11 @@ public class Storage implements IStorage {
         public void setInt(int nt) {
             v = nt;
         }
+
+        @Override
+        public void setNull() {
+            // TODO.
+        }
+
     }
 }

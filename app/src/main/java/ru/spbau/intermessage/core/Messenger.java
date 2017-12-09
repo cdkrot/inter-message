@@ -5,11 +5,16 @@ import ru.spbau.intermessage.net.Network;
 import ru.spbau.intermessage.net.WifiNetwork;
 
 import ru.spbau.intermessage.util.*;
+import ru.spbau.intermessage.crypto.ID;
+import ru.spbau.intermessage.store.IStorage;
 
 import java.util.Set;
 import java.util.HashSet;
 
 public class Messenger extends ServiceCommon {
+    public Messenger(IStorage store) {
+        storage = store;
+    }
     
     private static class ListenerRequest extends RequestCommon {
         public ListenerRequest(boolean a, EventListener l) {
@@ -33,7 +38,9 @@ public class Messenger extends ServiceCommon {
     
     protected Set<EventListener> listeners = new HashSet<EventListener>();
     protected Network network;
-
+    protected ID identity = ID.create();
+    protected IStorage storage;
+    
     // private enum SyncState {
     //     HANDSHAKE_A, // initiator
     //     HANDSHAKE_B, // second

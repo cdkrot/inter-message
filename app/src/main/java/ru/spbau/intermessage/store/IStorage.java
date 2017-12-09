@@ -25,6 +25,7 @@ public interface IStorage {
         public void setString(String str);
         public void setData(byte[] data);
         public void setInt(int nt);
+        public void setNull();
     };
 
     public IObject get(String key);
