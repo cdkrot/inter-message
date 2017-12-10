@@ -28,7 +28,7 @@ public interface IStorage {
         public void setNull();
     };
 
-    public inteface IList {
+    public interface IList {
         public int size();
         public IObject get(int i);
         public IObject[] getBatch(int i, int cnt);

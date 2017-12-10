@@ -47,6 +47,11 @@ public class Storage implements IStorage {
         return result;
     }
 
+    @Override
+    public IList getList(String key) {
+        return null;
+    }
+
     private class keyValueStore extends SQLiteOpenHelper{
         private final String tableName = "keyValueStore";
         private final String CREATE_TABLE = "create table " + tableName
