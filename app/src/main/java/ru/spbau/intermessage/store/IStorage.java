@@ -15,7 +15,7 @@ public interface IStorage {
         }
     };
     
-    public interface IObject {
+    public interface Union {
         public ObjectType getType();
         
         public String getString();
@@ -30,15 +30,15 @@ public interface IStorage {
 
     public interface IList {
         public int size();
-        public IObject get(int i);
-        public IObject[] getBatch(int i, int cnt);
-        public void push(IObject obj);
+        public Union get(int i);
+        public Union[] getBatch(int i, int cnt);
+        public void push(Union obj);
 
         public void create();
         public void delete();
     };
     
-    public IObject get(String key);
+    public Union get(String key);
     public List<String> getMatching(String group);
 
     public IList getList(String key);

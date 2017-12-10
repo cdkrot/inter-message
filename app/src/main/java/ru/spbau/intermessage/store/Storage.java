@@ -15,10 +15,10 @@ public class Storage implements IStorage {
     private final keyValueStore store = new keyValueStore(Intermessage.getAppContext());
 
     @Override
-    public IObject get(String key) {
+    public Union get(String key) {
         try (SQLiteDatabase sqldb = store.getReadableDatabase();
              Cursor c = sqldb.rawQuery("select * from " + store.tableName + " where id like '" + key + "'", null)) {
-            ObjectImpl result = new ObjectImpl(key);
+            UnionImpl result = new UnionImpl(key);
             if (c != null && c.moveToFirst()){
                 if (!c.isNull(1))
                     result.string = c.getString(1);
@@ -77,7 +77,7 @@ public class Storage implements IStorage {
         }
     }
 
-    private class ObjectImpl implements IStorage.IObject {
+    private class UnionImpl implements Union {
 
 
         String key;
@@ -86,7 +86,7 @@ public class Storage implements IStorage {
         Integer v = null;
 
 
-        ObjectImpl(String k) {
+        UnionImpl(String k) {
             key = k;
         }
 
