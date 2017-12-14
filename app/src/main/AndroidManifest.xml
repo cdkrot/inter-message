@@ -2,9 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="ru.spbau.intermessage">
 
-    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.INTERNET" />
 
-    <application android:name="ru.spbau.intermessage.Intermessage"
+    <application
+        android:name=".Intermessage"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -19,11 +20,15 @@
             </intent-filter>
         </activity>
         <activity android:name=".DialogsListActivity" />
-        <activity android:name=".DialogActivity" />
 
         <service
             android:name=".Controller"
-            android:exported="false"></service>
+            android:exported="false" />
+
+        <activity
+            android:name=".DialogActivity"
+            android:label="@string/title_activity_dialog"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 
 </manifest>
