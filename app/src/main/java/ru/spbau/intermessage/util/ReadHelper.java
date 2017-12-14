@@ -72,4 +72,15 @@ public class ReadHelper {
 
         return res;
     }
+
+    public boolean skip(byte[] bts) {
+        if (available() < bts.length)
+            return false;
+
+        for (int i = 0; i != bts.length; ++i)
+            if (readByte() != bts[i])
+                return false;
+
+        return true;
+    }
 }

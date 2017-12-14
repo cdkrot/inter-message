@@ -13,6 +13,11 @@ public class ByteVector {
         sz = n;
     }
 
+    private ByteVector(byte[] data) {
+        storage = data;
+        sz = data.length;
+    }
+    
     public void reserve(int n) {
         if (storage.length < n)
             setCapacity(n > 2 * storage.length ? n : 2 * storage.length);
@@ -73,5 +78,10 @@ public class ByteVector {
     /* direct access to the vector */
     public byte[] data() {
         return storage;
+    }
+
+    /* wraps reusing provided array (be careful) */
+    public static ByteVector wrap(byte[] bt) {
+        return new ByteVector(bt);
     }
 };
