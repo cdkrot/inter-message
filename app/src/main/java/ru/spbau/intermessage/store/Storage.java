@@ -12,7 +12,7 @@ import java.util.List;
 import ru.spbau.intermessage.Intermessage;
 
 public class Storage implements IStorage {
-    private final keyValueStore store = new keyValueStore(Intermessage.getAppContext());
+    private final KeyValueStore store = new KeyValueStore(Intermessage.getAppContext());
 
     @Override
     public Union get(String key) {
@@ -52,17 +52,17 @@ public class Storage implements IStorage {
         return null;
     }
 
-    private class keyValueStore extends SQLiteOpenHelper{
+    private class KeyValueStore extends SQLiteOpenHelper{
         private final String tableName = "keyValueStore";
         private final String CREATE_TABLE = "create table " + tableName
-                        + " (id text primary key,"
-                        + "string text,"
-                        + "number integer,"
-                        + "binary blob" + ");";
+                + " (id text primary key,"
+                + "string text,"
+                + "number integer,"
+                + "binary blob" + ");";
         private SQLiteDatabase db;
 
-        keyValueStore(Context context) {
-            super(context, "storage", null, 1);
+        KeyValueStore(Context context) {
+            super(context, "keyValueStore", null, 1);
         }
 
         @Override
@@ -78,7 +78,6 @@ public class Storage implements IStorage {
     }
 
     private class UnionImpl implements Union {
-
 
         String key;
         String string = null;
@@ -187,6 +186,65 @@ public class Storage implements IStorage {
 
                 sqldb.insert(store.tableName, null, cv);
             }
+        }
+    }
+
+    private class ListStore extends SQLiteOpenHelper {
+        private final String tableName = "listStore";
+        private final String CREATE_TABLE = "create table " + tableName +
+                " (id integer primary key autoincrement,"
+                + "string text,"
+                + "number integer,"
+                + "binary blob" + ");";;
+
+        private SQLiteDatabase db;
+
+        ListStore(Context context, String key) {
+            super(context, "listStore" + key, null, 1);
+        }
+
+        @Override
+        public void onCreate(SQLiteDatabase sqLiteDatabase) {
+            db.execSQL(CREATE_TABLE);
+        }
+
+        @Override
+        public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
+            db.execSQL("DROP TABLE IF EXISTS " + tableName);
+            onCreate(db);
+        }
+    }
+
+    private class UnionList implements IList {
+
+        @Override
+        public int size() {
+            return 0;
+        }
+
+        @Override
+        public Union get(int i) {
+            return null;
+        }
+
+        @Override
+        public Union[] getBatch(int i, int cnt) {
+            return new Union[0];
+        }
+
+        @Override
+        public void push(Union obj) {
+
+        }
+
+        @Override
+        public void create() {
+
+        }
+
+        @Override
+        public void delete() {
+
         }
     }
 }
