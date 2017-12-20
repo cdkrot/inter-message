@@ -4,18 +4,21 @@ import ru.spbau.intermessage.core.*;
 import ru.spbau.intermessage.store.IStorage;
 
 import ru.spbau.intermessage.util.ByteVector;
+import ru.spbau.intermessage.util.ReadHelper;
+import ru.spbau.intermessage.util.WriteHelper;
+import ru.spbau.intermessage.util.Tuple3;
 
 // somebody asked us to give new messages.
 
 // states:
-// 0: Other side identifies and sends specific chat ID.
-// OUT: Send pairs of (user, cnt) we have
-// 1: Other side asks for (user, subid)
-// OUT: Send requested message.
-// 2: Other side acks
-// OUT: Send ack as well.
-// STORAGE: update known information about this party.
-// goto 1.
+// 0: I: Other side identifies, check
+// 0: O: (chat, subid, id) to sync in, goto 1.
+// 1: I: SKIP | GET
+// 1: O: SKIP => (chat, subid, id), GET => Message, goto 2.
+// 1: *: SKIP => Update storage.
+// 2: I: ACK
+// 2: O: (chat, subid, id)
+// 2: *: Update storage.
 
 public class Logic implements ILogic {
     private Messenger msg;
@@ -23,89 +26,73 @@ public class Logic implements ILogic {
     
     private int state = 0;
     private User user = null;
-    private Chat chat = null;
 
-    private User askedUser = null;
-    private int askedId = -1;
+    private Chat lastchat = null;
+    private User lastuser = null;
+    private int lastid = -1;
     
     public Logic(Messenger msg_, IStorage store_) {
         msg = msg_;
         store = store_;
     }
 
+    public ByteVector getNextTuple() {
+        Tuple3<Chat, User, Integer> nextm = msg.getNextMessageFor(user);
+        if (nextm == null)
+            return null;
+
+        lastchat = nextm.first;
+        lastuser = nextm.second;
+        lastid   = nextm.third;
+        
+        WriteHelper writer = new WriteHelper(new ByteVector());
+        lastchat.write(writer);
+        lastuser.write(writer);
+        writer.writeInt(lastid);
+
+        return writer.getData();
+    }
+    
     public ByteVector feed0(ByteVector packet) {
         // TODO: add security check here.
-        ReadHelper helper = new ReadHelper(packet);
+        ReadHelper reader = new ReadHelper(packet);
         
-        user = User.load(helper);
-        if (user == null)
+        user = User.read(reader);
+        if (user == null || reader.available() != 0)
             return null;
-
-        chat = Chat.load(helper);
-        if (chat == null)
-            return null;
-
-        if (helper.available() > 0)
-            return null;
-
-        WriteHelper writer = new WriteHelper(new ByteVector());
-        
-        IStorage.IList list = store.getList("chat.info." + chat.id);
-        writer.writeInt(list.size());
-        for (int i = 0; i != list.size(); ++i) {
-            IStorage.Union obj = list.get(i);
-
-            ReadHelper unpacker = new ReadHelper(ByteVector.wrap(obj.getData()));
-            User u = User.load(unpacker);
-            int cnt = unpacker.readInt();
-
-            u.write(writer);
-            writer.write(cnt);
-        }
 
         state = 1;
-        
-        return writer.data();
+        return getNextTuple();
     }
 
     public ByteVector feed1(ByteVector packet) {
         ReadHelper reader = new ReadHelper(packet);
 
-        askedUser = User.load(reader);
-        if (askedUser == null)
+        String str = reader.readString();
+        if (str == null || reader.available() != 0 || (str != "ACK" && str != "SKI"))
             return null;
 
-        if (reader.available() != 4)
-            return null;
-
-        askedId = reader.readInt();
-
-        IStorage.IList list = store.getList("chat.msg." + chat.id + "." + askedUser.publickey);
-
-        if (askedId >= list.size())
-            return null;
-
-        WriteHelper writer = new WriteHelper(new ByteVector());
-        Message msg = Message.read(new ReadHelper(ByteVector.wrap(list.get(askedId).getBytes())));
-
-        msg.write(writer);
-        return writer.getData();
+        if (str == "SKIP") {
+            msg.sentMessageToParty(user, lastchat, lastuser, lastid);
+            return getNextTuple();
+        } else {
+            Message m = msg.getMessageById(lastchat, lastuser, lastid);
+            WriteHelper writer = new WriteHelper(new ByteVector());
+            m.write(writer);
+            state = 2;
+            return writer.getData();
+        }
     }
-
-    private const byte[] ACK = new byte[] {65, 67, 75};
     
     public ByteVector feed2(ByteVector packet) {
-        if (packet.size() != ACK.length)
+        ReadHelper reader = new ReadHelper(packet);
+        String str = reader.readString();
+        if (str == null || reader.available() != 0 || str != "ACK")
             return null;
 
-        for (int i = 0; i != ACK.length; ++i)
-            if (packet.get(i) != ACK[i])
-                return null;
-
-        // TODO: update info.
-        
+        msg.sentMessageToParty(user, lastchat, lastuser, lastid);
         state = 1;
-        return ACK;
+        return getNextTuple();
     }
     
     public ByteVector feed(ByteVector packet) {
@@ -114,7 +101,8 @@ public class Logic implements ILogic {
         case 1: return feed1(packet);
         case 2: return feed2(packet);
         }
+        return null;
     }
 
-    public void disconnect();
+    public void disconnect() {}
 };

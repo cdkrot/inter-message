@@ -23,16 +23,11 @@ public class WifiNNetwork implements NNetwork {
     private InetAddress bcast;
     
     private class Helper {
-        public Helper(SocketChannel sck, Messenger msg_, IStorage store_, ILogic logic_) {
+        public Helper(SocketChannel sck, ILogic logic_, boolean firstwrite) {
             token = null;
             
             sock = sck;
             
-            off = -6;
-            recv = null;
-            income = -1;
-            magicAccepter = 0;
-
             outbuf = ByteBuffer.allocate(4096);
             inbuf = ByteBuffer.allocate(4096);
             outbuf.order(ByteOrder.BIG_ENDIAN);
@@ -42,22 +37,26 @@ public class WifiNNetwork implements NNetwork {
             inbuf.clear();
 
             logic = logic_;
+            writing = firstwrite;
+
+            if (writing) {
+                pending = logic.feed(null);
+            }
         }
 
-        public boolean writing;
-        
+        public boolean writing;        
         public ILogic logic;
         
         public SelectionKey token;
         
         public SocketChannel sock;
 
-        public ByteVector pending;
-        
-        public int off;
+        public int off = -6;
 
-        public ByteVector recv;
-        public int income;
+        public ByteVector recv = null;
+        public ByteVector pending = null;
+        
+        public int income = -1;
 
         public int magicAccepter = 0;
 
@@ -65,45 +64,48 @@ public class WifiNNetwork implements NNetwork {
         public int outbuf_pos = 0;
         
         public int getOutput() {
-            if (pending.isEmpty())
+            if (pending == null)
                 return -1;
-
+            
             if (off < -2) {
                 return magic[(off++) + 6];
             }
             
             if (off == -2) {
                 off++;
-                return pending.peek().size() / 256;
+                return pending.size() / 256;
             }
 
             if (off == -1) {
                 off++;
-                return pending.peek().size() % 256;
+                return pending.size() % 256;
             }
 
-            int res = pending.peek().get(off++);
-            if (off == pending.peek().size()) {
+            int res = pending.get(off++);
+            if (off == pending.size()) {
                 off = -6;
-
-                pending.poll();
-                Callback call = callbacks.poll();
-                if (call != null)
-                    call.completed(true);
+                pending = null;
+                magicAccepter = 0;
             }
             return res;
         }
         public boolean onInput(byte b) {
+            if (writing)
+                return false;
+            
             System.out.printf("Get %d, recv: %d, income: %d, magicAcc: %d\n", (int)b, (recv == null ? -1 : recv.size()), income, magicAccepter);
             if (magicAccepter == -1) {
                 recv.pushBack(b);
                 if (recv.size() == income) {
-                    InetSocketAddress addr = (InetSocketAddress)sock.socket().getLocalSocketAddress();
-                    listener.recieved(addr.getHostName(), false, recv);
-                    
-                    recv = null;
-                    income = -1;
-                    magicAccepter = 0;
+                    pending = logic.feed(recv);
+
+                    if (pending == null)
+                        return false; // END OF LINE.
+                    else {
+                        off = -6;
+                        writing = true;
+                        return true;
+                    }
                 }
 
                 return true;
@@ -133,15 +135,6 @@ public class WifiNNetwork implements NNetwork {
         }
     };
 
-    private class UDPHelper {
-        public UDPHelper(DatagramChannel chan) {
-            sock = chan;
-            pending = new LinkedList<ByteVector>();
-        }
-        
-        public DatagramChannel sock;
-    }
-
     private InetAddress getBroadcast() {
         try {
             byte[] bts = new byte[4];
@@ -152,13 +145,13 @@ public class WifiNNetwork implements NNetwork {
         }
     }
   
-    private UDPHelper udphelper;
+    private DatagramChannel udpsock;
     private UDPLogic udplogic;
     
-    private void doWrite(UDPHelper helper) {
+    private void doUDPWrite() {
         ByteVector vec = udplogic.bcast();
 
-        if (pending != null) {
+        if (vec != null) {
             try {
                 System.out.println("Trying to send UDP bcast");
                 ByteBuffer buf = ByteBuffer.allocate(vec.size() + 6);
@@ -172,9 +165,8 @@ public class WifiNNetwork implements NNetwork {
 
                 buf.flip();
                 
-                int r = helper.sock.send(buf, new InetSocketAddress(bcast, udpPort));
+                int r = udpsock.send(buf, new InetSocketAddress(bcast, udpPort));
                 System.out.printf("Send %d bytes\n", r);
-
                 System.out.println("done");
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
@@ -182,10 +174,10 @@ public class WifiNNetwork implements NNetwork {
         }
     }
 
-    private void doRead(UDPHelper helper) {
+    private void doUDPRead() {
         try {
             ByteBuffer buf = ByteBuffer.allocate(8192);
-            InetSocketAddress addr = (InetSocketAddress)helper.sock.receive(buf);
+            InetSocketAddress addr = (InetSocketAddress)udpsock.receive(buf);
 
             System.out.println("incoming udp");
 
@@ -194,7 +186,6 @@ public class WifiNNetwork implements NNetwork {
                 for (InetAddress self: Collections.list(list))
                     if (self.equals(addr.getAddress()))
                         return;
-
                 // ignoring udp's from ourself.
             }
             
@@ -281,26 +272,38 @@ public class WifiNNetwork implements NNetwork {
             sock.socket().bind(new InetSocketAddress(listenPort));
             sock.register(epoll, sock.validOps(), sock);
             
-            DatagramChannel udp = DatagramChannel.open();
-            udp.configureBlocking(false);
-            udp.socket().bind(new InetSocketAddress(udpPort));
-            udp.socket().setBroadcast(true);
-            udphelper = new UDPHelper(udp);
+            udpsock = DatagramChannel.open();
+            udpsock.configureBlocking(false);
+            udpsock.socket().bind(new InetSocketAddress(udpPort));
+            udpsock.socket().setBroadcast(true);
             udplogic = new UDPLogic(msg, store);
-            udp.register(epoll, udp.validOps(), udphelper);
+            udpsock.register(epoll, udpsock.validOps(), udpsock);
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
     }
 
     public void create(String addr, ILogic logic) {
-        SocketChannel sock = SocketChannel.open();
-        sock.configureBlocking(false);
-        sock.socket().connect(new InetSocketAddress(addr, listenPort));
-        sock.register(epoll, sock.validOps(), new Helper(logic));
+        try {
+            SocketChannel sock = SocketChannel.open();
+            sock.configureBlocking(false);
+            sock.socket().connect(new InetSocketAddress(addr, listenPort));
+            // creating "listening" connection.
+            sock.register(epoll, sock.validOps(), new Helper(sock, logic, true));
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    public void work() {
+        try {
+            workDo();
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
     }
     
-    public void work() {
+    public void workDo() throws IOException {
         System.err.println("Starting work");
         synchronized (this) {
             System.err.println("Really Starting work");
@@ -318,28 +321,30 @@ public class WifiNNetwork implements NNetwork {
                     ServerSocketChannel sck = (ServerSocketChannel)s.attachment();
                     
                     SocketChannel client = sck.accept();
-                        client.configureBlocking(false);
-                        Helper helper = new Helper(client);
-                        helper.token = client.register(epoll, client.validOps(), helper);
+                    client.configureBlocking(false);
+                    // create "sending" connection.
+                    Helper helper = new Helper(client, new Logic(msg, store), false);
+                    helper.token = client.register(epoll, client.validOps(), helper);
                 }
                 
                 if (s.attachment() instanceof Helper)
-                    if (!handle((Helper)helper)) {
+                    if (!handle((Helper)(s.attachment()))) {
                         iter.remove();
+                        Helper helper = (Helper)(s.attachment());
                         helper.token.cancel();
                         helper.sock.close();
                         continue;
-                        }
+                    }
                 
-                if (s.isWritable() && (s.attachment() instanceof UDPHelper))
-                    doWrite((UDPHelper)s.attachment());
+                if (s.isWritable() && (s.attachment() instanceof DatagramChannel))
+                    doUDPWrite();
                 
-                if (s.isReadable() && (s.attachment() instanceof UDPHelper)) {
-                    doRead((UDPHelper)s.attachment());
+                if (s.isReadable() && (s.attachment() instanceof DatagramChannel)) {
+                    doUDPRead();
                 }
                 
                 iter.remove();
-                }
+            }
         }
     }
 

@@ -5,6 +5,8 @@ import ru.spbau.intermessage.core.*;
 import ru.spbau.intermessage.store.IStorage;
 
 import ru.spbau.intermessage.util.ByteVector;
+import ru.spbau.intermessage.util.WriteHelper;
+import ru.spbau.intermessage.util.ReadHelper;
 
 public class UDPLogic {
     private Messenger msg;
@@ -25,13 +27,13 @@ public class UDPLogic {
         
         lastTM = System.currentTimeMillis();
         
-        WriteHelper writer = new WriterHelper(new ByteVector());
+        WriteHelper writer = new WriteHelper(new ByteVector());
         
         writer.writeBytes(head);
         msg.identity.user().write(writer);
 
-        for (String str: store.getMatching("users.poor."))
-            writer.write(str);
+        for (User u: msg.getPoor())
+            u.write(writer);
         
         return writer.getData();
     }
@@ -40,7 +42,7 @@ public class UDPLogic {
         // TODO: check identity.
 
         ReadHelper reader = new ReadHelper(data);
-        if (!reader.skip(heap))
+        if (!reader.skip(head))
             return;
 
         User u = User.read(reader);
@@ -49,7 +51,7 @@ public class UDPLogic {
 
         boolean was = false;
         while (reader.available() > 0) {
-            User xx = User.read(reader):
+            User xx = User.read(reader);
             if (xx == null)
                 return;
 
@@ -57,7 +59,7 @@ public class UDPLogic {
                 was = true;
         }
 
-        store.get("user.location." + u.publickey).setString(from);
+        msg.setUserLocation(u, from);
 
         if (was)
             msg.syncWith(u);

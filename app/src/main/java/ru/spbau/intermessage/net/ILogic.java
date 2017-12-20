@@ -1,4 +1,6 @@
-package ru.spbau.intermessage.network;
+package ru.spbau.intermessage.net;
+
+import ru.spbau.intermessage.util.ByteVector;
 
 public interface ILogic {
     // return null to close or responce to send.

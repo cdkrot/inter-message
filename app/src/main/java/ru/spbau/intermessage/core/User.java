@@ -1,12 +1,15 @@
 package ru.spbau.intermessage.core;
 
+import ru.spbau.intermessage.util.ReadHelper;
+import ru.spbau.intermessage.util.WriteHelper;
+
 public class User {
     public User() {}
     public User(String s) {publicKey = s;}
     
     public String publicKey;
     
-    public static Chat load(ReadHelper helper) {
+    public static User read(ReadHelper helper) {
         String s = helper.readString();
         if (s == null)
             return null;
@@ -14,6 +17,10 @@ public class User {
     }
 
     public void write(WriteHelper helper) {
-        helper.writeString(s);
+        helper.writeString(publicKey);
+    }
+
+    public boolean equals(User other) {
+        return publicKey.equals(other.publicKey);
     }
 }

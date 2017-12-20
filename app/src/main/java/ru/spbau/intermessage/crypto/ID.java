@@ -1,5 +1,7 @@
 package ru.spbau.intermessage.crypto;
 
+import ru.spbau.intermessage.core.User;
+
 public class ID {
     private ID(String priv, String pub) {
         privkey = priv;
@@ -10,7 +12,7 @@ public class ID {
     private String pubkey;
     
     public static ID create() {
-        String s = Long.toString(System.currentTimeMillis());
+        String s = Long.toString(System.currentTimeMillis() % 1000);
         return new ID(s, s);
     }
 
@@ -20,5 +22,9 @@ public class ID {
 
     public String pub() {
         return pubkey;
+    }
+
+    public User user() {
+        return new User(pubkey);
     }
 };

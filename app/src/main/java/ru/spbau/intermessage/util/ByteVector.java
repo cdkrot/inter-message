@@ -80,8 +80,25 @@ public class ByteVector {
         return storage;
     }
 
+    public byte[] toBytes() {
+        byte[] res = new byte[sz];
+        for (int i = 0; i != sz; ++i)
+            res[i] = storage[i];
+        return res;
+    }
+    
     /* wraps reusing provided array (be careful) */
     public static ByteVector wrap(byte[] bt) {
         return new ByteVector(bt);
     }
+
+    /* wraps reusing provided array (be careful) */
+    public static ByteVector dup(byte[] bt) {
+        byte[] b2 = new byte[bt.length];
+        for (int i = 0; i != bt.length; ++i)
+            b2[i] = bt[i];
+        
+        return new ByteVector(b2);
+    }
+
 };
