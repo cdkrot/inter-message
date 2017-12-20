@@ -50,8 +50,10 @@ public class Controller extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        if (intent == null)
+        if (intent == null) {
             return;
+        }
+
         String action = intent.getAction();
         if (ACTION_SEND_MESSAGE.equals(action)) {
             long date = intent.getLongExtra("Date", 0);
