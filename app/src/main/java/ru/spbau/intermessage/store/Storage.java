@@ -19,13 +19,14 @@ public class Storage implements IStorage {
         try (SQLiteDatabase sqldb = store.getReadableDatabase();
              Cursor c = sqldb.rawQuery("select * from " + store.tableName + " where id like '" + key + "'", null)) {
             UnionImpl result = new UnionImpl(key);
-            if (c != null && c.moveToFirst()){
-                if (!c.isNull(1))
+            if (c != null && c.moveToFirst()) {
+                if (!c.isNull(1)) {
                     result.string = c.getString(1);
-                else if (!c.isNull(2))
+                } else if (!c.isNull(2)) {
                     result.v = c.getInt(2);
-                else if (!c.isNull(3))
+                } else if (!c.isNull(3)) {
                     result.data = c.getBlob(3);
+                }
                 return result;
             } else
                 return result;
@@ -91,12 +92,18 @@ public class Storage implements IStorage {
 
         @Override
         public ObjectType getType() {
-            if (string != null)
+            if (string != null) {
                 return ObjectType.STRING;
-            if (data != null)
+            }
+
+            if (data != null) {
                 return ObjectType.BYTE_ARRAY;
-            if (v != null)
+            }
+
+            if (v != null) {
                 return ObjectType.INTEGER;
+            }
+
             return ObjectType.NULL;
         }
 
@@ -120,10 +127,11 @@ public class Storage implements IStorage {
             boolean was = getType() != ObjectType.NULL;
             clear();
             string = str;
-            if (was)
+            if (was) {
                 update();
-            else
+            } else {
                 add();
+            }
         }
 
         @Override
@@ -131,10 +139,11 @@ public class Storage implements IStorage {
             boolean was = getType() != ObjectType.NULL;
             clear();
             data = d;
-            if (was)
+            if (was) {
                 update();
-            else
+            } else {
                 add();
+            }
         }
 
         @Override
@@ -142,10 +151,11 @@ public class Storage implements IStorage {
             boolean was = getType() != ObjectType.NULL;
             clear();
             v = nt;
-            if (was)
+            if (was) {
                 update();
-            else
+            } else {
                 add();
+            }
         }
 
         @Override
@@ -242,15 +252,17 @@ public class Storage implements IStorage {
                  Cursor c = sqldb.rawQuery("select * from " + store.tableName + " where id = " + key, null)) {
                 ListUnion result = new ListUnion(key);
                 if (c != null && c.moveToFirst()){
-                    if (!c.isNull(1))
+                    if (!c.isNull(1)) {
                         result.string = c.getString(1);
-                    else if (!c.isNull(2))
+                    } else if (!c.isNull(2)) {
                         result.v = c.getInt(2);
-                    else if (!c.isNull(3))
+                    } else if (!c.isNull(3)) {
                         result.data = c.getBlob(3);
+                    }
                     return result;
-                } else
+                } else {
                     return result;
+                }
             }
         }
 
@@ -266,16 +278,18 @@ public class Storage implements IStorage {
                 if (c != null && c.moveToFirst()){
                     do {
                         ListUnion union = new ListUnion(key);
-                        if (!c.isNull(1))
+                        if (!c.isNull(1)) {
                             union.string = c.getString(1);
-                        else if (!c.isNull(2))
+                        } else if (!c.isNull(2)) {
                             union.v = c.getInt(2);
-                        else if (!c.isNull(3))
+                        } else if (!c.isNull(3)) {
                             union.data = c.getBlob(3);
+                        }
                         result.add(union);
                     } while (c.moveToNext());
-                } else
+                } else {
                     return new Union[0];
+                }
             }
 
             return (Union[]) result.toArray();
@@ -325,12 +339,17 @@ public class Storage implements IStorage {
 
             @Override
             public ObjectType getType() {
-                if (string != null)
+                if (string != null) {
                     return ObjectType.STRING;
-                if (data != null)
+                }
+
+                if (data != null) {
                     return ObjectType.BYTE_ARRAY;
-                if (v != null)
+                }
+
+                if (v != null) {
                     return ObjectType.INTEGER;
+                }
                 return ObjectType.NULL;
             }
 
@@ -354,10 +373,11 @@ public class Storage implements IStorage {
                 boolean was = getType() != ObjectType.NULL;
                 clear();
                 string = str;
-                if (was)
+                if (was) {
                     update();
-                else
+                } else {
                     add();
+                }
             }
 
             @Override
@@ -365,10 +385,11 @@ public class Storage implements IStorage {
                 boolean was = getType() != ObjectType.NULL;
                 clear();
                 data = d;
-                if (was)
+                if (was) {
                     update();
-                else
+                } else {
                     add();
+                }
             }
 
             @Override
@@ -376,10 +397,11 @@ public class Storage implements IStorage {
                 boolean was = getType() != ObjectType.NULL;
                 clear();
                 v = nt;
-                if (was)
+                if (was) {
                     update();
-                else
+                } else {
                     add();
+                }
             }
 
             @Override

@@ -13,12 +13,12 @@ import java.util.List;
 
 import ru.spbau.intermessage.R;
 
-public class MessageAdapter extends BaseAdapter {
+public class ItemAdapter extends BaseAdapter {
 
     private LayoutInflater inflater;
-    private List<Message> data;
+    private List<Item> data;
 
-    public MessageAdapter(Context c, List<Message> list) {
+    public ItemAdapter(Context c, List<Item> list) {
         data = list;
         inflater = (LayoutInflater) c.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }
@@ -60,7 +60,7 @@ public class MessageAdapter extends BaseAdapter {
         TextView userName = holder.userName;
         TextView textMessage = holder.text;
 
-        Message message = (Message) getItem(i);
+        Item message = (Item) getItem(i);
 
         textMessage.setText(message.messageText);
 

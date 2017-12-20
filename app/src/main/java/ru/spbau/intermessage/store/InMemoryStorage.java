@@ -82,8 +82,10 @@ public class InMemoryStorage implements IStorage {
             }
             
             protected ObjectContainer forceFetch() {
-                if (kv.get(key) == null)
+                if (kv.get(key) == null) {
                     kv.put(key, new ObjectContainer());
+                }
+
                 return kv.get(key);
             }
 
@@ -100,8 +102,9 @@ public class InMemoryStorage implements IStorage {
 
         NavigableMap<String, ObjectContainer> blad = kv.tailMap(group, true);
         Map.Entry<String, ObjectContainer> ent;
-        while ((ent = blad.pollFirstEntry()) != null && ent.getKey().startsWith(group))
+        while ((ent = blad.pollFirstEntry()) != null && ent.getKey().startsWith(group)) {
             lst.add(ent.getKey());
+        }
         
         return lst;
     }
@@ -117,8 +120,10 @@ public class InMemoryStorage implements IStorage {
             }
             
             protected ListContainer forceFetch() {
-                if (lists.get(key) == null)
+                if (lists.get(key) == null) {
                     lists.put(key, new ListContainer());
+                }
+
                 return lists.get(key);
             }
 

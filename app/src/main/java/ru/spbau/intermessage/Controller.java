@@ -5,9 +5,10 @@ import android.content.Intent;
 import android.content.Context;
 
 import ru.spbau.intermessage.core.EventListener;
+import ru.spbau.intermessage.core.Message;
 import ru.spbau.intermessage.core.Messenger;
 import ru.spbau.intermessage.core.User;
-import ru.spbau.intermessage.gui.Message;
+import ru.spbau.intermessage.gui.Item;
 import ru.spbau.intermessage.util.Util;
 
 public class Controller extends IntentService {
@@ -30,7 +31,7 @@ public class Controller extends IntentService {
         super("Controller");
     }
 
-    public static void sendMessage(Context context, Message message) {
+    public static void sendMessage(Context context, Item message) {
         Intent intent = new Intent(context, Controller.class);
         intent.setAction(ACTION_SEND_MESSAGE);
         intent.putExtra("Date", message.date);
@@ -38,7 +39,7 @@ public class Controller extends IntentService {
         context.startService(intent);
     }
 
-    public static void receiveMessage(Context context, User chat, ru.spbau.intermessage.core.Message message) {
+    public static void receiveMessage(Context context, User chat, Message message) {
         Intent intent = new Intent(context, Controller.class);
         intent.setAction(ACTION_RECEIVE_MESSAGE);
         intent.putExtra("User", "Dima");
@@ -49,25 +50,24 @@ public class Controller extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        if (intent != null) {
-            final String action = intent.getAction();
-            if (ACTION_SEND_MESSAGE.equals(action)) {
-                final long date = intent.getLongExtra("Date", 0);
-                final String textMessage = intent.getStringExtra("Message");
-                messenger.sendMessage(null, new ru.spbau.intermessage.core.Message("text", date, Util.stringToBytes(textMessage)));
-
-            } else if (ACTION_RECEIVE_MESSAGE.equals(action)) {
-                Intent broadcastIntent = new Intent();
-                broadcastIntent.setAction(DialogActivity.MessageReceiver.ACTION_RECEIVE);
-                broadcastIntent.putExtra("User", intent.getStringExtra("User"));
-                broadcastIntent.putExtra("Date", intent.getLongExtra("Date", 0));
-                broadcastIntent.putExtra("Message", intent.getStringExtra("Message"));
-                sendBroadcast(broadcastIntent);
-            } else if (ACTION_KILL_MESSENGER.equals(action)) {
-                // Kill messenger and listener thread
-            } else {
-                // Should I fail?
-            }
+        if (intent == null)
+            return;
+        String action = intent.getAction();
+        if (ACTION_SEND_MESSAGE.equals(action)) {
+            long date = intent.getLongExtra("Date", 0);
+            String textMessage = intent.getStringExtra("Message");
+            messenger.sendMessage(null, new Message("text", date, Util.stringToBytes(textMessage)));
+        } else if (ACTION_RECEIVE_MESSAGE.equals(action)) {
+            Intent broadcastIntent = new Intent();
+            broadcastIntent.setAction(DialogActivity.MessageReceiver.ACTION_RECEIVE);
+            broadcastIntent.putExtra("User", intent.getStringExtra("User"));
+            broadcastIntent.putExtra("Date", intent.getLongExtra("Date", 0));
+            broadcastIntent.putExtra("Message", intent.getStringExtra("Message"));
+            sendBroadcast(broadcastIntent);
+        } else if (ACTION_KILL_MESSENGER.equals(action)) {
+            // Kill messenger and listener thread
+        } else {
+            // Should I fail?
         }
     }
 }

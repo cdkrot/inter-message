@@ -22,16 +22,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import ru.spbau.intermessage.gui.Message;
-import ru.spbau.intermessage.gui.MessageAdapter;
+import ru.spbau.intermessage.gui.Item;
+import ru.spbau.intermessage.gui.ItemAdapter;
 
 public class DialogActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
-    static final private List<Message> messages = new ArrayList<>();
+    static final private List<Item> messages = new ArrayList<>();
     //static final private String dialogID
     private MessageReceiver messageReceiver;
-    private MessageAdapter messagesAdapter;
+    private ItemAdapter messagesAdapter;
 
 
     @Override
@@ -55,9 +55,9 @@ public class DialogActivity extends AppCompatActivity
 
         //drawer block ends
 
-        final ListView messagesList = (ListView)findViewById(R.id.messagesList);
+        ListView messagesList = (ListView)findViewById(R.id.messagesList);
         final EditText input = (EditText)findViewById(R.id.input);
-        messagesAdapter = new MessageAdapter(this, messages);
+        messagesAdapter = new ItemAdapter(this, messages);
         messagesList.setAdapter(messagesAdapter);
 
 
@@ -67,7 +67,7 @@ public class DialogActivity extends AppCompatActivity
                 boolean handled = false;
                 if (i == EditorInfo.IME_ACTION_SEND) {
                     String text = input.getText().toString();
-                    Message newMessage = new Message();
+                    Item newMessage = new Item();
                     newMessage.date = System.currentTimeMillis() / 1000L;
                     newMessage.userName = "Alexandr";
                     newMessage.messageText = text;
@@ -97,22 +97,9 @@ public class DialogActivity extends AppCompatActivity
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
-        // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_camera) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
-
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_manage) {
-
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
-
-        }
+        //TODO: Handle navigation view item clicks here.
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
@@ -121,9 +108,10 @@ public class DialogActivity extends AppCompatActivity
 
     @Override
     public void onResume() {
-        super.onResume();  // Always call the superclass method first
-        if (messageReceiver == null)
+        super.onResume();
+        if (messageReceiver == null) {
             messageReceiver = new MessageReceiver();
+        }
         IntentFilter intentFilter = new IntentFilter(messageReceiver.ACTION_RECEIVE);
         registerReceiver(messageReceiver, intentFilter);
     }
@@ -132,8 +120,9 @@ public class DialogActivity extends AppCompatActivity
     public void onPause() {
         super.onPause();
 
-        if (messageReceiver != null)
+        if (messageReceiver != null) {
             unregisterReceiver(messageReceiver);
+        }
     }
 
     public class MessageReceiver extends BroadcastReceiver {
@@ -146,7 +135,7 @@ public class DialogActivity extends AppCompatActivity
                 long date = intent.getLongExtra("Date", 0);
                 String userName = intent.getStringExtra("User");
 
-                Message newMessage = new Message();
+                Item newMessage = new Item();
                 newMessage.date = date;
                 newMessage.messageText = text;
                 newMessage.userName = userName;

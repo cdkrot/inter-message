@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
                         SharedPreferences.Editor ed = sharedPreferences.edit();
                         ed.putString(PREF_NAME, enteredName);
                         ed.apply();
-                        //Controller.changeName();
+                        //TODO: Controller.changeName();
                     }
                 }
             });
