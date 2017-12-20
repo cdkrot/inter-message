@@ -8,19 +8,17 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import ru.spbau.intermessage.R;
 
 public class MessageAdapter extends BaseAdapter {
 
-    private Context context;
     private LayoutInflater inflater;
-    private ArrayList<Message> data;
+    private List<Message> data;
 
-    public MessageAdapter(Context c, ArrayList<Message> list) {
-        context = c;
+    public MessageAdapter(Context c, List<Message> list) {
         data = list;
         inflater = (LayoutInflater) c.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }

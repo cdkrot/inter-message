@@ -32,9 +32,10 @@ public interface IStorage {
         public int size();
         public Union get(int i);
         public Union[] getBatch(int i, int cnt);
-        public void push(Union obj);
+        public void push(int value);
+        public void push(String value);
+        public void push(byte[] value);
 
-        public void create();
         public void delete();
     };
     
