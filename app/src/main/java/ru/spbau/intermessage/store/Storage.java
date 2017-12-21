@@ -50,7 +50,7 @@ public class Storage implements IStorage {
 
     @Override
     public IList getList(String key) {
-        return null;
+        return new UnionList(key);
     }
 
     private class KeyValueStore extends SQLiteOpenHelper{
@@ -60,19 +60,18 @@ public class Storage implements IStorage {
                 + "string text,"
                 + "number integer,"
                 + "binary blob" + ");";
-        private SQLiteDatabase db;
 
         KeyValueStore(Context context) {
             super(context, "keyValueStore", null, 1);
         }
 
         @Override
-        public void onCreate(SQLiteDatabase sqLiteDatabase) {
+        public void onCreate(SQLiteDatabase db) {
             db.execSQL(CREATE_TABLE);
         }
 
         @Override
-        public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
+        public void onUpgrade(SQLiteDatabase db, int i, int i1) {
             db.execSQL("DROP TABLE IF EXISTS " + tableName);
             onCreate(db);
         }
@@ -179,7 +178,7 @@ public class Storage implements IStorage {
                 ContentValues cv = new ContentValues();
                 cv.put("id", key);
                 cv.put("string", string);
-                cv.put("data", data);
+                cv.put("binary", data);
                 cv.put("number", v);
 
                 sqldb.update(store.tableName, cv, "id like '" + key + "'", null);
@@ -191,10 +190,12 @@ public class Storage implements IStorage {
                 ContentValues cv = new ContentValues();
                 cv.put("id", key);
                 cv.put("string", string);
-                cv.put("data", data);
+                cv.put("binary", data);
                 cv.put("number", v);
 
-                sqldb.insert(store.tableName, null, cv);
+                long k = sqldb.insert(store.tableName, null, cv);
+                if (k == -1)
+                    throw new NullPointerException("fdfgdggfddfgdgdfdfdfgdgffgddfgfdfddfdgdgdrhrekvhewviuweyiuewyveuyreuivryneiyvtverycireiyveriteiu omcwporewriuy reoimpvyynperiu yniptveyu");
             }
         }
     }
@@ -207,25 +208,25 @@ public class Storage implements IStorage {
                 + "number integer,"
                 + "binary blob" + ");";;
 
-        private SQLiteDatabase db;
 
         ListStore(Context context, String key) {
             super(context, "listStore" + key, null, 1);
         }
 
         @Override
-        public void onCreate(SQLiteDatabase sqLiteDatabase) {
+        public void onCreate(SQLiteDatabase db) {
             db.execSQL(CREATE_TABLE);
         }
 
         @Override
-        public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
+        public void onUpgrade(SQLiteDatabase db, int i, int i1) {
             db.execSQL("DROP TABLE IF EXISTS " + tableName);
             onCreate(db);
         }
 
-        private void delete() {
+        private void delete(SQLiteDatabase db) {
             db.execSQL("DROP TABLE IF EXISTS " + tableName);
+            db.execSQL(CREATE_TABLE);
         }
     }
 
@@ -240,7 +241,7 @@ public class Storage implements IStorage {
         @Override
         public int size() {
             try (SQLiteDatabase sqldb = store.getReadableDatabase();
-                 Cursor c = sqldb.rawQuery("select COALESCE(MAX(id)+1, 0) from " + store.tableName, null)) {
+                 Cursor c = sqldb.rawQuery("select COALESCE(MAX(id), 0) from " + store.tableName, null)) {
                 c.moveToFirst();
                 return c.getInt(0);
             }
@@ -248,6 +249,7 @@ public class Storage implements IStorage {
 
         @Override
         public Union get(int key) {
+            key++;
             try (SQLiteDatabase sqldb = store.getReadableDatabase();
                  Cursor c = sqldb.rawQuery("select * from " + store.tableName + " where id = " + key, null)) {
                 ListUnion result = new ListUnion(key);
@@ -271,6 +273,7 @@ public class Storage implements IStorage {
          */
         @Override
         public Union[] getBatch(int key, int cnt) {
+            key++;
             List<Union> result = new ArrayList<>();
 
             try (SQLiteDatabase sqldb = store.getReadableDatabase();
@@ -312,8 +315,8 @@ public class Storage implements IStorage {
 
         private void add(Integer v, String s, byte[] b) {
             ContentValues cv = new ContentValues();
-            cv.put("data", b);
             cv.put("string", s);
+            cv.put("binary", b);
             cv.put("number", v);
             try (SQLiteDatabase sqldb = store.getWritableDatabase()) {
                 sqldb.insert(store.tableName, null, cv);
@@ -322,7 +325,7 @@ public class Storage implements IStorage {
 
         @Override
         public void delete() {
-            store.delete();
+            store.delete(store.getWritableDatabase());
         }
 
         private class ListUnion implements Union {
@@ -407,12 +410,6 @@ public class Storage implements IStorage {
             @Override
             public void setNull() {
                 throw new UnsupportedOperationException();
-                /*if (getType() != ObjectType.NULL) {
-                    clear();
-                    try (SQLiteDatabase sqldb = store.getWritableDatabase()) {
-                        sqldb.delete(store.tableName, "id like '" + key + "'", null);
-                    }
-                }*/
             }
 
             private void clear() {
@@ -425,7 +422,7 @@ public class Storage implements IStorage {
                 try (SQLiteDatabase sqldb = store.getWritableDatabase()) {
                     ContentValues cv = new ContentValues();
                     cv.put("string", string);
-                    cv.put("data", data);
+                    cv.put("binary", data);
                     cv.put("number", v);
 
                     sqldb.update(store.tableName, cv, "id = " + key, null);
@@ -434,15 +431,6 @@ public class Storage implements IStorage {
 
             private void add() {
                 throw new UnsupportedOperationException();
-                /*try (SQLiteDatabase sqldb = store.getWritableDatabase()) {
-                    ContentValues cv = new ContentValues();
-                    cv.put("id", key);
-                    cv.put("string", string);
-                    cv.put("data", data);
-                    cv.put("number", v);
-
-                    sqldb.insert(store.tableName, null, cv);
-                }*/
             }
         }
     }
