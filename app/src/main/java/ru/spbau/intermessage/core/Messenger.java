@@ -6,12 +6,14 @@ import ru.spbau.intermessage.net.*;
 import ru.spbau.intermessage.util.*;
 import ru.spbau.intermessage.crypto.ID;
 import ru.spbau.intermessage.store.IStorage;
+import ru.spbau.intermessage.store.InMemoryStorage;
 
 import java.util.*;
 
 public class Messenger extends ServiceCommon {
-    public Messenger(IStorage store) {
+    public Messenger(IStorage store, String tmp) {
         storage = store;
+        identity = ID.create(tmp);
     }
     
     private static class ListenerRequest extends RequestCommon {
@@ -33,10 +35,20 @@ public class Messenger extends ServiceCommon {
         public Chat chat;
         public Message message;
     }
+
+    private static class ChatCreateRequest extends RequestCommon {
+        public ChatCreateRequest(ArrayList<User> lst) {
+            users = lst;
+        }
+        
+        public Chat result;
+        public ArrayList<User> users;
+    }
+
     
     protected Set<EventListener> listeners = new HashSet<EventListener>();
     protected NNetwork network;
-    public final ID identity = ID.create();
+    public final ID identity;
     protected IStorage storage;
 
     protected void special() {
@@ -45,10 +57,12 @@ public class Messenger extends ServiceCommon {
 
     protected void interrupt() {
         network.interrupt();
+        super.interrupt();
     }
     
     protected void handleRequest(RequestCommon req) {
-        System.out.println("handling request");
+        System.out.println(req.toString());
+        
         if (req instanceof ListenerRequest) {
             ListenerRequest reqc = (ListenerRequest)req;
             if (reqc.add)
@@ -62,6 +76,13 @@ public class Messenger extends ServiceCommon {
             SendMessageRequest reqc = (SendMessageRequest)req;
 
             doSendMessage(reqc.chat, reqc.message);
+        }
+
+        if (req instanceof ChatCreateRequest) {
+            System.out.println("Messenger: creating chat");
+            ChatCreateRequest reqc = (ChatCreateRequest)req;
+
+            reqc.result = doCreateChat(reqc.users);
         }
     }
     
@@ -93,10 +114,19 @@ public class Messenger extends ServiceCommon {
         postRequest(new SendMessageRequest(chat, message));
     }
 
+    public Chat createChat(ArrayList<User> users) {
+        ChatCreateRequest req = new ChatCreateRequest(users);
+        postRequest(req);
+        req.waitCompletion();
+        return req.result;
+    }
+    
     public Message[] getMessagesFromChat(Chat chat, Object restrictions) {
         throw new UnsupportedOperationException("TODO");
     }
 
+    /*** INTERNAL, DO NOT USE */
+    
     public ArrayList<Chat> getChatsWithUser(User u) {
         ArrayList<Chat> list = new ArrayList<Chat>();
         
@@ -107,7 +137,7 @@ public class Messenger extends ServiceCommon {
 
     public ArrayList<User> getChatMembers(Chat chat) {
         ArrayList<User> list = new ArrayList<User>();
-        
+
         for (String str: storage.getMatching("chatmembers." + chat.id + "."))
             list.add(new User(str.substring(("chatmembers." + chat.id + ".").length())));
         return list;
@@ -163,7 +193,6 @@ public class Messenger extends ServiceCommon {
             m.write(writer);
 
             storage.getList("msg." + ch.id + "." + u.publicKey).push(writer.getData().toBytes());
-            storage.get("chatmembers." + ch.id + "." + u.publicKey).setInt(1);
 
             for (User member: getChatMembers(ch))
                 recalcNeedsSync(member);
@@ -188,18 +217,22 @@ public class Messenger extends ServiceCommon {
 
         storage.getList("msg." + ch.id + "." + identity.user().publicKey).push(writer.getData().toBytes());
 
-        for (User u: getChatMembers(ch))
-            storage.get("chatmembers." + ch.id + "." + u.publicKey).setInt(1);
+        System.err.println("tried to send message ");
+        
+        for (User u: getChatMembers(ch)) {
+            storage.get("user.poor." + u.publicKey).setInt(1);
+        }
     }
     
-    public void createChat(ArrayList<User> users) {
+    public Chat doCreateChat(ArrayList<User> users) {
         String id = "" + (System.currentTimeMillis() % 1000);
 
-        for (User u: users) {
+        for (User u: users)
             storage.get("chatmembers." + id + "." + u.publicKey).setInt(1);
-        }
-
+        
         doSendMessage(new Chat(id), new Message("!/chatcreated", 100500, Util.stringToBytes("chat created")));
+
+        return new Chat(id);
     }
     
     public ArrayList<User> getPoor() {

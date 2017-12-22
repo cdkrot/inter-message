@@ -304,13 +304,13 @@ public class WifiNNetwork implements NNetwork {
     }
     
     public void workDo() throws IOException {
-        System.err.println("Starting work");
+        //        System.err.println("Starting work");
         synchronized (this) {
-            System.err.println("Really Starting work");
+            //            System.err.println("Really Starting work");
 
             epoll.select();
             
-            System.err.println("Selected something");
+            //            System.err.println("Selected something");
             
             Iterator<SelectionKey> iter = epoll.selectedKeys().iterator();
             

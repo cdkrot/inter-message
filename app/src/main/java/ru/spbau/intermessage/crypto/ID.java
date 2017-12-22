@@ -11,9 +11,8 @@ public class ID {
     private String privkey;
     private String pubkey;
     
-    public static ID create() {
-        String s = Long.toString(System.currentTimeMillis() % 1000);
-        return new ID(s, s);
+    public static ID create(String tmp) {
+        return new ID(tmp, tmp);
     }
 
     public String priv() {

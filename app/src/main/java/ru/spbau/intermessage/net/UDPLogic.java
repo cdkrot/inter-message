@@ -13,7 +13,7 @@ public class UDPLogic {
     private IStorage store;
     private long lastTM = 0;
 
-    private long delta = 10 * 1000;
+    private long delta = 1 * 1000;
     private byte[] head = {85, 83, 69, 82};    
     
     public UDPLogic(Messenger msg_, IStorage store_) {
@@ -22,7 +22,7 @@ public class UDPLogic {
     }
 
     public ByteVector bcast() {
-        if (lastTM + delta < System.currentTimeMillis())
+        if (lastTM + delta > System.currentTimeMillis())
             return null;
         
         lastTM = System.currentTimeMillis();
@@ -34,6 +34,8 @@ public class UDPLogic {
 
         for (User u: msg.getPoor())
             u.write(writer);
+
+        System.err.println("Sent bcast");
         
         return writer.getData();
     }

@@ -34,9 +34,16 @@ public abstract class ServiceCommon {
                 
                 while (true) {
                     RequestCommon r;
+                    while (true) {
+                        synchronized (queue) {
+                            if (!queue.isEmpty())
+                                break;
+                        }
+                        
+                        special();
+                    }
+
                     synchronized (queue) {
-                        while (queue.isEmpty())
-                            special();
                         r = queue.poll();
                     }
                     
