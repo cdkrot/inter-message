@@ -34,6 +34,7 @@ public class WifiNNetwork implements NNetwork {
             inbuf.order(ByteOrder.BIG_ENDIAN);
 
             outbuf.clear();
+            outbuf.flip();
             inbuf.clear();
 
             logic = logic_;
@@ -100,9 +101,10 @@ public class WifiNNetwork implements NNetwork {
                 if (recv.size() == income) {
                     pending = logic.feed(recv);
 
-                    if (pending == null)
+                    if (pending == null) {
+                        System.err.println("LOGIC EOF");
                         return false; // END OF LINE.
-                    else {
+                    } else {
                         off = -6;
                         writing = true;
                         return true;
@@ -255,13 +257,11 @@ public class WifiNNetwork implements NNetwork {
                 System.err.print("IN:");
                 
                 for (int pos = 0; pos != helper.inbuf.position(); ++pos) {
-                    System.err.print(" " + helper.inbuf.get(pos));
                     if (!helper.onInput(helper.inbuf.get(pos))) {
                         System.err.println("... FAIL");
                         return false;
                     }
                 }
-                System.err.println("");
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
