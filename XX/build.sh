@@ -5,7 +5,7 @@ set -e
 rm XX/work/src -rf
 
 mkdir -p XX/work/src
-cp build.gradle XX/work
+cp XX/build.gradle XX/work
 
 for elem in $(cat XX/files.list)
 do
