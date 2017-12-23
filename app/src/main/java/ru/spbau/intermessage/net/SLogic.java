@@ -33,6 +33,7 @@ public class SLogic implements ILogic {
         WriteHelper writer = new WriteHelper(new ByteVector());
         msg.identity.user().write(writer);
 
+        state = 1;
         return writer.getData();
     }
 

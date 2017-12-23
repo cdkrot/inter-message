@@ -144,6 +144,8 @@ public class Messenger extends ServiceCommon {
     }
     
     public void recalcNeedsSync(User u) {
+        storage.get("user.poor." + u.publicKey).setNull();
+        
         for (Chat chat: getChatsWithUser(u)) {
             for (User member: getChatMembers(chat)) {
                 if (storage.getList("msg." + chat.id + "." + member.publicKey).size() >
@@ -157,12 +159,13 @@ public class Messenger extends ServiceCommon {
     }
 
     public Tuple3<Chat, User, Integer> getNextMessageFor(User u) {
-        storage.get("user.poor." + u.publicKey).setNull();
-
+        ((InMemoryStorage)storage).dump();
+        
         for (Chat chat: getChatsWithUser(u)) {
             for (User member: getChatMembers(chat)) {
                 int we = storage.getList("msg." + chat.id + "." + member.publicKey).size();
-                int they = storage.get("info." + u.publicKey + "." + chat.id + "." + member.publicKey).getInt();
+                IStorage.Union handle = storage.get("info." + u.publicKey + "." + chat.id + "." + member.publicKey);
+                int they = (handle.getType() == IStorage.ObjectType.INTEGER ? handle.getInt() : 0);
                 if (we > they) {
                     return new Tuple3<Chat, User, Integer>(chat, member, they);
                 }
@@ -235,6 +238,10 @@ public class Messenger extends ServiceCommon {
             storage.get("chatmembers." + id + "." + u.publicKey).setInt(1);
             storage.get("chatswith." + u.publicKey + "." + id).setInt(1);
         }
+
+        User u = identity.user(); // self.
+        storage.get("chatmembers." + id + "." + u.publicKey).setInt(1);
+        storage.get("chatswith." + u.publicKey + "." + id).setInt(1);
         
         doSendMessage(new Chat(id), new Message("!/chatcreated", 100500, Util.stringToBytes("chat created")));
 

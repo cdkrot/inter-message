@@ -13,7 +13,7 @@ public class UDPLogic {
     private IStorage store;
     private long lastTM = 0;
 
-    private long delta = 10 * 1000;
+    private long delta = 3 * 1000;
     private byte[] head = {85, 83, 69, 82};    
     
     public UDPLogic(Messenger msg_, IStorage store_) {
