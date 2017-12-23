@@ -1,19 +1,19 @@
 package ru.spbau.intermessage.core;
 
 import ru.spbau.intermessage.core.Message;
-import ru.spbau.intermessage.net.Network;
-import ru.spbau.intermessage.net.WifiNetwork;
+import ru.spbau.intermessage.net.*;
 
 import ru.spbau.intermessage.util.*;
 import ru.spbau.intermessage.crypto.ID;
 import ru.spbau.intermessage.store.IStorage;
+import ru.spbau.intermessage.store.InMemoryStorage;
 
-import java.util.Set;
-import java.util.HashSet;
+import java.util.*;
 
 public class Messenger extends ServiceCommon {
-    public Messenger(IStorage store) {
+    public Messenger(IStorage store, String tmp) {
         storage = store;
+        identity = ID.create(tmp);
     }
     
     private static class ListenerRequest extends RequestCommon {
@@ -27,52 +27,42 @@ public class Messenger extends ServiceCommon {
     };
 
     private static class SendMessageRequest extends RequestCommon {
-        public SendMessageRequest(User ch, Message msg) {
+        public SendMessageRequest(Chat ch, Message msg) {
             chat = ch;
             message = msg;
         }
         
-        public User chat;
+        public Chat chat;
         public Message message;
     }
+
+    private static class ChatCreateRequest extends RequestCommon {
+        public ChatCreateRequest(ArrayList<User> lst) {
+            users = lst;
+        }
+        
+        public Chat result;
+        public ArrayList<User> users;
+    }
+
     
     protected Set<EventListener> listeners = new HashSet<EventListener>();
-    protected Network network;
-    protected ID identity = ID.create();
+    protected NNetwork network;
+    public final ID identity;
     protected IStorage storage;
-    
-    // private enum SyncState {
-    //     HANDSHAKE_A, // initiator
-    //     HANDSHAKE_B, // second
-    //     REQUEST_SENT, // initiator
-    //     REQUEST_REPLIED, // second
-    //     OBJECT_SEND, // initiator
-    //     OBJECT_CONFIRMED // second
-    // };
-    
-    // private class SyncPrimitive {      
-    //     public User chat;
-    //     public User sender;
-    //     public int value;
 
-    //     public void write(ByteVector vec) {
-    //         8
-    //     }
-    // };
- 
-    // private class SyncProcess {
-    //     public SyncProcess() {}
-    //     public SyncProcess(SyncState st) {state = st;}
-        
-    //     public SyncState state; // last finished operation.
-        
-    //     public ArrayList<SyncPrimitive> requests;
-    // };
-    
-    // protected HashMap<User, SyncProcess> sync;
+    protected void special() {
+        network.work();
+    }
+
+    protected void interrupt() {
+        network.interrupt();
+        super.interrupt();
+    }
     
     protected void handleRequest(RequestCommon req) {
-        System.out.println("handling request");
+        System.out.println(req.toString());
+        
         if (req instanceof ListenerRequest) {
             ListenerRequest reqc = (ListenerRequest)req;
             if (reqc.add)
@@ -85,44 +75,17 @@ public class Messenger extends ServiceCommon {
             System.out.println("Messenger: trying to send");
             SendMessageRequest reqc = (SendMessageRequest)req;
 
-            WriteHelper helper = new WriteHelper(new ByteVector());
-            
-            helper.writeString(reqc.message.type);
-            helper.writeLong(reqc.message.timestamp);
-            helper.writeBytes(reqc.message.data);
+            doSendMessage(reqc.chat, reqc.message);
+        }
 
-            network.send(null, helper.getData(), null);
+        if (req instanceof ChatCreateRequest) {
+            System.out.println("Messenger: creating chat");
+            ChatCreateRequest reqc = (ChatCreateRequest)req;
+
+            reqc.result = doCreateChat(reqc.users);
         }
     }
     
-    // protected void onData(User user, byte[] data) {
-    //     // TODO: insert cryptography here
-        
-    //     if (data == null or data.length == 0)
-    //         return;
-
-    //     int code = data[0];
-    //     switch (code) {
-    //     case 0:
-    //         if (data.length == 1) {
-    //             if (sync.contains(user))
-    //                 sync.remove(user); // discard old sync -_-.
-
-    //             sync.add(user, new SyncProcess(SyncState.HANDSHAKE_B));
-    //             byte[] snd = new byte[1];
-    //             snd[0] = 1;
-    //             network.send(user, snd);
-    //         }
-            
-    //         break;
-    //     case 1:
-    //         if (data.length == 1) {
-    //             byte[] dta;
-                
-    //         }
-    //     }
-    // }
-
     protected void onMessage(User chat, User user, Message msg) {
         synchronized (this) {
             for (EventListener listener: listeners)
@@ -131,49 +94,8 @@ public class Messenger extends ServiceCommon {
     }
     
     protected void warmUp() {
-        network = new WifiNetwork();
-        network.open(new Network.IncomeListener() {
-                public void recieved(String from, boolean bcast, ByteVector dta) {         
-                    System.out.printf("Incoming packet from %s, type %d, len %d\n", from, (bcast ? 1 : 0), dta.size());
-
-                    for (int i = 0; i != Math.min(100, dta.size()); ++i)
-                        System.out.printf("%d ", dta.get(i));
-
-                    System.out.println("");
-
-                    if (bcast) {
-                        ReadHelper helper = new ReadHelper(dta);
-                        Message msg = new Message();
-                        
-                        System.out.println("#1");
-                                                
-                        msg.type = helper.readString();
-                        if (msg.type == null)
-                            return;
-
-                        System.out.printf("#2 %d\n", helper.available());
-                        
-                        if (helper.available() < 8)
-                            return;
-                        
-                        msg.timestamp = helper.readLong();
-
-                        System.out.printf("#3 %d\n", helper.available());
-                        
-                        msg.data = helper.readBytes();
-
-                        if (msg.data == null)
-                            return;
-
-                        System.out.println("#4");
-                        
-                        if (helper.available() > 0)
-                            return;
-
-                        Messenger.this.onMessage(null, new User(from), msg);
-                    }
-                };
-            });
+        network = new WifiNNetwork();
+        network.begin(this, storage);
     }
     
     protected void onClose() {
@@ -188,15 +110,179 @@ public class Messenger extends ServiceCommon {
         postRequest(new ListenerRequest(false, listener));
     }
     
-    public User[] getUsersInChat(User chat) {
-        throw new UnsupportedOperationException("TODO");
-    }
-
-    public void sendMessage(User chat, Message message) {
+    public void sendMessage(Chat chat, Message message) {
         postRequest(new SendMessageRequest(chat, message));
     }
 
-    public Message[] getMessagesFromChat(User chat, Object restrictions) {
+    public Chat createChat(ArrayList<User> users) {
+        ChatCreateRequest req = new ChatCreateRequest(users);
+        postRequest(req);
+        req.waitCompletion();
+        return req.result;
+    }
+    
+    public Message[] getMessagesFromChat(Chat chat, Object restrictions) {
         throw new UnsupportedOperationException("TODO");
+    }
+
+    /*** INTERNAL, DO NOT USE */
+    
+    public ArrayList<Chat> getChatsWithUser(User u) {
+        ArrayList<Chat> list = new ArrayList<Chat>();
+        
+        for (String str: storage.getMatching("chatswith." + u.publicKey + "."))
+            list.add(new Chat(str.substring(("chatswith." + u.publicKey + ".").length())));
+        return list;
+    }
+
+    public ArrayList<User> getChatMembers(Chat chat) {
+        ArrayList<User> list = new ArrayList<User>();
+
+        for (String str: storage.getMatching("chatmembers." + chat.id + "."))
+            list.add(new User(str.substring(("chatmembers." + chat.id + ".").length())));
+        return list;
+    }
+    
+    public void recalcNeedsSync(User u) {
+        storage.get("user.poor." + u.publicKey).setNull();
+        
+        for (Chat chat: getChatsWithUser(u)) {
+            for (User member: getChatMembers(chat)) {
+                int we = storage.getList("msg." + chat.id + "." + member.publicKey).size();
+                IStorage.Union handle = storage.get("info." + u.publicKey + "." + chat.id + "." + member.publicKey);
+                int they = (handle.getType() == IStorage.ObjectType.INTEGER ? handle.getInt() : 0);
+                
+                if (we > they) {
+                    storage.get("user.poor." + u.publicKey).setInt(1);
+                    return;
+                }
+            }
+        }
+    }
+
+    public Tuple3<Chat, User, Integer> getNextMessageFor(User u) {
+        ((InMemoryStorage)storage).dump();
+        
+        for (Chat chat: getChatsWithUser(u)) {
+            for (User member: getChatMembers(chat)) {
+                int we = storage.getList("msg." + chat.id + "." + member.publicKey).size();
+                IStorage.Union handle = storage.get("info." + u.publicKey + "." + chat.id + "." + member.publicKey);
+                int they = (handle.getType() == IStorage.ObjectType.INTEGER ? handle.getInt() : 0);
+                if (we > they) {
+                    return new Tuple3<Chat, User, Integer>(chat, member, they);
+                }
+            }
+        }
+        return null;
+    }
+
+    private HashSet<String> busy = new HashSet<String>();
+
+    public boolean setBusy(User u) {
+        if (busy.contains(u.publicKey))
+            return false;
+
+        busy.add(u.publicKey);
+        return true;
+    }
+
+    public void setNotBusy(User u) {
+        busy.remove(u.publicKey);
+    }
+    
+    public void syncWith(User u) {
+        if (!setBusy(u))
+            return;
+        network.create(storage.get("user.location." + u.publicKey).getString(), new SLogic(this, storage, u));
+    }
+    
+    public void sentMessageToParty(User u, Chat ch, User sub, int id) {
+        storage.get("info." + u.publicKey + "." + ch.id + "." + sub.publicKey).setInt(id + 1);
+        recalcNeedsSync(u);
+    }
+
+    public boolean registerMessage(Chat ch, User u, int id, Message m) {
+        System.err.println("Recieved new(?) message " + m.type);
+
+        int len = storage.getList("msg." + ch.id + "." + u.publicKey).size();
+        if (id > len || id < 0)
+            return false;
+        if (id == len) {
+            WriteHelper writer = new WriteHelper(new ByteVector());
+            m.write(writer);
+
+            storage.getList("msg." + ch.id + "." + u.publicKey).push(writer.getData().toBytes());
+
+            for (User member: getChatMembers(ch))
+                recalcNeedsSync(member);
+            
+            return true;
+        }
+        return true;
+    }
+    
+    public int needMessage(Chat ch, User u, int i) {
+        int len = storage.getList("msg." + ch.id + "." + u.publicKey).size();
+        if (i == len)
+            return 1; // yep
+        if (i > len || i < 0)
+            return -1; // wtf
+        return 0; // don't need.
+    }
+
+    protected void doSendMessage(Chat ch, Message msg) {
+        WriteHelper writer = new WriteHelper(new ByteVector());
+        msg.write(writer);
+
+        storage.getList("msg." + ch.id + "." + identity.user().publicKey).push(writer.getData().toBytes());
+
+        System.err.println("tried to send message ");
+        
+        for (User u: getChatMembers(ch)) {
+            storage.get("user.poor." + u.publicKey).setInt(1);
+        }
+    }
+    
+    public Chat doCreateChat(ArrayList<User> users) {
+        String id = "" + (System.currentTimeMillis() % 1000);
+
+        for (User u: users) {
+            storage.get("chatmembers." + id + "." + u.publicKey).setInt(1);
+            storage.get("chatswith." + u.publicKey + "." + id).setInt(1);
+        }
+
+        User u = identity.user(); // self.
+        storage.get("chatmembers." + id + "." + u.publicKey).setInt(1);
+        storage.get("chatswith." + u.publicKey + "." + id).setInt(1);
+        
+        doSendMessage(new Chat(id), new Message("!/chatcreated", 100500, Util.stringToBytes("chat created")));
+
+        return new Chat(id);
+    }
+    
+    public ArrayList<User> getPoor() {
+        ArrayList<User> res = new ArrayList<User>();
+        for (String s: storage.getMatching("user.poor."))
+            res.add(new User(s.substring("user.poor.".length())));
+        return res;
+    }
+    
+    public Message getMessageById(Chat ch, User u, int id) {
+        byte[] data = storage.getList("msg." + ch.id + "." + u.publicKey).get(id).getData();
+        
+        ReadHelper reader = new ReadHelper(ByteVector.wrap(data));
+        return Message.read(reader);
+    }
+
+    public void setUserLocation(User u, String addr) {
+        storage.get("user.location." + u.publicKey).setString(addr);
+    }
+
+    public String getUserLocation(User u) {
+        IStorage.Union obj = storage.get("user.location." + u.publicKey);
+
+        if (obj.getType() != IStorage.ObjectType.STRING)
+            return null;
+        return obj.getString();
     }
 };

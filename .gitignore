@@ -1,4 +1,4 @@
-build.sh
+/build.sh
 *.iml
 .gradle
 /local.properties
@@ -9,3 +9,5 @@ build.sh
 /captures
 .externalNativeBuild
 .idea
+/XX/work
+/LOG.txt

@@ -9,6 +9,17 @@ public class InMemoryStorage implements IStorage {
         
         public Object data;
         public IStorage.ObjectType type;
+
+        @Override
+        public String toString() {
+            switch (type) {
+            case NULL: return "[NULL]";
+            case INTEGER: return "" + (Integer)data;
+            case STRING: return "\"" + (String)data + "\"";
+            case BYTE_ARRAY: return ((byte[])data).toString();
+            }
+            return null;
+        }
     };
 
     private static class ListContainer {
@@ -75,12 +86,14 @@ public class InMemoryStorage implements IStorage {
     
     public InMemoryStorage() {}
     
-    public Union get(final String key) {
+    public Union get(final String key) {            
         return new UnionBase() {
+            @Override
             protected ObjectContainer fetch() {
                 return kv.get(key);
             }
-            
+
+            @Override
             protected ObjectContainer forceFetch() {
                 if (kv.get(key) == null) {
                     kv.put(key, new ObjectContainer());
@@ -89,6 +102,7 @@ public class InMemoryStorage implements IStorage {
                 return kv.get(key);
             }
 
+            @Override
             protected void delete() {
                 kv.remove(key);
             }
@@ -96,15 +110,13 @@ public class InMemoryStorage implements IStorage {
     }
     
     public List<String> getMatching(String group) {
-        // proving that java is crap in yet another way.
-        
         List<String> lst = new ArrayList<String>();
 
-        NavigableMap<String, ObjectContainer> blad = kv.tailMap(group, true);
-        Map.Entry<String, ObjectContainer> ent;
-        while ((ent = blad.pollFirstEntry()) != null && ent.getKey().startsWith(group)) {
-            lst.add(ent.getKey());
-        }
+        for (Map.Entry<String, ObjectContainer> ent: kv.tailMap(group).entrySet())
+            if (ent.getKey().startsWith(group))
+                lst.add(ent.getKey());
+            else
+                break;
         
         return lst;
     }
@@ -176,5 +188,14 @@ public class InMemoryStorage implements IStorage {
                 get(fetch().data.size() - 1).setData(value);
             }
         };
+    }
+
+    public void dump() {
+        System.err.println("BEGIN DUMP");
+        for (Map.Entry<String, ObjectContainer> entry: kv.entrySet())
+            System.err.println(entry.getKey() + " -> " + entry.getValue().toString());
+        for (Map.Entry<String, ListContainer> entry: lists.entrySet()) {
+            System.err.println("L " + entry.getKey() + " -> " + entry.getValue().data.size());
+        }
     }
 }

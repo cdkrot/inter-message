@@ -34,6 +34,11 @@ public class WriteHelper {
         writeBytes(Util.stringToBytes(str));
     }
 
+    public void writeBytesSimple(byte[] arr) {
+        for (int i = 0; i != arr.length; ++i)
+            writeByte(arr[i]);
+    }
+    
     public void writeBytes(byte[] arr) {
         writeInt(arr.length);
         for (byte b: arr)
