@@ -144,8 +144,6 @@ public class Messenger extends ServiceCommon {
     }
     
     public void recalcNeedsSync(User u) {
-        storage.get("user.poor." + u.publicKey).setNull();
-
         for (Chat chat: getChatsWithUser(u)) {
             for (User member: getChatMembers(chat)) {
                 if (storage.getList("msg." + chat.id + "." + member.publicKey).size() >
@@ -233,8 +231,10 @@ public class Messenger extends ServiceCommon {
     public Chat doCreateChat(ArrayList<User> users) {
         String id = "" + (System.currentTimeMillis() % 1000);
 
-        for (User u: users)
+        for (User u: users) {
             storage.get("chatmembers." + id + "." + u.publicKey).setInt(1);
+            storage.get("chatswith." + u.publicKey + "." + id).setInt(1);
+        }
         
         doSendMessage(new Chat(id), new Message("!/chatcreated", 100500, Util.stringToBytes("chat created")));
 
