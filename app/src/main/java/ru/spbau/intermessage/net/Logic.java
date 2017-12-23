@@ -64,6 +64,9 @@ public class Logic implements ILogic {
         if (user == null || reader.available() != 0)
             return null;
 
+        if (!msg.setBusy(user))
+            return null;
+        
         System.err.println("KEK3");
         
         state = 1;
@@ -74,10 +77,10 @@ public class Logic implements ILogic {
         ReadHelper reader = new ReadHelper(packet);
 
         String str = reader.readString();
-        if (str == null || reader.available() != 0 || (str != "ACK" && str != "SKIP"))
+        if (str == null || reader.available() != 0 || (!str.equals("GET") && !str.equals("SKIP")))
             return null;
 
-        if (str == "SKIP") {
+        if (str.equals("SKIP")) {
             msg.sentMessageToParty(user, lastchat, lastuser, lastid);
             return getNextTuple();
         } else {
@@ -92,7 +95,7 @@ public class Logic implements ILogic {
     public ByteVector feed2(ByteVector packet) {
         ReadHelper reader = new ReadHelper(packet);
         String str = reader.readString();
-        if (str == null || reader.available() != 0 || str != "ACK")
+        if (str == null || reader.available() != 0 || !str.equals("ACK"))
             return null;
 
         msg.sentMessageToParty(user, lastchat, lastuser, lastid);
@@ -109,5 +112,8 @@ public class Logic implements ILogic {
         return null;
     }
 
-    public void disconnect() {}
+    public void disconnect() {
+        if (user != null)
+            msg.setNotBusy(user);
+    }
 };

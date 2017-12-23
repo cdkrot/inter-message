@@ -23,8 +23,10 @@ public class SLogic implements ILogic {
     private Chat chat;
     private User subid;
     private int  subsubid;
+
+    private User xxx;
     
-    public SLogic(Messenger msg_, IStorage store_) {
+    public SLogic(Messenger msg_, IStorage store_, User xxx) {
         msg = msg_;
         store = store_;
     }
@@ -92,5 +94,7 @@ public class SLogic implements ILogic {
         return null;
     }
 
-    public void disconnect() {}
+    public void disconnect() {
+        msg.setNotBusy(xxx);
+    }
 };

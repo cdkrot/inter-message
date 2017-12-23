@@ -148,9 +148,11 @@ public class Messenger extends ServiceCommon {
         
         for (Chat chat: getChatsWithUser(u)) {
             for (User member: getChatMembers(chat)) {
-                if (storage.getList("msg." + chat.id + "." + member.publicKey).size() >
-                    storage.get("info." + u.publicKey + "." + chat.id + "." + member.publicKey).getInt()) {
-                    
+                int we = storage.getList("msg." + chat.id + "." + member.publicKey).size();
+                IStorage.Union handle = storage.get("info." + u.publicKey + "." + chat.id + "." + member.publicKey);
+                int they = (handle.getType() == IStorage.ObjectType.INTEGER ? handle.getInt() : 0);
+                
+                if (we > they) {
                     storage.get("user.poor." + u.publicKey).setInt(1);
                     return;
                 }
@@ -174,16 +176,26 @@ public class Messenger extends ServiceCommon {
         return null;
     }
 
-    private HashSet<String> blad = new HashSet<String>();
-    
-    public void syncWith(User u) {
-        if (blad.contains(u.publicKey))
-            return;
+    private HashSet<String> busy = new HashSet<String>();
 
-        blad.add(u.publicKey);
-        network.create(storage.get("user.location." + u.publicKey).getString(), new SLogic(this, storage));
+    public boolean setBusy(User u) {
+        if (busy.contains(u.publicKey))
+            return false;
+
+        busy.add(u.publicKey);
+        return true;
     }
 
+    public void setNotBusy(User u) {
+        busy.remove(u.publicKey);
+    }
+    
+    public void syncWith(User u) {
+        if (!setBusy(u))
+            return;
+        network.create(storage.get("user.location." + u.publicKey).getString(), new SLogic(this, storage, u));
+    }
+    
     public void sentMessageToParty(User u, Chat ch, User sub, int id) {
         storage.get("info." + u.publicKey + "." + ch.id + "." + sub.publicKey).setInt(id + 1);
         recalcNeedsSync(u);
