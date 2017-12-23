@@ -34,11 +34,16 @@ public abstract class ServiceCommon {
                 
                 while (true) {
                     RequestCommon r;
+                    while (true) {
+                        synchronized (queue) {
+                            if (!queue.isEmpty())
+                                break;
+                        }
+                        
+                        special();
+                    }
+
                     synchronized (queue) {
-                        while (queue.isEmpty())
-                            try {
-                                queue.wait();
-                            } catch (InterruptedException ex) {} // poor java.
                         r = queue.poll();
                     }
                     
@@ -55,6 +60,16 @@ public abstract class ServiceCommon {
         }.start();
     }
 
+    protected void special() {
+        try {
+            queue.wait();
+        } catch (InterruptedException ex) {} // poor java
+    }
+
+    protected void interrupt() {
+        queue.notify();        
+    }
+    
     protected void warmUp() {}
     protected void onClose() {}
     
@@ -63,7 +78,7 @@ public abstract class ServiceCommon {
     protected void postRequest(RequestCommon req) {
         synchronized (queue) {
             queue.add(req);
-            queue.notify();
+            interrupt();
         }
     }
 

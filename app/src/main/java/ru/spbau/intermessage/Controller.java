@@ -13,7 +13,7 @@ import ru.spbau.intermessage.util.Util;
 
 public class Controller extends IntentService {
 
-    private static Messenger messenger = new Messenger(null);
+    private static Messenger messenger = new Messenger(null, "1");
     static {
         messenger.registerEventListener(new EventListener() {
             @Override
