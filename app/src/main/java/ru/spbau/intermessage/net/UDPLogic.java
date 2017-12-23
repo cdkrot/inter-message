@@ -29,7 +29,7 @@ public class UDPLogic {
         
         WriteHelper writer = new WriteHelper(new ByteVector());
         
-        writer.writeBytes(head);
+        writer.writeBytesSimple(head);
         msg.identity.user().write(writer);
 
         for (User u: msg.getPoor())
@@ -42,11 +42,15 @@ public class UDPLogic {
 
     public void recieve(String from, ByteVector data) {
         // TODO: check identity.
-
+        
         ReadHelper reader = new ReadHelper(data);
+        for (int i = 0; i != data.size(); ++i)
+            System.err.print(data.get(i) + " ");
+        System.err.println("");
+        
         if (!reader.skip(head))
             return;
-
+        
         User u = User.read(reader);
         if (u == null)
             return;
@@ -63,6 +67,8 @@ public class UDPLogic {
 
         msg.setUserLocation(u, from);
 
+        System.err.println("Get valid bcast from " + u.publicKey + " " + was);
+        
         if (was)
             msg.syncWith(u);
     }
