@@ -126,11 +126,11 @@ public class DialogActivity extends AppCompatActivity
     }
 
     public class MessageReceiver extends BroadcastReceiver {
-        public static final String ACTION_RECEIVE = "receiver.action.RECEIVE";
+        public static final String ACTION_RECEIVE = "DialogActivity.action.RECEIVE";
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (Objects.equals(intent.getAction(), ACTION_RECEIVE)) {
+            if (ACTION_RECEIVE.equals(intent.getAction())) {
                 String text = intent.getStringExtra("Message");
                 long date = intent.getLongExtra("Date", 0);
                 String userName = intent.getStringExtra("User");

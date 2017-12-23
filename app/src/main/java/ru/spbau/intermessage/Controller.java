@@ -23,10 +23,12 @@ public class Controller extends IntentService {
         });
     }
 
-    private static final String ACTION_SEND_MESSAGE = "controller.action.SEND";
-    private static final String ACTION_RECEIVE_MESSAGE = "controller.action.RECEIVE";
-    private static final String ACTION_KILL_MESSENGER = "controller.action.KILL";
-    private static final String ACTION_USER_CHANGE_NAME = "controller.action.USER_CHANGE_NAME";
+    private static final String ACTION_SEND_MESSAGE = "Controller.action.SEND";
+    private static final String ACTION_RECEIVE_MESSAGE = "Controller.action.RECEIVE";
+    private static final String ACTION_KILL_MESSENGER = "Controller.action.KILL";
+    private static final String ACTION_USER_CHANGE_NAME = "Controller.action.USER_CHANGE_NAME";
+    private static final String ACTION_REQUEST_DIALOGS_LIST = "Controller.action.REQUEST_DIALOGS_LIST";
+
 
     public Controller() {
         super("Controller");
@@ -46,6 +48,12 @@ public class Controller extends IntentService {
         intent.putExtra("User", "Dima");
         intent.putExtra("Date", message.timestamp);
         intent.putExtra("Message", Util.bytesToString(message.data));
+        context.startService(intent);
+    }
+
+    public static void requestDialogList(Context context) {
+        Intent intent = new Intent(context, Controller.class);
+        intent.setAction(ACTION_REQUEST_DIALOGS_LIST);
         context.startService(intent);
     }
 
@@ -81,7 +89,10 @@ public class Controller extends IntentService {
             // Kill messenger and listener thread
         } else if (ACTION_USER_CHANGE_NAME.equals(action)) {
             String newName = intent.getStringExtra("NewName");
-            //messenger.changeUserName(newName);
+            messenger.changeUserName(newName);
+        } else if (ACTION_REQUEST_DIALOGS_LIST.equals(action)) {
+            messenger.requestDialogsList();
         }
     }
+
 }

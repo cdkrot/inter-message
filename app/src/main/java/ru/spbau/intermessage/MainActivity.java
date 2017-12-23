@@ -35,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
         buttonNames.add(name);
         name = getString(R.string.menu_options);
         buttonNames.add(name);
+        buttonNames.add("About");
         buttonNames.add("Console mode");
 
         @SuppressWarnings("unchecked")

@@ -1,6 +1,9 @@
 package ru.spbau.intermessage;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -13,6 +16,9 @@ import java.util.ArrayList;
 
 public class DialogsListActivity extends AppCompatActivity {
 
+    private MessageReceiver messageReceiver;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -23,7 +29,7 @@ public class DialogsListActivity extends AppCompatActivity {
         String name = getString(R.string.new_dialog);
 
         buttonNames.add(name);
-        buttonNames.add("Elite dialog");
+        Controller.requestDialogList(this);
 
         @SuppressWarnings("unchecked")
         final ArrayAdapter dialogsAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, buttonNames);
@@ -41,5 +47,45 @@ public class DialogsListActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (messageReceiver == null) {
+            messageReceiver = new DialogsListActivity.MessageReceiver();
+        }
+        IntentFilter intentFilter = new IntentFilter(messageReceiver.ACTION_RECEIVE);
+        registerReceiver(messageReceiver, intentFilter);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        if (messageReceiver != null) {
+            unregisterReceiver(messageReceiver);
+        }
+    }
+
+    public class MessageReceiver extends BroadcastReceiver {
+        public static final String ACTION_RECEIVE = "DialogActivity.action.RECEIVE";
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (ACTION_RECEIVE.equals(intent.getAction())) {
+                /*String text = intent.getStringExtra("Message");
+                long date = intent.getLongExtra("Date", 0);
+                String userName = intent.getStringExtra("User");
+
+                Item newMessage = new Item();
+                newMessage.date = date;
+                newMessage.messageText = text;
+                newMessage.userName = userName;
+
+                messages.add(newMessage);
+                messagesAdapter.notifyDataSetChanged();*/
+            }
+        }
     }
 }

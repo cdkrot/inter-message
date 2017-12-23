@@ -161,8 +161,6 @@ public class Messenger extends ServiceCommon {
     }
 
     public Tuple3<Chat, User, Integer> getNextMessageFor(User u) {
-        ((InMemoryStorage)storage).dump();
-        
         for (Chat chat: getChatsWithUser(u)) {
             for (User member: getChatMembers(chat)) {
                 int we = storage.getList("msg." + chat.id + "." + member.publicKey).size();
