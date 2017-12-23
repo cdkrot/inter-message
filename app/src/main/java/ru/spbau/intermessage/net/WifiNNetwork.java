@@ -42,6 +42,8 @@ public class WifiNNetwork implements NNetwork {
             if (writing) {
                 pending = logic.feed(null);
             }
+
+            System.err.println("CREATED NEW SOCKET + " + writing);
         }
 
         public boolean writing;        
@@ -209,6 +211,14 @@ public class WifiNNetwork implements NNetwork {
     private boolean handle(Helper helper) {
         if (!helper.token.isValid())
             return false;
+
+        if (helper.token.isConnectable()) {
+            try {
+                return helper.sock.finishConnect();
+            } catch (IOException ex) {
+                return false;
+            }
+        }
         
         if (helper.writing && helper.token.isWritable()) {
             System.err.println("WRITING");
@@ -289,8 +299,10 @@ public class WifiNNetwork implements NNetwork {
     public void create(String addr, ILogic logic) {
         try {
             SocketChannel sock = SocketChannel.open();
+            sock.bind(null);
             sock.configureBlocking(false);
             sock.connect(new InetSocketAddress(addr, listenPort));
+
             // creating "listening" connection.
             Helper helper = new Helper(sock, logic, true);
             helper.token = sock.register(epoll, sock.validOps(), helper);
@@ -325,19 +337,21 @@ public class WifiNNetwork implements NNetwork {
                     Helper helper = new Helper(client, new Logic(msg, store), false);
                     helper.token = client.register(epoll, client.validOps(), helper);
                 }
-                
-                if (s.attachment() instanceof Helper)
-                    if (!handle((Helper)(s.attachment()))) {
+
+                if (s.attachment() instanceof Helper) {
+                    Helper helper = (Helper)(s.attachment());
+
+                    if (!handle(helper)) {
                         iter.remove();
 
                         System.err.println("EPICFAIL");
-                        
-                        Helper helper = (Helper)(s.attachment());
+
                         helper.token.cancel();
                         helper.logic.disconnect();
                         helper.sock.close();
                         continue;
                     }
+                }
                 
                 if (s.isWritable() && (s.attachment() instanceof DatagramChannel))
                     doUDPWrite();

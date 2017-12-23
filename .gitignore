@@ -9,4 +9,5 @@
 /captures
 .externalNativeBuild
 .idea
-XX/work
+/XX/work
+/LOG.txt
