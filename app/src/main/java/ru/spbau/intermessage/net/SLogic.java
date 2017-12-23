@@ -26,9 +26,10 @@ public class SLogic implements ILogic {
 
     private User xxx;
     
-    public SLogic(Messenger msg_, IStorage store_, User xxx) {
+    public SLogic(Messenger msg_, IStorage store_, User xxx_) {
         msg = msg_;
         store = store_;
+        xxx = xxx_;
     }
 
     public ByteVector feed0(ByteVector packet) {
