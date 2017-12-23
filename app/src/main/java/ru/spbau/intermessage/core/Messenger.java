@@ -172,8 +172,14 @@ public class Messenger extends ServiceCommon {
         }
         return null;
     }
+
+    private HashSet<String> blad = new HashSet<String>();
     
     public void syncWith(User u) {
+        if (blad.contains(u.publicKey))
+            return;
+
+        blad.add(u.publicKey);
         network.create(storage.get("user.location." + u.publicKey).getString(), new SLogic(this, storage));
     }
 

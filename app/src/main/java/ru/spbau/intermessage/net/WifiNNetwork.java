@@ -216,8 +216,12 @@ public class WifiNNetwork implements NNetwork {
                     helper.outbuf.clear();
 
                     int r;
-                    while (helper.outbuf.remaining() > 0 && (r = helper.getOutput()) != -1)
+                    System.err.print("OUT:");
+                    while (helper.outbuf.remaining() > 0 && (r = helper.getOutput()) != -1) {
+                        System.err.print(" " + r);
                         helper.outbuf.put((byte)r);
+                    }
+                    System.err.println("");
 
                     helper.outbuf.flip();
                 }
@@ -235,10 +239,17 @@ public class WifiNNetwork implements NNetwork {
                 int cnt = helper.sock.read(helper.inbuf);
                 if (cnt == -1)
                     return false;
+
+                System.err.print("IN:");
                 
-                for (int pos = 0; pos != helper.inbuf.position(); ++pos)
-                    if (!helper.onInput(helper.inbuf.get(pos)))
+                for (int pos = 0; pos != helper.inbuf.position(); ++pos) {
+                    System.err.print(" " + helper.inbuf.get(pos));
+                    if (!helper.onInput(helper.inbuf.get(pos))) {
+                        System.err.println("... FAIL");
                         return false;
+                    }
+                }
+                System.err.println("");
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
