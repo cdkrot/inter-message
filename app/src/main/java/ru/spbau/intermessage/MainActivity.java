@@ -15,6 +15,8 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 
+import ru.spbau.intermessage.console.ConsoleActivity;
+
 //import ru.spbau.intermessage.store.StorageTest;
 
 public class MainActivity extends AppCompatActivity {
@@ -33,6 +35,9 @@ public class MainActivity extends AppCompatActivity {
         buttonNames.add(name);
         name = getString(R.string.menu_options);
         buttonNames.add(name);
+        buttonNames.add("Console mode");
+
+        @SuppressWarnings("unchecked")
         ArrayAdapter mainMenuAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, buttonNames);
 
         final SharedPreferences sharedPreferences = getSharedPreferences(PREF_FILE, MODE_PRIVATE);
@@ -73,12 +78,15 @@ public class MainActivity extends AppCompatActivity {
         mainMenuList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                if (l == 0) {
-                    Intent intent = new Intent(MainActivity.this, DialogsListActivity.class);
-                    startActivity(intent);
-                } else {
-                    Toast.makeText(MainActivity.this, "It is point of no return.", Toast.LENGTH_SHORT).show();
-                    android.os.Process.killProcess(android.os.Process.myPid());
+                switch (i) {
+                    case 0: Intent intent = new Intent(MainActivity.this, DialogsListActivity.class);
+                            startActivity(intent);
+                            break;
+
+                    case 1: android.os.Process.killProcess(android.os.Process.myPid());
+                            break;
+                    case 2: intent = new Intent(MainActivity.this, ConsoleActivity.class);
+                            startActivity(intent);
                 }
             }
         });
