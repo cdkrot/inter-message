@@ -3,7 +3,10 @@
 set -e
 
 rm XX/work/src -rf
-mkdir XX/work/src
+
+mkdir -p XX/work/src
+cp build.gradle XX/work
+
 for elem in $(cat XX/files.list)
 do
     mkdir -p $(dirname XX/work/src/$elem)
