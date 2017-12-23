@@ -13,7 +13,7 @@ public class UDPLogic {
     private IStorage store;
     private long lastTM = 0;
 
-    private long delta = 1 * 1000;
+    private long delta = 10 * 1000;
     private byte[] head = {85, 83, 69, 82};    
     
     public UDPLogic(Messenger msg_, IStorage store_) {
@@ -44,9 +44,6 @@ public class UDPLogic {
         // TODO: check identity.
         
         ReadHelper reader = new ReadHelper(data);
-        for (int i = 0; i != data.size(); ++i)
-            System.err.print(data.get(i) + " ");
-        System.err.println("");
         
         if (!reader.skip(head))
             return;

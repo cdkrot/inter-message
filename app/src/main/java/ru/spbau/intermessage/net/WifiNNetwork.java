@@ -61,7 +61,6 @@ public class WifiNNetwork implements NNetwork {
         public int magicAccepter = 0;
 
         public ByteBuffer outbuf, inbuf;
-        public int outbuf_pos = 0;
         
         public int getOutput() {
             if (pending == null)
@@ -153,7 +152,6 @@ public class WifiNNetwork implements NNetwork {
 
         if (vec != null) {
             try {
-                System.out.println("Trying to send UDP bcast");
                 ByteBuffer buf = ByteBuffer.allocate(vec.size() + 6);
                 buf.clear();
                 for (int i = 0; i != magic.length; ++i)
@@ -166,8 +164,7 @@ public class WifiNNetwork implements NNetwork {
                 buf.flip();
                 
                 int r = udpsock.send(buf, new InetSocketAddress(bcast, udpPort));
-                System.out.printf("Send %d bytes\n", r);
-                System.out.println("done");
+                System.out.printf("Send bcast %d bytes\n", r);
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
@@ -210,31 +207,25 @@ public class WifiNNetwork implements NNetwork {
     }
 
     private boolean handle(Helper helper) {
-        if (!helper.token.isValid()) {
-            helper.logic.disconnect();
+        if (!helper.token.isValid())
             return false;
-        }
         
         if (helper.writing && helper.token.isWritable()) {
             try {
-                if (helper.outbuf_pos == helper.outbuf.position()) {
-                    helper.outbuf_pos = 0;
+                if (helper.outbuf.remaining() == 0) {
                     helper.outbuf.clear();
 
                     int r;
-                    
-                    while (helper.outbuf.remaining() > 0 && (r = helper.getOutput()) != -1) {
+                    while (helper.outbuf.remaining() > 0 && (r = helper.getOutput()) != -1)
                         helper.outbuf.put((byte)r);
-                    }
 
                     helper.outbuf.flip();
                 }
                 
-                if (helper.outbuf_pos != helper.outbuf.position())
-                    helper.outbuf_pos += helper.sock.write(helper.outbuf);
+                if (helper.outbuf.remaining() > 0)
+                    helper.sock.write(helper.outbuf);
                 else
                     helper.writing = false;
-                
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
@@ -246,9 +237,8 @@ public class WifiNNetwork implements NNetwork {
                     return false;
                 
                 for (int pos = 0; pos != helper.inbuf.position(); ++pos)
-                    if (!helper.onInput(helper.inbuf.get(pos))) {
+                    if (!helper.onInput(helper.inbuf.get(pos)))
                         return false;
-                    }
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
@@ -305,13 +295,8 @@ public class WifiNNetwork implements NNetwork {
     }
     
     public void workDo() throws IOException {
-        //        System.err.println("Starting work");
         synchronized (this) {
-            //            System.err.println("Really Starting work");
-
             epoll.select();
-            
-            //            System.err.println("Selected something");
             
             Iterator<SelectionKey> iter = epoll.selectedKeys().iterator();
             
@@ -333,6 +318,7 @@ public class WifiNNetwork implements NNetwork {
                         iter.remove();
                         Helper helper = (Helper)(s.attachment());
                         helper.token.cancel();
+                        helper.logic.disconnect();
                         helper.sock.close();
                         continue;
                     }
@@ -340,9 +326,8 @@ public class WifiNNetwork implements NNetwork {
                 if (s.isWritable() && (s.attachment() instanceof DatagramChannel))
                     doUDPWrite();
                 
-                if (s.isReadable() && (s.attachment() instanceof DatagramChannel)) {
+                if (s.isReadable() && (s.attachment() instanceof DatagramChannel))
                     doUDPRead();
-                }
                 
                 iter.remove();
             }
