@@ -238,7 +238,7 @@ public class WifiNNetwork implements NNetwork {
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
-        } else {
+        } else if (!helper.writing && helper.token.isReadable()) {
             try {
                 helper.inbuf.clear();
                 int cnt = helper.sock.read(helper.inbuf);
@@ -289,7 +289,8 @@ public class WifiNNetwork implements NNetwork {
             sock.configureBlocking(false);
             sock.connect(new InetSocketAddress(addr, listenPort));
             // creating "listening" connection.
-            sock.register(epoll, sock.validOps(), new Helper(sock, logic, true));
+            Helper helper = new Helper(sock, logic, true);
+            helper.token = sock.register(epoll, sock.validOps(), helper);
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
