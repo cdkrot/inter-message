@@ -211,6 +211,7 @@ public class WifiNNetwork implements NNetwork {
             return false;
         
         if (helper.writing && helper.token.isWritable()) {
+            System.err.println("WRITING");
             try {
                 if (helper.outbuf.remaining() == 0) {
                     helper.outbuf.clear();
@@ -234,6 +235,7 @@ public class WifiNNetwork implements NNetwork {
                 throw new RuntimeException(ex);
             }
         } else if (!helper.writing && helper.token.isReadable()) {
+            System.err.println("READING");
             try {
                 helper.inbuf.clear();
                 int cnt = helper.sock.read(helper.inbuf);
@@ -327,6 +329,9 @@ public class WifiNNetwork implements NNetwork {
                 if (s.attachment() instanceof Helper)
                     if (!handle((Helper)(s.attachment()))) {
                         iter.remove();
+
+                        System.err.println("EPICFAIL");
+                        
                         Helper helper = (Helper)(s.attachment());
                         helper.token.cancel();
                         helper.logic.disconnect();
