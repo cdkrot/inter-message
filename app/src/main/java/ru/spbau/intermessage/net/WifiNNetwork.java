@@ -287,7 +287,7 @@ public class WifiNNetwork implements NNetwork {
         try {
             SocketChannel sock = SocketChannel.open();
             sock.configureBlocking(false);
-            sock.socket().connect(new InetSocketAddress(addr, listenPort));
+            sock.connect(new InetSocketAddress(addr, listenPort));
             // creating "listening" connection.
             sock.register(epoll, sock.validOps(), new Helper(sock, logic, true));
         } catch (IOException ex) {
