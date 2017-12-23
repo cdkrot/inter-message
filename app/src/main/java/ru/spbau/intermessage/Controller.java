@@ -26,6 +26,7 @@ public class Controller extends IntentService {
     private static final String ACTION_SEND_MESSAGE = "controller.action.SEND";
     private static final String ACTION_RECEIVE_MESSAGE = "controller.action.RECEIVE";
     private static final String ACTION_KILL_MESSENGER = "controller.action.KILL";
+    private static final String ACTION_USER_CHANGE_NAME = "controller.action.USER_CHANGE_NAME";
 
     public Controller() {
         super("Controller");
@@ -45,6 +46,16 @@ public class Controller extends IntentService {
         intent.putExtra("User", "Dima");
         intent.putExtra("Date", message.timestamp);
         intent.putExtra("Message", Util.bytesToString(message.data));
+        context.startService(intent);
+    }
+
+    public static void changeUserName(Context context, String newName) {
+        if (newName == null)
+            return;
+
+        Intent intent = new Intent(context, Controller.class);
+        intent.setAction(ACTION_USER_CHANGE_NAME);
+        intent.putExtra("NewName", newName);
         context.startService(intent);
     }
 
@@ -68,8 +79,9 @@ public class Controller extends IntentService {
             sendBroadcast(broadcastIntent);
         } else if (ACTION_KILL_MESSENGER.equals(action)) {
             // Kill messenger and listener thread
-        } else {
-            // Should I fail?
+        } else if (ACTION_USER_CHANGE_NAME.equals(action)) {
+            String newName = intent.getStringExtra("NewName");
+            //messenger.changeUserName(newName);
         }
     }
 }
