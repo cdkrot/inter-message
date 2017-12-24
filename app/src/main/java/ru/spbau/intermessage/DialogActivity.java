@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import ru.spbau.intermessage.core.Message;
 import ru.spbau.intermessage.gui.Item;
 import ru.spbau.intermessage.gui.ItemAdapter;
 
@@ -126,8 +127,18 @@ public class DialogActivity extends AppCompatActivity
         if (messageReceiver == null) {
             messageReceiver = new MessageReceiver();
         }
-        IntentFilter intentFilter = new IntentFilter(MessageReceiver.ACTION_RECEIVE);
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(MessageReceiver.ACTION_RECEIVE);
+        intentFilter.addAction(MessageReceiver.ACTION_GOT_LAST_MESSAGES);
+        intentFilter.addAction(MessageReceiver.ACTION_GOT_UPDATES);
+
         registerReceiver(messageReceiver, intentFilter);
+
+        if (messages.size() == 0) {
+            Controller.requestLastMessages(this, chatId, 20);
+        } else{
+            Controller.requestUpdates(this, chatId, messages.get(messages.size() - 1).position);
+        }
     }
 
     @Override
@@ -141,10 +152,18 @@ public class DialogActivity extends AppCompatActivity
 
     public class MessageReceiver extends BroadcastReceiver {
         public static final String ACTION_RECEIVE = "DialogActivity.action.RECEIVE";
+        public static final String ACTION_GOT_LAST_MESSAGES = "DialogActivity.action.LAST_MESSAGES";
+        public static final String ACTION_GOT_UPDATES = "DialogActivity.action.UPDATES";
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (ACTION_RECEIVE.equals(intent.getAction())) {
+            String action = intent.getAction();
+            if (ACTION_RECEIVE.equals(action)) {
+
+                String toChatId = intent.getStringExtra("ChatId");
+                if (!toChatId.equals(chatId))
+                    return;
+
                 String text = intent.getStringExtra("Message");
                 long date = intent.getLongExtra("Date", 0);
                 String userName = intent.getStringExtra("User");
@@ -156,6 +175,31 @@ public class DialogActivity extends AppCompatActivity
 
                 messages.add(newMessage);
                 messagesAdapter.notifyDataSetChanged();
+
+            } else  if (ACTION_GOT_LAST_MESSAGES.equals(action)){
+                String toChatId = intent.getStringExtra("ChatId");
+                if (!toChatId.equals(chatId))
+                    return;
+
+                if (messages.size() != 0)
+                    return;
+
+                int position = intent.getIntExtra("FirstPosition", 0);
+                ArrayList<String> texts = intent.getStringArrayListExtra("Texts");
+                long[] timestamps = intent.getLongArrayExtra("Timestamps");
+                ArrayList<String> userNames = intent.getStringArrayListExtra("UserNames");
+                //TODO
+
+            } else if (ACTION_GOT_UPDATES.equals(action)) {
+                String toChatId = intent.getStringExtra("ChatId");
+                if (!toChatId.equals(chatId))
+                    return;
+
+                int position = intent.getIntExtra("FirstPosition", 0);
+                ArrayList<String> texts = intent.getStringArrayListExtra("Texts");
+                long[] timestamps = intent.getLongArrayExtra("Timestamps");
+                ArrayList<String> userNames = intent.getStringArrayListExtra("UserNames");
+                //TODO
             }
         }
     }

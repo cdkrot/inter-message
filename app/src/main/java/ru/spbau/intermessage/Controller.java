@@ -21,8 +21,9 @@ public class Controller extends IntentService {
     static {
         messenger.registerEventListener(new EventListener() {
             @Override
-            public void onMessage(User chat, User user, Message message) {
-                receiveMessage(Intermessage.getAppContext(), chat, message);
+            public void onMessage(Chat chat, User user, Message message) {
+                //Dima should implement
+                receiveMessage(Intermessage.getAppContext(), messenger.getUserName(user), chat.id, message);
             }
         });
     }
@@ -34,6 +35,8 @@ public class Controller extends IntentService {
     private static final String ACTION_REQUEST_DIALOGS_LIST = "Controller.action.REQUEST_DIALOGS_LIST";
     private static final String ACTION_RETURN_DIALOGS_LIST = "Controller.action.RETURN_DIALOGS_LIST";
     private static final String ACTION_CREATE_NEW_CHAT = "Controller.action.CREATE_NEW_CHAT";
+    private static final String ACTION_REQUEST_LATEST = "Controller.action.REQUEST_LASTEST";
+    private static final String ACTION_REQUEST_UPDATES = "Controller.action.REQUEST_UPDATES";
 
 
     public Controller() {
@@ -49,12 +52,31 @@ public class Controller extends IntentService {
         context.startService(intent);
     }
 
-    public static void receiveMessage(Context context, User chat, Message message) {
+    public static void requestLastMessages(Context context, String chatId, int limit) {
+        Intent intent = new Intent(context, Controller.class);
+        intent.setAction(ACTION_REQUEST_LATEST);
+        intent.putExtra("ChatId", chatId);
+        intent.putExtra("Limit", limit);
+
+        context.startService(intent);
+    }
+
+    public static void requestUpdates(Context context, String chatId, int last) {
+        Intent intent = new Intent(context, Controller.class);
+        intent.setAction(ACTION_REQUEST_UPDATES);
+        intent.putExtra("ChatId", chatId);
+        intent.putExtra("Last", last);
+
+        context.startService(intent);
+    }
+
+    public static void receiveMessage(Context context, String userName, String chatId,  Message message) {
         Intent intent = new Intent(context, Controller.class);
         intent.setAction(ACTION_RECEIVE_MESSAGE);
-        intent.putExtra("User", "Dima");
+        intent.putExtra("User", userName);
         intent.putExtra("Date", message.timestamp);
         intent.putExtra("Message", Util.bytesToString(message.data));
+        intent.putExtra("ChatId", chatId);
         context.startService(intent);
     }
 
@@ -75,6 +97,24 @@ public class Controller extends IntentService {
         intent.putStringArrayListExtra("Ids", chatIds);
         intent.putStringArrayListExtra("Names", chatNames);
         context.startService(intent);
+    }
+
+    public static void returnLatest(Context context, Chat chat, List<Message> messages, int firstPosition) {
+        ArrayList<String> texts = new ArrayList<>();
+        ArrayList<Long> timestamps = new ArrayList<>();
+        ArrayList<String> userNames = new ArrayList<>();
+        for (Message m : messages) {
+            texts.add(Util.bytesToString(m.data));
+            timestamps.add(m.timestamp);
+            //TODO
+        }
+        //ChatId!!!
+
+    }
+
+    public static void returnUpdates(Context context, Chat chat, List<Message> messages, int firstPosition) {
+        //TODO
+        //ChatId!!!
     }
 
     public static void changeUserName(Context context, String newName) {
@@ -115,6 +155,7 @@ public class Controller extends IntentService {
             broadcastIntent.putExtra("User", intent.getStringExtra("User"));
             broadcastIntent.putExtra("Date", intent.getLongExtra("Date", 0));
             broadcastIntent.putExtra("Message", intent.getStringExtra("Message"));
+            broadcastIntent.putExtra("ChatId", intent.getStringExtra("ChatId"));
             sendBroadcast(broadcastIntent);
 
         } else if (ACTION_KILL_MESSENGER.equals(action)) {
@@ -139,7 +180,6 @@ public class Controller extends IntentService {
 
         } else if (ACTION_CREATE_NEW_CHAT.equals(action)) {
 
-
             Intent broadcastIntent = new Intent();
             broadcastIntent.setAction(DialogsListActivity.MessageReceiver.ACTION_CHAT_CREATED);
             // Dima should implement
@@ -147,7 +187,18 @@ public class Controller extends IntentService {
             broadcastIntent.putExtra("ChatName", intent.getStringExtra("ChatName"));
             broadcastIntent.putExtra("ChatId", newChat.id);
 
+        } else if (ACTION_REQUEST_LATEST.equals(action)) {
+            int limit = intent.getIntExtra("Limit", 0);
+            String chatId = intent.getStringExtra("ChatId");
+            // Dima should implement
+            messenger.requestLatest(new Chat(chatId), limit,
+                    (chat, messages, firstPosition) -> Controller.returnLatest(Intermessage.getAppContext(), chat, messages, firstPosition));
+        } else if (ACTION_REQUEST_UPDATES.equals(action)) {
+            int last = intent.getIntExtra("Last", 0);
+            String chatId = intent.getStringExtra("ChatId");
+            // Dima should implement
+            messenger.requestUpdates(new Chat(chatId), last,
+                    (chat, messages, firstPosition) -> Controller.returnUpdates(Intermessage.getAppContext(), chat, messages, firstPosition));
         }
     }
-
 }
