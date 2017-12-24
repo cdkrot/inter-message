@@ -40,11 +40,12 @@ public class Controller extends IntentService {
         super("Controller");
     }
 
-    public static void sendMessage(Context context, Item message) {
+    public static void sendMessage(Context context, Item message, String chatId) {
         Intent intent = new Intent(context, Controller.class);
         intent.setAction(ACTION_SEND_MESSAGE);
         intent.putExtra("Date", message.date);
         intent.putExtra("Message", message.messageText);
+        intent.putExtra("ChatId", chatId);
         context.startService(intent);
     }
 
@@ -104,7 +105,8 @@ public class Controller extends IntentService {
 
             long date = intent.getLongExtra("Date", 0);
             String textMessage = intent.getStringExtra("Message");
-            messenger.sendMessage(null, new Message("text", date, Util.stringToBytes(textMessage)));
+            String chatId = intent.getStringExtra("ChatId");
+            messenger.sendMessage(new Chat(chatId), new Message("text", date, Util.stringToBytes(textMessage)));
 
         } else if (ACTION_RECEIVE_MESSAGE.equals(action)) {
 

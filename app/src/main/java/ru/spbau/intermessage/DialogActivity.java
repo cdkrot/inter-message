@@ -29,15 +29,27 @@ public class DialogActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
     static final private List<Item> messages = new ArrayList<>();
-    //static final private String dialogID
+    static private String chatId;
     private MessageReceiver messageReceiver;
     private ItemAdapter messagesAdapter;
+    private String selfUserName;
 
+    private final String PREF_FILE = "preferences";
+    private final String PREF_NAME = "userName";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dialog);
+
+        Intent creatorIntent = getIntent();
+        String id = creatorIntent.getStringExtra("ChatId");
+        if (chatId == null || !chatId.equals(id)) {
+            chatId = id;
+            messages.clear();
+        }
+
+        selfUserName = getSharedPreferences(PREF_FILE, MODE_PRIVATE).getString(PREF_NAME, "Default name");
 
         //drawer block begins
 
@@ -67,16 +79,19 @@ public class DialogActivity extends AppCompatActivity
                 boolean handled = false;
                 if (i == EditorInfo.IME_ACTION_SEND) {
                     String text = input.getText().toString();
+                    if (text.length() == 0)
+                        return false;
+
                     Item newMessage = new Item();
                     newMessage.date = System.currentTimeMillis() / 1000L;
-                    newMessage.userName = "Alexandr";
+                    newMessage.userName = selfUserName;
                     newMessage.messageText = text;
                     input.setText("");
 
                     messages.add(newMessage);
                     messagesAdapter.notifyDataSetChanged();
 
-                    Controller.sendMessage(DialogActivity.this, newMessage);
+                    Controller.sendMessage(DialogActivity.this, newMessage, chatId);
                     handled = true;
                 }
                 return handled;
@@ -94,7 +109,6 @@ public class DialogActivity extends AppCompatActivity
         }
     }
 
-    @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         int id = item.getItemId();
