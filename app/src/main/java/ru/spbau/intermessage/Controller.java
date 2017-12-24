@@ -13,15 +13,16 @@ import ru.spbau.intermessage.core.Message;
 import ru.spbau.intermessage.core.Messenger;
 import ru.spbau.intermessage.core.User;
 import ru.spbau.intermessage.gui.Item;
+import ru.spbau.intermessage.store.Storage;
 import ru.spbau.intermessage.util.Util;
 
 public class Controller extends IntentService {
 
-    private static Messenger messenger = new Messenger(null, "1");
+    private static Messenger messenger = new Messenger(new Storage(), "1");
     static {
         messenger.registerEventListener(new EventListener() {
             @Override
-            public void onMessage(Chat chat, User user, Message message) {
+            public void onMessage(User chat, User user, Message message) {
                 //Dima should implement
                 receiveMessage(Intermessage.getAppContext(), messenger.getUserName(user), chat.id, message);
             }
