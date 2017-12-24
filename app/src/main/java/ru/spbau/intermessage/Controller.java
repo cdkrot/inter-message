@@ -33,6 +33,8 @@ public class Controller extends IntentService {
     private static final String ACTION_USER_CHANGE_NAME = "Controller.action.USER_CHANGE_NAME";
     private static final String ACTION_REQUEST_DIALOGS_LIST = "Controller.action.REQUEST_DIALOGS_LIST";
     private static final String ACTION_RETURN_DIALOGS_LIST = "Controller.action.RETURN_DIALOGS_LIST";
+    private static final String ACTION_CREATE_NEW_CHAT = "Controller.action.CREATE_NEW_CHAT";
+
 
     public Controller() {
         super("Controller");
@@ -67,10 +69,11 @@ public class Controller extends IntentService {
             chatIds.add(c.id);
         }
 
-        Intent intent = new Intent();
+        Intent intent = new Intent(context, Controller.class);
+        intent.setAction(Controller.ACTION_RETURN_DIALOGS_LIST);
         intent.putStringArrayListExtra("Ids", chatIds);
         intent.putStringArrayListExtra("Names", chatNames);
-        intent.setAction(DialogsListActivity.MessageReceiver.ACTION_RECEIVE_DIALOGS_LIST;
+        context.startService(intent);
     }
 
     public static void changeUserName(Context context, String newName) {
@@ -83,6 +86,13 @@ public class Controller extends IntentService {
         context.startService(intent);
     }
 
+    public static void createNewChat(Context context, String chatName) {
+        Intent intent = new Intent(context, Controller.class);
+        intent.setAction(ACTION_CREATE_NEW_CHAT);
+        intent.putExtra("ChatName", chatName);
+        context.startService(intent);
+    }
+
     @Override
     protected void onHandleIntent(Intent intent) {
         if (intent == null) {
@@ -91,23 +101,50 @@ public class Controller extends IntentService {
 
         String action = intent.getAction();
         if (ACTION_SEND_MESSAGE.equals(action)) {
+
             long date = intent.getLongExtra("Date", 0);
             String textMessage = intent.getStringExtra("Message");
             messenger.sendMessage(null, new Message("text", date, Util.stringToBytes(textMessage)));
+
         } else if (ACTION_RECEIVE_MESSAGE.equals(action)) {
+
             Intent broadcastIntent = new Intent();
             broadcastIntent.setAction(DialogActivity.MessageReceiver.ACTION_RECEIVE);
             broadcastIntent.putExtra("User", intent.getStringExtra("User"));
             broadcastIntent.putExtra("Date", intent.getLongExtra("Date", 0));
             broadcastIntent.putExtra("Message", intent.getStringExtra("Message"));
             sendBroadcast(broadcastIntent);
+
         } else if (ACTION_KILL_MESSENGER.equals(action)) {
             // Kill messenger and listener thread
         } else if (ACTION_USER_CHANGE_NAME.equals(action)) {
+
             String newName = intent.getStringExtra("NewName");
+            // Dima should implement
             messenger.changeUserName(newName);
+
         } else if (ACTION_REQUEST_DIALOGS_LIST.equals(action)) {
+
+            // Dima should implement
             messenger.requestDialogsList((chats, names) -> Controller.returnDialogsList(Intermessage.getAppContext(), chats, names));
+        } else if (ACTION_RETURN_DIALOGS_LIST.equals(action)) {
+
+            Intent broadcastIntent = new Intent();
+            broadcastIntent.putStringArrayListExtra("Ids", intent.getStringArrayListExtra("Ids"));
+            broadcastIntent.putStringArrayListExtra("Names", intent.getStringArrayListExtra("Names"));
+            broadcastIntent.setAction(DialogsListActivity.MessageReceiver.ACTION_RECEIVE_DIALOGS_LIST);
+            sendBroadcast(broadcastIntent);
+
+        } else if (ACTION_CREATE_NEW_CHAT.equals(action)) {
+
+
+            Intent broadcastIntent = new Intent();
+            broadcastIntent.setAction(DialogsListActivity.MessageReceiver.ACTION_CHAT_CREATED);
+            // Dima should implement
+            Chat newChat = messenger.createNewChat(intent.getStringExtra("ChatName"));
+            broadcastIntent.putExtra("ChatName", intent.getStringExtra("ChatName"));
+            broadcastIntent.putExtra("ChatId", newChat.id);
+
         }
     }
 

@@ -90,9 +90,9 @@ public class DialogsListActivity extends AppCompatActivity {
             String action = intent.getAction();
             if (ACTION_RECEIVE_DIALOGS_LIST.equals(action)) {
                 ArrayList<String> names = intent.getStringArrayListExtra("Names");
-                names.add(0, "Create new dialog");
 
                 buttonNames.clear();
+                buttonNames.add("Create new dialog");
                 buttonNames.addAll(names);
 
                 ArrayList<String> ids = intent.getStringArrayListExtra("Ids");
