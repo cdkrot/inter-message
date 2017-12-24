@@ -112,7 +112,7 @@ public class DialogActivity extends AppCompatActivity
         if (messageReceiver == null) {
             messageReceiver = new MessageReceiver();
         }
-        IntentFilter intentFilter = new IntentFilter(messageReceiver.ACTION_RECEIVE);
+        IntentFilter intentFilter = new IntentFilter(MessageReceiver.ACTION_RECEIVE);
         registerReceiver(messageReceiver, intentFilter);
     }
 

@@ -4,6 +4,10 @@ import android.app.IntentService;
 import android.content.Intent;
 import android.content.Context;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import ru.spbau.intermessage.core.Chat;
 import ru.spbau.intermessage.core.EventListener;
 import ru.spbau.intermessage.core.Message;
 import ru.spbau.intermessage.core.Messenger;
@@ -17,7 +21,7 @@ public class Controller extends IntentService {
     static {
         messenger.registerEventListener(new EventListener() {
             @Override
-            public void onMessage(User chat, User user, ru.spbau.intermessage.core.Message message) {
+            public void onMessage(User chat, User user, Message message) {
                 receiveMessage(Intermessage.getAppContext(), chat, message);
             }
         });
@@ -28,7 +32,7 @@ public class Controller extends IntentService {
     private static final String ACTION_KILL_MESSENGER = "Controller.action.KILL";
     private static final String ACTION_USER_CHANGE_NAME = "Controller.action.USER_CHANGE_NAME";
     private static final String ACTION_REQUEST_DIALOGS_LIST = "Controller.action.REQUEST_DIALOGS_LIST";
-
+    private static final String ACTION_RETURN_DIALOGS_LIST = "Controller.action.RETURN_DIALOGS_LIST";
 
     public Controller() {
         super("Controller");
@@ -55,6 +59,18 @@ public class Controller extends IntentService {
         Intent intent = new Intent(context, Controller.class);
         intent.setAction(ACTION_REQUEST_DIALOGS_LIST);
         context.startService(intent);
+    }
+
+    public static void returnDialogsList(Context context, List<Chat> chats, ArrayList<String> chatNames) {
+        ArrayList<String> chatIds = new ArrayList<>();
+        for (Chat c : chats) {
+            chatIds.add(c.id);
+        }
+
+        Intent intent = new Intent();
+        intent.putStringArrayListExtra("Ids", chatIds);
+        intent.putStringArrayListExtra("Names", chatNames);
+        intent.setAction(DialogsListActivity.MessageReceiver.ACTION_RECEIVE_DIALOGS_LIST;
     }
 
     public static void changeUserName(Context context, String newName) {
@@ -91,7 +107,7 @@ public class Controller extends IntentService {
             String newName = intent.getStringExtra("NewName");
             messenger.changeUserName(newName);
         } else if (ACTION_REQUEST_DIALOGS_LIST.equals(action)) {
-            messenger.requestDialogsList();
+            messenger.requestDialogsList((chats, names) -> Controller.returnDialogsList(Intermessage.getAppContext(), chats, names));
         }
     }
 

@@ -13,11 +13,15 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class DialogsListActivity extends AppCompatActivity {
 
     private MessageReceiver messageReceiver;
 
+    static private ArrayList<String> buttonNames;
+    static private ArrayList<String> chatIds;
+    private ArrayAdapter dialogsAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,25 +29,30 @@ public class DialogsListActivity extends AppCompatActivity {
         setContentView(R.layout.activity_dialogs_list);
 
         ListView dialogsList = (ListView) findViewById(R.id.dialogs);
-        ArrayList<String> buttonNames = new ArrayList<>();
-        String name = getString(R.string.new_dialog);
 
-        buttonNames.add(name);
-        Controller.requestDialogList(this);
+        if (buttonNames == null || chatIds == null) {
+            buttonNames = new ArrayList<>();
+            chatIds = new ArrayList<>();
+            String name = getString(R.string.new_dialog);
+            buttonNames.add(name);
+        }
 
-        @SuppressWarnings("unchecked")
-        final ArrayAdapter dialogsAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, buttonNames);
+
+        //noinspection unchecked
+        dialogsAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, buttonNames);
 
         dialogsList.setAdapter(dialogsAdapter);
 
         dialogsList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                if (l == 0) {
+                if (i == 0) {
                     Toast.makeText(DialogsListActivity.this, "Isn't Elite dialog sufficient for everything?", Toast.LENGTH_LONG).show();
                 } else {
-                    Intent intent = new Intent(DialogsListActivity.this, DialogActivity.class);
-                    startActivity(intent);
+                    Intent newIntent = new Intent(DialogsListActivity.this, DialogActivity.class);
+                    newIntent.putExtra("ChatId", chatIds.get(i));
+                    newIntent.putExtra("ChatName", buttonNames.get(i - 1));
+                    startActivity(newIntent);
                 }
             }
         });
@@ -55,8 +64,12 @@ public class DialogsListActivity extends AppCompatActivity {
         if (messageReceiver == null) {
             messageReceiver = new DialogsListActivity.MessageReceiver();
         }
-        IntentFilter intentFilter = new IntentFilter(messageReceiver.ACTION_RECEIVE);
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(MessageReceiver.ACTION_RECEIVE_DIALOGS_LIST);
+        intentFilter.addAction(MessageReceiver.ACTION_CHAT_CREATED);
         registerReceiver(messageReceiver, intentFilter);
+
+        Controller.requestDialogList(this);
     }
 
     @Override
@@ -69,22 +82,36 @@ public class DialogsListActivity extends AppCompatActivity {
     }
 
     public class MessageReceiver extends BroadcastReceiver {
-        public static final String ACTION_RECEIVE = "DialogActivity.action.RECEIVE";
+        public static final String ACTION_CHAT_CREATED = "DialogsListActivity.action.CHAT_CREATED";
+        public static final String ACTION_RECEIVE_DIALOGS_LIST = "DialogsListActivity.action.DIALOGS_LIST";
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (ACTION_RECEIVE.equals(intent.getAction())) {
-                /*String text = intent.getStringExtra("Message");
-                long date = intent.getLongExtra("Date", 0);
-                String userName = intent.getStringExtra("User");
+            String action = intent.getAction();
+            if (ACTION_RECEIVE_DIALOGS_LIST.equals(action)) {
+                ArrayList<String> names = intent.getStringArrayListExtra("Names");
+                names.add(0, "Create new dialog");
 
-                Item newMessage = new Item();
-                newMessage.date = date;
-                newMessage.messageText = text;
-                newMessage.userName = userName;
+                buttonNames.clear();
+                buttonNames.addAll(names);
 
-                messages.add(newMessage);
-                messagesAdapter.notifyDataSetChanged();*/
+                ArrayList<String> ids = intent.getStringArrayListExtra("Ids");
+
+                chatIds = ids;
+
+                dialogsAdapter.notifyDataSetChanged();
+
+            } else if (ACTION_CHAT_CREATED.equals(action)){
+                Intent newIntent = new Intent(DialogsListActivity.this, DialogActivity.class);
+                newIntent.putExtra("ChatId", intent.getStringExtra("ChatId"));
+                newIntent.putExtra("ChatName", intent.getStringExtra("ChatName"));
+
+                buttonNames.add(intent.getStringExtra("ChatName"));
+                chatIds.add(intent.getStringExtra("ChatId"));
+
+                dialogsAdapter.notifyDataSetChanged();
+
+                startActivity(newIntent);
             }
         }
     }
