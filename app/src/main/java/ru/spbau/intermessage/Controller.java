@@ -22,7 +22,7 @@ public class Controller extends IntentService {
     static {
         messenger.registerEventListener(new EventListener() {
             @Override
-            public void onMessage(User chat, User user, Message message) {
+            public void onMessage(Chat chat, User user, Message message) {
                 //Dima should implement
                 receiveMessage(Intermessage.getAppContext(), messenger.getUserName(user), chat.id, message);
             }
