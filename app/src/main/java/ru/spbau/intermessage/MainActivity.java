@@ -67,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
                         SharedPreferences.Editor ed = sharedPreferences.edit();
                         ed.putString(PREF_NAME, enteredName);
                         ed.apply();
-                        //TODO: Controller.changeName();
+                        Controller.changeUserName(MainActivity.this, enteredName);
                     }
                 }
             });
@@ -86,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
 
                     case 1: android.os.Process.killProcess(android.os.Process.myPid());
                             break;
-                    case 2: intent = new Intent(MainActivity.this, ConsoleActivity.class);
+                    case 3: intent = new Intent(MainActivity.this, ConsoleActivity.class);
                             startActivity(intent);
                 }
             }

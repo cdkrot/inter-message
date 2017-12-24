@@ -2,13 +2,17 @@ package ru.spbau.intermessage;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -47,7 +51,32 @@ public class DialogsListActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 if (i == 0) {
-                    Toast.makeText(DialogsListActivity.this, "Isn't Elite dialog sufficient for everything?", Toast.LENGTH_LONG).show();
+                    AlertDialog.Builder alert = new AlertDialog.Builder(DialogsListActivity.this);
+                    alert.setTitle("Hello!");
+                    alert.setMessage("Enter name of new Dialog:");
+
+                    final EditText input = new EditText(DialogsListActivity.this);
+                    alert.setView(input);
+
+                    alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            //Nothing to do
+                        }
+                    });
+
+                    alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            String enteredName = input.getText().toString();
+                            if (enteredName.length() != 0) {
+                                Controller.createNewChat(DialogsListActivity.this, enteredName);
+                            }
+                        }
+                    });
+
+                    alert.show();
+
                 } else {
                     Intent newIntent = new Intent(DialogsListActivity.this, DialogActivity.class);
                     newIntent.putExtra("ChatId", chatIds.get(i));
