@@ -11,6 +11,7 @@ ru/spbau/intermessage/store/InMemoryStorage.java
 ru/spbau/intermessage/util/ReadHelper.java
 ru/spbau/intermessage/util/WriteHelper.java
 ru/spbau/intermessage/util/Tuple3.java
+ru/spbau/intermessage/util/Pair.java
 ru/spbau/intermessage/util/ByteVector.java
 ru/spbau/intermessage/util/Util.java
 ru/spbau/intermessage/net/UDPLogic.java

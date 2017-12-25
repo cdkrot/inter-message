@@ -28,7 +28,7 @@ public class Main {
             ArrayList<User> scary = new ArrayList<User>();
             scary.add(new User(args[1]));
             
-            ch = msg.createChat(scary);
+            ch = msg.createChat("the chat", scary);
 
             System.err.println("#5");
         }

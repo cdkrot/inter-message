@@ -9,6 +9,7 @@ import ru.spbau.intermessage.store.IStorage;
 import ru.spbau.intermessage.store.InMemoryStorage;
 
 import java.util.*;
+import java.util.function.*;
 
 public class Messenger extends ServiceCommon {
     public Messenger(IStorage store, ID id) {
@@ -114,17 +115,68 @@ public class Messenger extends ServiceCommon {
         postRequest(new SendMessageRequest(chat, message));
     }
 
-    public Chat createChat(ArrayList<User> users) {
+    public Chat createChat(String chatname, ArrayList<User> users) {
         ChatCreateRequest req = new ChatCreateRequest(users);
         postRequest(req);
         req.waitCompletion();
         return req.result;
     }
+
+    public void changeUserName(String newname) {
+        postRequest(new RunnableRequest() {
+                public void run() {
+                    storage.get("id.username").setString(newname);
+                }
+            });
+    }
     
-    public Message[] getMessagesFromChat(Chat chat, Object restrictions) {
-        throw new UnsupportedOperationException("TODO");
+    public void getListOfChats(Consumer<List<Pair<String, Chat>>> callback) {
+        postRequest(new RunnableRequest() {
+                public void run() {
+                    callback.accept(new ArrayList<Pair<String, Chat>>());
+                }
+            });
     }
 
+    public void getLastMessages(Chat chat, int limit, Consumer<Pair<Integer, List<Tuple3<User, String, Message>>>> callback) {
+        postRequest(new RunnableRequest() {
+                public void run() {
+                    callback.accept(new Pair(0, new ArrayList<Tuple3<User, String, Message>>()));
+                }
+            });
+    }
+
+    public void getMessagesSince(Chat chat, int from, int limit, Consumer<List<Tuple3<User, String, Message>>> callback) {
+        postRequest(new RunnableRequest() {
+                public void run() {
+                    callback.accept(new ArrayList<Tuple3<User, String, Message>>());;
+                }
+            });
+    }
+
+    public void addUserToChat(Chat chat, User user) {
+        postRequest(new RunnableRequest() {
+                public void run() {
+                }
+            });
+    }
+
+    public void getUsersNearby(Consumer<List<Pair<User, String>>> callback) {
+        postRequest(new RunnableRequest() {
+                public void run() {
+                    callback.accept(new ArrayList<Pair<User, String>>());
+                }
+            });
+    }
+
+    public void getUsersInChat(Chat chat, Consumer<List<Pair<User, String>>> callback) {
+        postRequest(new RunnableRequest() {
+                public void run() {
+                    callback.accept(new ArrayList<Pair<User, String>>());
+                }
+            });
+    }
+    
     /*** INTERNAL, DO NOT USE */
     
     public ArrayList<Chat> getChatsWithUser(User u) {
