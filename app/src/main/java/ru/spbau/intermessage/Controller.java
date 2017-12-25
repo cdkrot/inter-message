@@ -96,7 +96,8 @@ public class Controller extends IntentService {
         context.startService(intent);
     }
 
-    public static void returnDialogsList(Context context, List<Chat> chats, ArrayList<String> chatNames) {
+    public static void returnDialogsList(List<Chat> chats, ArrayList<String> chatNames) {
+        Context context = Intermessage.getAppContext();
         ArrayList<String> chatIds = new ArrayList<>();
         for (Chat c : chats) {
             chatIds.add(c.id);
@@ -109,7 +110,8 @@ public class Controller extends IntentService {
         context.startService(intent);
     }
 
-    public static void returnLatest(Context context, Chat chat, List<Message> messages, int firstPosition) {
+    public static void returnLatest(Chat chat, List<Message> messages, int firstPosition) {
+        Context context = Intermessage.getAppContext();
         ArrayList<String> texts = new ArrayList<>();
         ArrayList<Long> timestamps = new ArrayList<>();
         ArrayList<String> userNames = new ArrayList<>();
@@ -122,7 +124,8 @@ public class Controller extends IntentService {
 
     }
 
-    public static void returnUpdates(Context context, Chat chat, List<Message> messages, int firstPosition) {
+    public static void returnUpdates(Chat chat, List<Message> messages, int firstPosition) {
+        Context context = Intermessage.getAppContext();
         //TODO
         //ChatId!!!
     }
@@ -196,6 +199,7 @@ public class Controller extends IntentService {
             Chat newChat = messenger.createNewChat(intent.getStringExtra("ChatName"));
             broadcastIntent.putExtra("ChatName", intent.getStringExtra("ChatName"));
             broadcastIntent.putExtra("ChatId", newChat.id);
+            sendBroadcast(broadcastIntent);
 
         } else if (ACTION_REQUEST_LATEST.equals(action)) {
             int limit = intent.getIntExtra("Limit", 0);
