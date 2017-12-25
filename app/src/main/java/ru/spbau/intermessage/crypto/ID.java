@@ -3,7 +3,7 @@ package ru.spbau.intermessage.crypto;
 import ru.spbau.intermessage.core.User;
 
 public class ID {
-    private ID(String priv, String pub) {
+    public ID(String priv, String pub) {
         privkey = priv;
         pubkey = pub;
     }
@@ -11,8 +11,8 @@ public class ID {
     private String privkey;
     private String pubkey;
     
-    public static ID create(String tmp) {
-        return new ID(tmp, tmp);
+    public static ID create() {
+        return new ID("228", "410");
     }
 
     public String priv() {

@@ -1,5 +1,6 @@
 import ru.spbau.intermessage.core.*;
 import ru.spbau.intermessage.util.*;
+import ru.spbau.intermessage.crypto.ID;
 import ru.spbau.intermessage.store.InMemoryStorage;
 
 import java.util.*;
@@ -15,7 +16,7 @@ public class Main {
     public static void main(String[] args) {
         System.err.println("#1");
         InMemoryStorage store = new InMemoryStorage();
-        Messenger msg = new Messenger(store, args[0]);
+        Messenger msg = new Messenger(store, ID.create());
         System.err.println("#2");
         sleep(5000);
         System.err.println("#3");

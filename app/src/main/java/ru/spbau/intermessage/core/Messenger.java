@@ -11,9 +11,9 @@ import ru.spbau.intermessage.store.InMemoryStorage;
 import java.util.*;
 
 public class Messenger extends ServiceCommon {
-    public Messenger(IStorage store, String tmp) {
+    public Messenger(IStorage store, ID id) {
         storage = store;
-        identity = ID.create(tmp);
+        identity = id;
     }
     
     private static class ListenerRequest extends RequestCommon {
