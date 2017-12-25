@@ -44,6 +44,16 @@ public class MainActivity extends AppCompatActivity {
         final SharedPreferences sharedPreferences = getSharedPreferences(PREF_FILE, MODE_PRIVATE);
         String userName = sharedPreferences.getString(PREF_NAME, "");
 
+        String publicKey = sharedPreferences.getString("publicKey", "");
+        if (publicKey.length() == 0) {
+            publicKey = Long.toHexString(Double.doubleToLongBits(Math.random()));
+            String privateKey = Long.toHexString(Double.doubleToLongBits(Math.random()));
+            SharedPreferences.Editor ed = sharedPreferences.edit();
+            ed.putString("publicKey", publicKey);
+            ed.putString("privateKey", privateKey);
+            ed.commit();
+        }
+
         if (userName.length() == 0) {
             AlertDialog.Builder alert = new AlertDialog.Builder(this);
             alert.setTitle("Hello!");
@@ -74,6 +84,8 @@ public class MainActivity extends AppCompatActivity {
 
             alert.show();
         }
+
+
 
         mainMenuList.setAdapter(mainMenuAdapter);
         mainMenuList.setOnItemClickListener(new AdapterView.OnItemClickListener() {

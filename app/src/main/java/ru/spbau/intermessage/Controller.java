@@ -3,6 +3,7 @@ package ru.spbau.intermessage;
 import android.app.IntentService;
 import android.content.Intent;
 import android.content.Context;
+import android.content.SharedPreferences;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,13 +13,14 @@ import ru.spbau.intermessage.core.EventListener;
 import ru.spbau.intermessage.core.Message;
 import ru.spbau.intermessage.core.Messenger;
 import ru.spbau.intermessage.core.User;
+import ru.spbau.intermessage.crypto.ID;
 import ru.spbau.intermessage.gui.Item;
 import ru.spbau.intermessage.store.Storage;
 import ru.spbau.intermessage.util.Util;
 
 public class Controller extends IntentService {
 
-    private static Messenger messenger = new Messenger(new Storage(), "1");
+    private static Messenger messenger = new Messenger(new Storage(), getId());
     static {
         messenger.registerEventListener(new EventListener() {
             @Override
@@ -27,6 +29,13 @@ public class Controller extends IntentService {
                 receiveMessage(Intermessage.getAppContext(), messenger.getUserName(user), chat.id, message);
             }
         });
+    }
+
+    static ID getId() {
+        SharedPreferences sharedPreferences = Intermessage.getAppContext().getSharedPreferences("preferences", MODE_PRIVATE);
+        String publicKey = sharedPreferences.getString("publicKey", "trustno1");
+        String privateKey = sharedPreferences.getString("privateKey", "beliveinlie");
+        return new ID(publicKey, privateKey);
     }
 
     private static final String ACTION_SEND_MESSAGE = "Controller.action.SEND";
