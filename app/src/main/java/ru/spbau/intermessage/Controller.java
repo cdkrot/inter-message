@@ -4,6 +4,8 @@ import android.app.IntentService;
 import android.content.Intent;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
+import android.support.annotation.RequiresApi;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,18 +17,21 @@ import ru.spbau.intermessage.core.Messenger;
 import ru.spbau.intermessage.core.User;
 import ru.spbau.intermessage.crypto.ID;
 import ru.spbau.intermessage.gui.Item;
+import ru.spbau.intermessage.store.InMemoryStorage;
 import ru.spbau.intermessage.store.Storage;
+import ru.spbau.intermessage.util.Pair;
+import ru.spbau.intermessage.util.Tuple3;
 import ru.spbau.intermessage.util.Util;
 
 public class Controller extends IntentService {
 
-    private static Messenger messenger = new Messenger(new Storage(), getId());
+    private static Messenger messenger = new Messenger(new InMemoryStorage(), getId());
     static {
         messenger.registerEventListener(new EventListener() {
             @Override
-            public void onMessage(Chat chat, User user, Message message) {
+            public void onMessage(Chat chat, Pair<String, User> user, Message message) {
                 //Dima should implement
-                receiveMessage(Intermessage.getAppContext(), messenger.getUserName(user), chat.id, message);
+                receiveMessage(Intermessage.getAppContext(), user.first, chat.id, message);
             }
         });
     }
@@ -100,11 +105,13 @@ public class Controller extends IntentService {
         context.startService(intent);
     }
 
-    public static void returnDialogsList(List<Chat> chats, ArrayList<String> chatNames) {
+    public static void returnDialogsList(List<Pair<String, Chat>> chats) {
         Context context = Intermessage.getAppContext();
         ArrayList<String> chatIds = new ArrayList<>();
-        for (Chat c : chats) {
-            chatIds.add(c.id);
+        ArrayList<String> chatNames = new ArrayList<>();
+        for (Pair<String, Chat> c : chats) {
+            chatIds.add(c.second.id);
+            chatNames.add(c.first);
         }
 
         Intent intent = new Intent(context, Controller.class);
@@ -114,15 +121,16 @@ public class Controller extends IntentService {
         context.startService(intent);
     }
 
-    public static void returnLatest(Chat chat, List<Message> messages, int firstPosition) {
+    public static void returnLatest(String chatId, List<Tuple3<User, String, Message>> messages, int firstPosition) {
         Context context = Intermessage.getAppContext();
         String[] texts = new String[messages.size()];
         long[] timestamps = new long[messages.size()];
         String[] userNames = new String[messages.size()];
         for (int i = 0; i < messages.size(); i++) {
-            texts[i] = Util.bytesToString(messages.get(i).data);
-            timestamps[i] = messages.get(i).timestamp;
-            //TODO
+            Tuple3<User, String, Message> tr = messages.get(i);
+            texts[i] = Util.bytesToString(tr.third.data);
+            timestamps[i] = tr.third.timestamp;
+            userNames[i] = tr.second;
         }
         Intent intent = new Intent(context, Controller.class);
         intent.setAction(Controller.ACTION_RETURN_LATEST);
@@ -130,20 +138,21 @@ public class Controller extends IntentService {
         intent.putExtra("Timestamps", timestamps);
         intent.putExtra("UserNames", userNames);
         intent.putExtra("Texts", texts);
-        intent.putExtra("ChatId", chat.id);
+        intent.putExtra("ChatId", chatId);
 
         context.startService(intent);
     }
 
-    public static void returnUpdates(Chat chat, List<Message> messages, int firstPosition) {
+    public static void returnUpdates(String chatId, List<Tuple3<User, String, Message>> messages, int firstPosition) {
         Context context = Intermessage.getAppContext();
         String[] texts = new String[messages.size()];
         long[] timestamps = new long[messages.size()];
         String[] userNames = new String[messages.size()];
         for (int i = 0; i < messages.size(); i++) {
-            texts[i] = Util.bytesToString(messages.get(i).data);
-            timestamps[i] = messages.get(i).timestamp;
-            //TODO
+            Tuple3<User, String, Message> tr = messages.get(i);
+            texts[i] = Util.bytesToString(tr.third.data);
+            timestamps[i] = tr.third.timestamp;
+            userNames[i] = tr.second;
         }
         Intent intent = new Intent(context, Controller.class);
         intent.setAction(Controller.ACTION_RETURN_UPDATES);
@@ -151,7 +160,7 @@ public class Controller extends IntentService {
         intent.putExtra("Timestamps", timestamps);
         intent.putExtra("UserNames", userNames);
         intent.putExtra("Texts", texts);
-        intent.putExtra("ChatId", chat.id);
+        intent.putExtra("ChatId", chatId);
 
         context.startService(intent);
     }
@@ -188,6 +197,7 @@ public class Controller extends IntentService {
         context.startService(intent);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     protected void onHandleIntent(Intent intent) {
         if (intent == null) {
@@ -223,7 +233,7 @@ public class Controller extends IntentService {
         } else if (ACTION_REQUEST_DIALOGS_LIST.equals(action)) {
 
             // Dima should implement
-            messenger.requestDialogsList((chats, names) -> Controller.returnDialogsList(Intermessage.getAppContext(), chats, names));
+            messenger.getListOfChats(Controller::returnDialogsList);
         } else if (ACTION_RETURN_DIALOGS_LIST.equals(action)) {
 
             Intent broadcastIntent = new Intent();
@@ -237,7 +247,8 @@ public class Controller extends IntentService {
             Intent broadcastIntent = new Intent();
             broadcastIntent.setAction(DialogsListActivity.MessageReceiver.ACTION_CHAT_CREATED);
             // Dima should implement
-            Chat newChat = messenger.createNewChat(intent.getStringExtra("ChatName"));
+            Chat newChat = messenger.createChat(intent.getStringExtra("ChatName"), new ArrayList<User>());
+            //TODO
             broadcastIntent.putExtra("ChatName", intent.getStringExtra("ChatName"));
             broadcastIntent.putExtra("ChatId", newChat.id);
             sendBroadcast(broadcastIntent);
@@ -246,14 +257,14 @@ public class Controller extends IntentService {
             int limit = intent.getIntExtra("Limit", 0);
             String chatId = intent.getStringExtra("ChatId");
             // Dima should implement
-            messenger.requestLatest(new Chat(chatId), limit,
-                    (chat, messages, firstPosition) -> Controller.returnLatest(chat, messages, firstPosition));
+            messenger.getLastMessages(new Chat(chatId), limit,
+                    (firstPosition, messages) -> Controller.returnLatest(chatId, messages, firstPosition));
         } else if (ACTION_REQUEST_UPDATES.equals(action)) {
             int last = intent.getIntExtra("Last", 0);
             String chatId = intent.getStringExtra("ChatId");
             // Dima should implement
-            messenger.requestUpdates(new Chat(chatId), last,
-                    (chat, messages, firstPosition) -> Controller.returnUpdates(chat, messages, firstPosition));
+            messenger.getMessagesSince(new Chat(chatId), last + 1, 10000000,
+                    (messages) -> Controller.returnUpdates(chatId, messages, last + 1));
         } else if (ACTION_RETURN_LATEST.equals(action)) {
 
             Intent broadcastIntent = new Intent();
@@ -280,13 +291,36 @@ public class Controller extends IntentService {
 
             String chatId = intent.getStringExtra("ChatId");
             // Dima should implement
-            messenger.requestUsersNotInChat(chatId);
+            List<Pair<User, String>> usersNearby = messenger.getUsersNearby();
+            List<Pair<User, String>> usersInChat = messenger.getUsersInChat(new Chat(chatId));
+            usersNearby.sort((a, b) -> a.first.publicKey.compareTo(b.first.publicKey));
+            usersInChat.sort((a, b) -> a.first.publicKey.compareTo(b.first.publicKey));
+            ArrayList<String> userIds = new ArrayList<>();
+            ArrayList<String> userNames = new ArrayList<>();
+            int position = 0;
+            for (Pair<User, String> p : usersNearby) {
+                while (position != usersInChat.size() &&
+                        p.first.publicKey.compareTo(usersInChat.get(position).first.publicKey) < 0) {
+                    position++;
+                }
+                if (position == usersInChat.size() ||
+                        p.first.publicKey.compareTo(usersInChat.get(position).first.publicKey) > 0) {
+                    userIds.add(p.first.publicKey);
+                    userNames.add(p.second);
+                }
+            }
+
+            Intent broadcastIntent = new Intent();
+            intent.setAction(DialogActivity.MessageReceiver.ACTION_GET_USERS_FOR_ADD);
+            broadcastIntent.putExtra("UserNames", userNames);
+            broadcastIntent.putExtra("UserIds", userIds);
+            sendBroadcast(intent);
 
         } else if (ACTION_ADD_USER.equals(action)) {
             String userId = intent.getStringExtra("UserId");
             String chatId = intent.getStringExtra("ChatId");
             // Dima should implement
-            messenger.addUserToChat(userId, chatId);
+            messenger.addUserToChat(new Chat(chatId), new User(userId));
         }
     }
 }

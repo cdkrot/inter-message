@@ -154,6 +154,7 @@ public class DialogActivity extends AppCompatActivity
         public static final String ACTION_RECEIVE = "DialogActivity.action.RECEIVE";
         public static final String ACTION_GOT_LAST_MESSAGES = "DialogActivity.action.LAST_MESSAGES";
         public static final String ACTION_GOT_UPDATES = "DialogActivity.action.UPDATES";
+        public static final String ACTION_GET_USERS_FOR_ADD = "DialogActivity.action.GET_USERS_FOR_ADD";
 
         @Override
         public void onReceive(Context context, Intent intent) {
