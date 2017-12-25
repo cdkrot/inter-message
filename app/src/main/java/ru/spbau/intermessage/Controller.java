@@ -49,6 +49,8 @@ public class Controller extends IntentService {
     private static final String ACTION_REQUEST_UPDATES = "Controller.action.REQUEST_UPDATES";
     private static final String ACTION_RETURN_UPDATES = "Controller.action.RETURN_DIALOGS_LIST";
     private static final String ACTION_RETURN_LATEST = "Controller.action.RETURN_DIALOGS_LIST";
+    private static final String ACTION_REQUEST_ADD_USER = "Controller.action.REQUEST_ADD_USER";
+    private static final String ACTION_ADD_USER = "Controller.action.ADD_USER";
 
 
     public Controller() {
@@ -171,6 +173,21 @@ public class Controller extends IntentService {
         context.startService(intent);
     }
 
+    public static void requestAddUser(Context context, String chatId) {
+        Intent intent = new Intent(context, Controller.class);
+        intent.setAction(ACTION_REQUEST_ADD_USER);
+        intent.putExtra("ChatId", chatId);
+        context.startService(intent);
+    }
+
+    public static void addUser(Context context, String userId, String chatId) {
+        Intent intent = new Intent(context, Controller.class);
+        intent.setAction(ACTION_ADD_USER);
+        intent.putExtra("UserId", userId);
+        intent.putExtra("ChatId", chatId);
+        context.startService(intent);
+    }
+
     @Override
     protected void onHandleIntent(Intent intent) {
         if (intent == null) {
@@ -259,6 +276,17 @@ public class Controller extends IntentService {
             broadcastIntent.putExtra("FirstPosition", intent.getIntExtra("FirstPosition", 0));
             sendBroadcast(broadcastIntent);
 
+        } else if (ACTION_REQUEST_ADD_USER.equals(action)) {
+
+            String chatId = intent.getStringExtra("ChatId");
+            // Dima should implement
+            messenger.requestUsersNotInChat(chatId);
+
+        } else if (ACTION_ADD_USER.equals(action)) {
+            String userId = intent.getStringExtra("UserId");
+            String chatId = intent.getStringExtra("ChatId");
+            // Dima should implement
+            messenger.addUserToChat(userId, chatId);
         }
     }
 }
