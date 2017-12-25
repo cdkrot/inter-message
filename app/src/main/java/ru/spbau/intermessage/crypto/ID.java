@@ -12,7 +12,9 @@ public class ID {
     private String pubkey;
     
     public static ID create() {
-        return new ID("228", "410");
+        String publicKey = Long.toHexString(Double.doubleToLongBits(Math.random()));
+        String privateKey = Long.toHexString(Double.doubleToLongBits(Math.random()));
+        return new ID(privateKey, publicKey);
     }
 
     public String priv() {

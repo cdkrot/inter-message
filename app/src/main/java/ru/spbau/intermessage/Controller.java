@@ -35,7 +35,7 @@ public class Controller extends IntentService {
         SharedPreferences sharedPreferences = Intermessage.getAppContext().getSharedPreferences("preferences", MODE_PRIVATE);
         String publicKey = sharedPreferences.getString("publicKey", "trustno1");
         String privateKey = sharedPreferences.getString("privateKey", "beliveinlie");
-        return new ID(publicKey, privateKey);
+        return new ID(privateKey, publicKey);
     }
 
     private static final String ACTION_SEND_MESSAGE = "Controller.action.SEND";

@@ -16,6 +16,7 @@ import android.widget.Toast;
 import java.util.ArrayList;
 
 import ru.spbau.intermessage.console.ConsoleActivity;
+import ru.spbau.intermessage.crypto.ID;
 
 //import ru.spbau.intermessage.store.StorageTest;
 
@@ -46,11 +47,10 @@ public class MainActivity extends AppCompatActivity {
 
         String publicKey = sharedPreferences.getString("publicKey", "");
         if (publicKey.length() == 0) {
-            publicKey = Long.toHexString(Double.doubleToLongBits(Math.random()));
-            String privateKey = Long.toHexString(Double.doubleToLongBits(Math.random()));
+            ID id = ID.create();
             SharedPreferences.Editor ed = sharedPreferences.edit();
-            ed.putString("publicKey", publicKey);
-            ed.putString("privateKey", privateKey);
+            ed.putString("publicKey", id.pub());
+            ed.putString("privateKey", id.priv());
             ed.commit();
         }
 
