@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -17,7 +16,6 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class DialogsListActivity extends AppCompatActivity {
 
@@ -79,8 +77,8 @@ public class DialogsListActivity extends AppCompatActivity {
 
                 } else {
                     Intent newIntent = new Intent(DialogsListActivity.this, DialogActivity.class);
-                    newIntent.putExtra("ChatId", chatIds.get(i));
-                    newIntent.putExtra("ChatName", buttonNames.get(i - 1));
+                    newIntent.putExtra("ChatId", chatIds.get(i - 1));
+                    newIntent.putExtra("ChatName", buttonNames.get(i));
                     startActivity(newIntent);
                 }
             }

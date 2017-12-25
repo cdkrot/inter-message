@@ -175,7 +175,6 @@ public class DialogActivity extends AppCompatActivity
 
                 messages.add(newMessage);
                 messagesAdapter.notifyDataSetChanged();
-
             } else  if (ACTION_GOT_LAST_MESSAGES.equals(action)){
                 String toChatId = intent.getStringExtra("ChatId");
                 if (!toChatId.equals(chatId))
@@ -185,21 +184,41 @@ public class DialogActivity extends AppCompatActivity
                     return;
 
                 int position = intent.getIntExtra("FirstPosition", 0);
-                ArrayList<String> texts = intent.getStringArrayListExtra("Texts");
+                String[] texts = intent.getStringArrayExtra("Texts");
                 long[] timestamps = intent.getLongArrayExtra("Timestamps");
-                ArrayList<String> userNames = intent.getStringArrayListExtra("UserNames");
-                //TODO
+                String[] userNames = intent.getStringArrayExtra("UserNames");
+                int length = timestamps.length;
+                int shift = Math.max(0, position - messages.get(0).position + 1);
+                for (int i = length - shift - 1; i >= 0; i--) {
+                    Item item = new Item();
+                    item.position = position + i;
+                    item.date = timestamps[i];
+                    item.messageText = texts[i];
+                    item.userName = userNames[i];
+                    messages.add(item);
+                }
 
             } else if (ACTION_GOT_UPDATES.equals(action)) {
                 String toChatId = intent.getStringExtra("ChatId");
-                if (!toChatId.equals(chatId))
+                if (messages.size() == 0 || !toChatId.equals(chatId))
                     return;
 
                 int position = intent.getIntExtra("FirstPosition", 0);
-                ArrayList<String> texts = intent.getStringArrayListExtra("Texts");
+                String[] texts = intent.getStringArrayExtra("Texts");
                 long[] timestamps = intent.getLongArrayExtra("Timestamps");
-                ArrayList<String> userNames = intent.getStringArrayListExtra("UserNames");
-                //TODO
+                String[] userNames = intent.getStringArrayExtra("UserNames");
+                int length = timestamps.length;
+                int shift = 0;
+                shift = Math.max(0, messages.get(messages.size() - 1).position - position + 1);
+                for (int i = shift; i < length; i++) {
+                    Item item = new Item();
+                    item.position = position + i;
+                    item.date = timestamps[i];
+                    item.messageText = texts[i];
+                    item.userName = userNames[i];
+                    messages.add(item);
+                }
+                messagesAdapter.notifyDataSetChanged();
             }
         }
     }

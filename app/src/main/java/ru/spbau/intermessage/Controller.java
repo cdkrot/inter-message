@@ -47,6 +47,8 @@ public class Controller extends IntentService {
     private static final String ACTION_CREATE_NEW_CHAT = "Controller.action.CREATE_NEW_CHAT";
     private static final String ACTION_REQUEST_LATEST = "Controller.action.REQUEST_LASTEST";
     private static final String ACTION_REQUEST_UPDATES = "Controller.action.REQUEST_UPDATES";
+    private static final String ACTION_RETURN_UPDATES = "Controller.action.RETURN_DIALOGS_LIST";
+    private static final String ACTION_RETURN_LATEST = "Controller.action.RETURN_DIALOGS_LIST";
 
 
     public Controller() {
@@ -112,22 +114,44 @@ public class Controller extends IntentService {
 
     public static void returnLatest(Chat chat, List<Message> messages, int firstPosition) {
         Context context = Intermessage.getAppContext();
-        ArrayList<String> texts = new ArrayList<>();
-        ArrayList<Long> timestamps = new ArrayList<>();
-        ArrayList<String> userNames = new ArrayList<>();
-        for (Message m : messages) {
-            texts.add(Util.bytesToString(m.data));
-            timestamps.add(m.timestamp);
+        String[] texts = new String[messages.size()];
+        long[] timestamps = new long[messages.size()];
+        String[] userNames = new String[messages.size()];
+        for (int i = 0; i < messages.size(); i++) {
+            texts[i] = Util.bytesToString(messages.get(i).data);
+            timestamps[i] = messages.get(i).timestamp;
             //TODO
         }
-        //ChatId!!!
+        Intent intent = new Intent(context, Controller.class);
+        intent.setAction(Controller.ACTION_RETURN_LATEST);
+        intent.putExtra("FirstPosition", firstPosition);
+        intent.putExtra("Timestamps", timestamps);
+        intent.putExtra("UserNames", userNames);
+        intent.putExtra("Texts", texts);
+        intent.putExtra("ChatId", chat.id);
 
+        context.startService(intent);
     }
 
     public static void returnUpdates(Chat chat, List<Message> messages, int firstPosition) {
         Context context = Intermessage.getAppContext();
-        //TODO
-        //ChatId!!!
+        String[] texts = new String[messages.size()];
+        long[] timestamps = new long[messages.size()];
+        String[] userNames = new String[messages.size()];
+        for (int i = 0; i < messages.size(); i++) {
+            texts[i] = Util.bytesToString(messages.get(i).data);
+            timestamps[i] = messages.get(i).timestamp;
+            //TODO
+        }
+        Intent intent = new Intent(context, Controller.class);
+        intent.setAction(Controller.ACTION_RETURN_UPDATES);
+        intent.putExtra("FirstPosition", firstPosition);
+        intent.putExtra("Timestamps", timestamps);
+        intent.putExtra("UserNames", userNames);
+        intent.putExtra("Texts", texts);
+        intent.putExtra("ChatId", chat.id);
+
+        context.startService(intent);
     }
 
     public static void changeUserName(Context context, String newName) {
@@ -206,13 +230,35 @@ public class Controller extends IntentService {
             String chatId = intent.getStringExtra("ChatId");
             // Dima should implement
             messenger.requestLatest(new Chat(chatId), limit,
-                    (chat, messages, firstPosition) -> Controller.returnLatest(Intermessage.getAppContext(), chat, messages, firstPosition));
+                    (chat, messages, firstPosition) -> Controller.returnLatest(chat, messages, firstPosition));
         } else if (ACTION_REQUEST_UPDATES.equals(action)) {
             int last = intent.getIntExtra("Last", 0);
             String chatId = intent.getStringExtra("ChatId");
             // Dima should implement
             messenger.requestUpdates(new Chat(chatId), last,
-                    (chat, messages, firstPosition) -> Controller.returnUpdates(Intermessage.getAppContext(), chat, messages, firstPosition));
+                    (chat, messages, firstPosition) -> Controller.returnUpdates(chat, messages, firstPosition));
+        } else if (ACTION_RETURN_LATEST.equals(action)) {
+
+            Intent broadcastIntent = new Intent();
+            broadcastIntent.setAction(DialogActivity.MessageReceiver.ACTION_GOT_LAST_MESSAGES);
+            broadcastIntent.putExtra("UserNames", intent.getStringArrayExtra("UserNames"));
+            broadcastIntent.putExtra("Timestamps", intent.getLongArrayExtra("Timestamps"));
+            broadcastIntent.putExtra("ChatId", intent.getStringExtra("ChatId"));
+            broadcastIntent.putExtra("Texts", intent.getStringArrayExtra("Texts"));
+            broadcastIntent.putExtra("FirstPosition", intent.getIntExtra("FirstPosition", 0));
+            sendBroadcast(broadcastIntent);
+
+        } else if (ACTION_REQUEST_UPDATES.equals(action)) {
+
+            Intent broadcastIntent = new Intent();
+            broadcastIntent.setAction(DialogActivity.MessageReceiver.ACTION_GOT_UPDATES);
+            broadcastIntent.putExtra("UserNames", intent.getStringArrayExtra("UserNames"));
+            broadcastIntent.putExtra("Timestamps", intent.getLongArrayExtra("Timestamps"));
+            broadcastIntent.putExtra("ChatId", intent.getStringExtra("ChatId"));
+            broadcastIntent.putExtra("Texts", intent.getStringArrayExtra("Texts"));
+            broadcastIntent.putExtra("FirstPosition", intent.getIntExtra("FirstPosition", 0));
+            sendBroadcast(broadcastIntent);
+
         }
     }
 }
