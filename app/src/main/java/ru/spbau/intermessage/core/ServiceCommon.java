@@ -25,12 +25,18 @@ public abstract class ServiceCommon {
         }
     }
 
+    protected abstract static class RunnableRequest extends RequestCommon {
+        public abstract void run();
+    }
+    
     public ServiceCommon() {
         queue = new ArrayDeque<RequestCommon>();
         
         new Thread() {
             public void run() {
-                warmUp();
+                synchronized (queue) {
+                    warmUp();
+                }
                 
                 while (true) {
                     RequestCommon r;
@@ -50,8 +56,12 @@ public abstract class ServiceCommon {
                     // process new request.
                     if (r == null)
                         break; // termination.
+
+                    if (r instanceof RunnableRequest)
+                        ((RunnableRequest)(r)).run();
+                    else
+                        handleRequest(r);
                     
-                    handleRequest(r);
                     r.complete();
                 }
 
