@@ -45,7 +45,6 @@ public class Messenger extends ServiceCommon {
         public Chat result;
         public ArrayList<User> users;
     }
-
     
     protected Set<EventListener> listeners = new HashSet<EventListener>();
     protected NNetwork network;
@@ -87,7 +86,7 @@ public class Messenger extends ServiceCommon {
         }
     }
     
-    protected void onMessage(User chat, User user, Message msg) {
+    protected void onMessage(Chat chat, User user, Message msg) {
         synchronized (this) {
             for (EventListener listener: listeners)
                 listener.onMessage(chat, user, msg);
@@ -129,6 +128,15 @@ public class Messenger extends ServiceCommon {
                 }
             });
     }
+
+    public String getOwnName() {
+        IStorage.Union a = storage.get("id.username");
+
+        if (a.getType() != IStorage.ObjectType.STRING)
+            return a.getString();
+        else
+            return "";
+    }
     
     public void getListOfChats(Consumer<List<Pair<String, Chat>>> callback) {
         postRequest(new RunnableRequest() {
@@ -138,10 +146,10 @@ public class Messenger extends ServiceCommon {
             });
     }
 
-    public void getLastMessages(Chat chat, int limit, Consumer<Pair<Integer, List<Tuple3<User, String, Message>>>> callback) {
+    public void getLastMessages(Chat chat, int limit, BiConsumer<Integer, List<Tuple3<User, String, Message>>> callback) {
         postRequest(new RunnableRequest() {
                 public void run() {
-                    callback.accept(new Pair(0, new ArrayList<Tuple3<User, String, Message>>()));
+                    callback.accept(0, new ArrayList<Tuple3<User, String, Message>>());
                 }
             });
     }
@@ -157,24 +165,26 @@ public class Messenger extends ServiceCommon {
     public void addUserToChat(Chat chat, User user) {
         postRequest(new RunnableRequest() {
                 public void run() {
+                    
                 }
             });
     }
 
-    public void getUsersNearby(Consumer<List<Pair<User, String>>> callback) {
+    public List<Pair<User, String>> getUsersNearby() {
         postRequest(new RunnableRequest() {
                 public void run() {
-                    callback.accept(new ArrayList<Pair<User, String>>());
                 }
             });
+        return null;
     }
 
-    public void getUsersInChat(Chat chat, Consumer<List<Pair<User, String>>> callback) {
+    public List<Pair<User, String>> getUsersInChat(Chat chat) {
         postRequest(new RunnableRequest() {
                 public void run() {
-                    callback.accept(new ArrayList<Pair<User, String>>());
                 }
             });
+
+        return null;
     }
     
     /*** INTERNAL, DO NOT USE */
@@ -199,7 +209,7 @@ public class Messenger extends ServiceCommon {
         storage.get("user.poor." + u.publicKey).setNull();
         
         for (Chat chat: getChatsWithUser(u)) {
-            for (User member: getChatMembers(chat)) {
+            for (User member: getChatMembers(chat)) {                
                 int we = storage.getList("msg." + chat.id + "." + member.publicKey).size();
                 IStorage.Union handle = storage.get("info." + u.publicKey + "." + chat.id + "." + member.publicKey);
                 int they = (handle.getType() == IStorage.ObjectType.INTEGER ? handle.getInt() : 0);
@@ -305,7 +315,7 @@ public class Messenger extends ServiceCommon {
         storage.get("chatmembers." + id + "." + u.publicKey).setInt(1);
         storage.get("chatswith." + u.publicKey + "." + id).setInt(1);
         
-        doSendMessage(new Chat(id), new Message("!/chatcreated", 100500, Util.stringToBytes("chat created")));
+        doSendMessage(new Chat(id), new Message("newchat", 100500, Util.stringToBytes("chat created")));
 
         return new Chat(id);
     }
