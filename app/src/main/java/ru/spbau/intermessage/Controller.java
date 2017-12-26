@@ -8,6 +8,7 @@ import android.os.Build;
 import android.support.annotation.RequiresApi;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import ru.spbau.intermessage.core.Chat;
@@ -304,9 +305,8 @@ public class Controller extends IntentService {
             String chatId = intent.getStringExtra("ChatId");
             List<Pair<User, String>> usersNearby = messenger.getUsersNearby();
             List<Pair<User, String>> usersInChat = messenger.getUsersInChat(new Chat(chatId));
-
-            usersNearby.sort((a, b) -> a.first.publicKey.compareTo(b.first.publicKey));
-            usersInChat.sort((a, b) -> a.first.publicKey.compareTo(b.first.publicKey));
+            Collections.sort(usersNearby, (a, b) -> a.first.publicKey.compareTo(b.first.publicKey));
+            Collections.sort(usersInChat, (a, b) -> a.first.publicKey.compareTo(b.first.publicKey));
 
             ArrayList<String> userIds = new ArrayList<>();
             ArrayList<String> userNames = new ArrayList<>();
