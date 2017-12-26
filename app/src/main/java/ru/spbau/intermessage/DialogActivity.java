@@ -2,9 +2,14 @@ package ru.spbau.intermessage;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
+import android.text.InputType;
+import android.util.SparseBooleanArray;
 import android.view.KeyEvent;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -14,9 +19,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.inputmethod.EditorInfo;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,6 +51,7 @@ public class DialogActivity extends AppCompatActivity
         setContentView(R.layout.activity_dialog);
 
         Intent creatorIntent = getIntent();
+
         String id = creatorIntent.getStringExtra("ChatId");
         if (chatId == null || !chatId.equals(id)) {
             chatId = id;
@@ -55,6 +63,7 @@ public class DialogActivity extends AppCompatActivity
         //drawer block begins
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar.setTitle(creatorIntent.getStringExtra("ChatName"));
         setSupportActionBar(toolbar);
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -124,6 +133,16 @@ public class DialogActivity extends AppCompatActivity
     @Override
     public void onResume() {
         super.onResume();
+
+        Intent creatorIntent = getIntent();
+        boolean wasCreated = creatorIntent.getBooleanExtra("Created", false);
+        creatorIntent.putExtra("Created", false);
+        setIntent(creatorIntent);
+
+        if (wasCreated) {
+            Controller.requestAddUser(this, chatId);
+        }
+
         if (messageReceiver == null) {
             messageReceiver = new MessageReceiver();
         }
@@ -131,6 +150,7 @@ public class DialogActivity extends AppCompatActivity
         intentFilter.addAction(MessageReceiver.ACTION_RECEIVE);
         intentFilter.addAction(MessageReceiver.ACTION_GOT_LAST_MESSAGES);
         intentFilter.addAction(MessageReceiver.ACTION_GOT_UPDATES);
+        intentFilter.addAction(MessageReceiver.ACTION_GET_USERS_FOR_ADD);
 
         registerReceiver(messageReceiver, intentFilter);
 
@@ -220,6 +240,52 @@ public class DialogActivity extends AppCompatActivity
                     messages.add(item);
                 }
                 messagesAdapter.notifyDataSetChanged();
+            } else if (ACTION_GET_USERS_FOR_ADD.equals(action)) {
+                ArrayList<String> userNames = intent.getStringArrayListExtra("UserNames");
+                ArrayList<String> userIds = intent.getStringArrayListExtra("UserIds");
+                if (userNames.isEmpty()) {
+                    Toast.makeText(DialogActivity.this, "No users available for addition", Toast.LENGTH_LONG).show();
+                    return;
+                }
+
+                AlertDialog.Builder alert = new AlertDialog.Builder(DialogActivity.this);
+                alert.setTitle("Hello!");
+                alert.setMessage("Enter your name:");
+
+                final ListView listUsers = new ListView(DialogActivity.this);
+                @SuppressWarnings("unchecked")
+                ArrayAdapter adapter = new ArrayAdapter(DialogActivity.this, android.R.layout.simple_list_item_multiple_choice, userNames);
+                listUsers.setAdapter(adapter);
+                alert.setView(listUsers);
+
+                alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        //Nothing to do
+                    }
+                });
+
+                alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int _unused) {
+                        ArrayList<String> checkedIds = new ArrayList<>();
+                        SparseBooleanArray checkedUsers = listUsers.getCheckedItemPositions();
+
+                        for (int i = 0; i < userNames.size(); i++)
+                            if (checkedUsers.get(i)) {
+                                checkedIds.add(userIds.get(i));
+                            }
+
+                        if (!checkedIds.isEmpty()) {
+                            Controller.addUsers(checkedIds, chatId);
+                            Toast.makeText(DialogActivity.this, checkedIds.size() + " users were added", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(DialogActivity.this, "No users were choosed", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+
+                alert.show();
             }
         }
     }

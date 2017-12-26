@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.text.InputType;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -60,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
             alert.setMessage("Enter your name:");
 
             final EditText input = new EditText(this);
+            input.setInputType(InputType.TYPE_TEXT_FLAG_IME_MULTI_LINE);
             alert.setView(input);
 
             alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -73,11 +75,13 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
                     String enteredName = input.getText().toString();
-                    if (enteredName.length() != 0) {
+                    if (enteredName.length() != 0 && enteredName.length() < 30) {
                         SharedPreferences.Editor ed = sharedPreferences.edit();
                         ed.putString(PREF_NAME, enteredName);
                         ed.apply();
                         Controller.changeUserName(MainActivity.this, enteredName);
+                    } else {
+                        Toast.makeText(MainActivity.this, "Incorrect name", Toast.LENGTH_LONG).show();
                     }
                 }
             });
@@ -103,7 +107,5 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-
-        //StorageTest.test();
     }
 }

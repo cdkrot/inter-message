@@ -8,6 +8,7 @@ import android.content.IntentFilter;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.InputType;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -54,6 +55,7 @@ public class DialogsListActivity extends AppCompatActivity {
                     alert.setMessage("Enter name of new Dialog:");
 
                     final EditText input = new EditText(DialogsListActivity.this);
+                    input.setInputType(InputType.TYPE_TEXT_FLAG_IME_MULTI_LINE);
                     alert.setView(input);
 
                     alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -67,8 +69,10 @@ public class DialogsListActivity extends AppCompatActivity {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
                             String enteredName = input.getText().toString();
-                            if (enteredName.length() != 0) {
+                            if (enteredName.length() != 0 && enteredName.length() < 30) {
                                 Controller.createNewChat(DialogsListActivity.this, enteredName);
+                            } else {
+                                Toast.makeText(DialogsListActivity.this, "Incorrect name of dialog", Toast.LENGTH_LONG).show();
                             }
                         }
                     });
@@ -79,6 +83,7 @@ public class DialogsListActivity extends AppCompatActivity {
                     Intent newIntent = new Intent(DialogsListActivity.this, DialogActivity.class);
                     newIntent.putExtra("ChatId", chatIds.get(i - 1));
                     newIntent.putExtra("ChatName", buttonNames.get(i));
+                    newIntent.putExtra("Created", false);
                     startActivity(newIntent);
                 }
             }
@@ -132,7 +137,7 @@ public class DialogsListActivity extends AppCompatActivity {
                 Intent newIntent = new Intent(DialogsListActivity.this, DialogActivity.class);
                 newIntent.putExtra("ChatId", intent.getStringExtra("ChatId"));
                 newIntent.putExtra("ChatName", intent.getStringExtra("ChatName"));
-
+                newIntent.putExtra("Created", true);
                 buttonNames.add(intent.getStringExtra("ChatName"));
                 chatIds.add(intent.getStringExtra("ChatId"));
 
