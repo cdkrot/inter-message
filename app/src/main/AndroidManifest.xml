@@ -19,7 +19,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".DialogsListActivity" />
+
+        <activity android:name=".DialogsListActivity"
+            android:label="@string/title_activity_dialogs_list"
+            />
 
         <service
             android:name=".Controller"
@@ -30,7 +33,13 @@
             android:label="@string/title_activity_dialog"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity android:name=".console.ConsoleActivity" />
-        <activity android:name=".AboutActivity"></activity>
+        <activity android:name=".AboutActivity"
+                  android:label="@string/title_activity_about"
+            />
+
+        <activity android:name=".SettingsActivity"
+                  android:label="@string/title_activity_settings"
+            />
     </application>
 
 </manifest>

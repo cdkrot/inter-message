@@ -47,6 +47,7 @@
                 android:layout_marginEnd="8dp"
                 android:layout_marginStart="8dp"
                 android:ems="10"
+                android:hint="Type your message here"
                 android:imeOptions="actionSend"
                 android:inputType="text|textImeMultiLine"
                 app:layout_constraintBottom_toBottomOf="parent"

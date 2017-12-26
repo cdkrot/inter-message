@@ -101,6 +101,9 @@ public class MainActivity extends AppCompatActivity {
                     case 0: Intent intent = new Intent(MainActivity.this, DialogsListActivity.class);
                             startActivity(intent);
                             break;
+                    case 1: intent = new Intent(MainActivity.this, SettingsActivity.class);
+                            startActivity(intent);
+                            break;
 
                     case 2: intent = new Intent(MainActivity.this, AboutActivity.class);
                             startActivity(intent);
