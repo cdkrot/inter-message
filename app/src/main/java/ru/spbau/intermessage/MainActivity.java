@@ -39,6 +39,8 @@ public class MainActivity extends AppCompatActivity {
         buttonNames.add(name);
         buttonNames.add("About");
         buttonNames.add("Console mode");
+        buttonNames.add("Kill application");
+
 
         @SuppressWarnings("unchecked")
         ArrayAdapter mainMenuAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, buttonNames);
@@ -100,10 +102,15 @@ public class MainActivity extends AppCompatActivity {
                             startActivity(intent);
                             break;
 
-                    case 1: android.os.Process.killProcess(android.os.Process.myPid());
+                    case 2: intent = new Intent(MainActivity.this, AboutActivity.class);
+                            startActivity(intent);
                             break;
+
                     case 3: intent = new Intent(MainActivity.this, ConsoleActivity.class);
                             startActivity(intent);
+                            break;
+                    case 4: android.os.Process.killProcess(android.os.Process.myPid());
+
                 }
             }
         });
