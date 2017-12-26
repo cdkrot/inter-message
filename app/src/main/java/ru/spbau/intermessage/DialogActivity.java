@@ -187,7 +187,11 @@ public class DialogActivity extends AppCompatActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_get_users) {
+            Controller.requestUsersInChat(chatId);
+            return true;
+        } else if (id == R.id.action_add_users) {
+            Controller.requestAddUser(this, chatId);
             return true;
         }
 
