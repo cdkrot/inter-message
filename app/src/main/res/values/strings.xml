@@ -3,7 +3,7 @@
     <string name="menu_dialogs">Dialogs</string>
     <string name="menu_options">Options</string>
     <string name="new_dialog">Create new dialog</string>
-    <string name="title_activity_dialog">DialogActivity</string>
+    <string name="title_activity_dialog">Dialog</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
