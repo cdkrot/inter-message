@@ -151,6 +151,7 @@ public class DialogActivity extends AppCompatActivity
         intentFilter.addAction(MessageReceiver.ACTION_GOT_LAST_MESSAGES);
         intentFilter.addAction(MessageReceiver.ACTION_GOT_UPDATES);
         intentFilter.addAction(MessageReceiver.ACTION_GET_USERS_FOR_ADD);
+        intentFilter.addAction(MessageReceiver.ACTION_GET_USERS);
 
         registerReceiver(messageReceiver, intentFilter);
 
@@ -175,15 +176,17 @@ public class DialogActivity extends AppCompatActivity
         public static final String ACTION_GOT_LAST_MESSAGES = "DialogActivity.action.LAST_MESSAGES";
         public static final String ACTION_GOT_UPDATES = "DialogActivity.action.UPDATES";
         public static final String ACTION_GET_USERS_FOR_ADD = "DialogActivity.action.GET_USERS_FOR_ADD";
+        public static final String ACTION_GET_USERS = "DialogActivity.action.GET_USERS";
 
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            if (ACTION_RECEIVE.equals(action)) {
 
-                String toChatId = intent.getStringExtra("ChatId");
-                if (!toChatId.equals(chatId))
-                    return;
+            String toChatId = intent.getStringExtra("ChatId");
+            if (!toChatId.equals(chatId))
+                return;
+
+            if (ACTION_RECEIVE.equals(action)) {
 
                 String text = intent.getStringExtra("Message");
                 long date = intent.getLongExtra("Date", 0);
@@ -197,9 +200,6 @@ public class DialogActivity extends AppCompatActivity
                 messages.add(newMessage);
                 messagesAdapter.notifyDataSetChanged();
             } else  if (ACTION_GOT_LAST_MESSAGES.equals(action)){
-                String toChatId = intent.getStringExtra("ChatId");
-                if (!toChatId.equals(chatId))
-                    return;
 
                 if (messages.size() != 0)
                     return;
@@ -220,9 +220,6 @@ public class DialogActivity extends AppCompatActivity
                 }
 
             } else if (ACTION_GOT_UPDATES.equals(action)) {
-                String toChatId = intent.getStringExtra("ChatId");
-                if (messages.size() == 0 || !toChatId.equals(chatId))
-                    return;
 
                 int position = intent.getIntExtra("FirstPosition", 0);
                 String[] texts = intent.getStringArrayExtra("Texts");
@@ -249,8 +246,7 @@ public class DialogActivity extends AppCompatActivity
                 }
 
                 AlertDialog.Builder alert = new AlertDialog.Builder(DialogActivity.this);
-                alert.setTitle("Hello!");
-                alert.setMessage("Enter your name:");
+                alert.setMessage("Choose users to add:");
 
                 final ListView listUsers = new ListView(DialogActivity.this);
                 @SuppressWarnings("unchecked")
@@ -280,12 +276,29 @@ public class DialogActivity extends AppCompatActivity
                             Controller.addUsers(checkedIds, chatId);
                             Toast.makeText(DialogActivity.this, checkedIds.size() + " users were added", Toast.LENGTH_SHORT).show();
                         } else {
-                            Toast.makeText(DialogActivity.this, "No users were choosed", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(DialogActivity.this, "No users were chosen", Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
 
                 alert.show();
+            } else if (ACTION_GET_USERS.equals(action)) {
+                ArrayList<String> userNames = intent.getStringArrayListExtra("UserNames");
+                AlertDialog.Builder alert = new AlertDialog.Builder(DialogActivity.this);
+                alert.setMessage("Users in this chat:");
+
+                final ListView listUsers = new ListView(DialogActivity.this);
+                @SuppressWarnings("unchecked")
+                ArrayAdapter adapter = new ArrayAdapter(DialogActivity.this, android.R.layout.simple_list_item_1, userNames);
+                listUsers.setAdapter(adapter);
+                alert.setView(listUsers);
+
+                alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int _unused) {
+                        //nothing to do
+                    }
+                });
             }
         }
     }

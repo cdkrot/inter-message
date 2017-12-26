@@ -56,7 +56,7 @@ public class Controller extends IntentService {
     private static final String ACTION_REQUEST_ADD_USER = "Controller.action.REQUEST_ADD_USER";
     private static final String ACTION_ADD_USER = "Controller.action.ADD_USER";
     private static final String ACTION_ADD_USERS = "Controller.action.ADD_USERS";
-
+    private static final String ACTION_GET_USERS_IN_CHAT = "Controller.action.GET_USERS_IN_CHAT";
 
     public Controller() {
         super("Controller");
@@ -207,8 +207,15 @@ public class Controller extends IntentService {
         context.startService(intent);
     }
 
+    public static void requestUsersInChat(String chatId) {
+        Context context = Intermessage.getAppContext();
+        Intent intent = new Intent(context, Controller.class);
+        intent.setAction(ACTION_GET_USERS_IN_CHAT);
+        intent.putExtra("ChatId", chatId);
+        context.startService(intent);
+    }
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
+
     @Override
     protected void onHandleIntent(Intent intent) {
         if (intent == null) {
@@ -338,6 +345,20 @@ public class Controller extends IntentService {
             }
 
             messenger.addUsersToChat(new Chat(chatId), users);
+
+        } else if (ACTION_GET_USERS_IN_CHAT.equals(action)) {
+
+            String chatId = intent.getStringExtra("ChatId");
+            List<Pair<User, String>> usersInChat = messenger.getUsersInChat(new Chat(chatId));
+            ArrayList<String> userNames = new ArrayList<>();
+            for (Pair<User, String> p : usersInChat) {
+                userNames.add(p.second);
+            }
+
+            Intent broadcastIntent = new Intent();
+            intent.setAction(DialogActivity.MessageReceiver.ACTION_GET_USERS);
+            broadcastIntent.putExtra("UserNames", userNames);
+            sendBroadcast(intent);
 
         }
     }

@@ -51,7 +51,6 @@ public class DialogsListActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 if (i == 0) {
                     AlertDialog.Builder alert = new AlertDialog.Builder(DialogsListActivity.this);
-                    alert.setTitle("Hello!");
                     alert.setMessage("Enter name of new Dialog:");
 
                     final EditText input = new EditText(DialogsListActivity.this);
