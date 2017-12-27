@@ -44,6 +44,7 @@ public class Controller extends IntentService {
                                 .setContentTitle("Dialog notification")
                                 .setContentText("New message(s)");
                 Intent resultIntent = new Intent(Intermessage.getAppContext(), DialogActivity.class);
+                resultIntent.putExtra("ChatId", chat.id);
                 PendingIntent pendingIntent = PendingIntent.getActivity(
                         Intermessage.getAppContext(),
                         0,

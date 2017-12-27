@@ -99,8 +99,8 @@ public class DialogActivity extends AppCompatActivity
                     newMessage.messageText = text;
                     input.setText("");
 
-                    messages.add(newMessage);
-                    messagesAdapter.notifyDataSetChanged();
+                    /*messages.add(newMessage);
+                    messagesAdapter.notifyDataSetChanged();*/
 
                     Controller.sendMessage(DialogActivity.this, newMessage, chatId);
                     handled = true;
@@ -226,6 +226,7 @@ public class DialogActivity extends AppCompatActivity
 
                 messages.add(newMessage);
                 messagesAdapter.notifyDataSetChanged();
+
             } else  if (ACTION_GOT_LAST_MESSAGES.equals(action)){
 
                 if (messages.size() != 0)
@@ -246,6 +247,8 @@ public class DialogActivity extends AppCompatActivity
                     messages.add(item);
                 }
 
+                messagesAdapter.notifyDataSetChanged();
+
             } else if (ACTION_GOT_UPDATES.equals(action)) {
 
                 int position = intent.getIntExtra("FirstPosition", 0);
@@ -263,7 +266,9 @@ public class DialogActivity extends AppCompatActivity
                     item.userName = userNames[i];
                     messages.add(item);
                 }
+
                 messagesAdapter.notifyDataSetChanged();
+
             } else if (ACTION_GET_USERS_FOR_ADD.equals(action)) {
                 ArrayList<String> userNames = intent.getStringArrayListExtra("UserNames");
                 ArrayList<String> userIds = intent.getStringArrayListExtra("UserIds");
@@ -326,6 +331,8 @@ public class DialogActivity extends AppCompatActivity
                         //nothing to do
                     }
                 });
+
+                alert.show();
             }
         }
     }
