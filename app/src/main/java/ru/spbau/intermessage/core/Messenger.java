@@ -292,8 +292,8 @@ public class Messenger extends ServiceCommon {
     public boolean registerMessage(Chat ch, User u, int id, Message m) {
         System.err.println("Recieved new(?) message " + m.type);
         
-        if (storage.get("chats." + ch.id).getType() != IStorage.ObjectType.STRING)
-            storage.get("chats." + ch.id).setString("new chat");
+        if (storage.get("chatname." + ch.id).getType() != IStorage.ObjectType.STRING)
+            storage.get("chatname." + ch.id).setString("new chat");
         
         int len = storage.getList("msg." + ch.id + "." + u.publicKey).size();
         if (id > len || id < 0)
@@ -307,7 +307,7 @@ public class Messenger extends ServiceCommon {
             for (User member: getChatMembers(ch))
                 recalcNeedsSync(member);
 
-            if (m.type.equals("!newchat") || m.type.equals("!useradd")) {
+            if (m.type.equals("!newchat") || m.type.equals("!adduser")) {
                 ReadHelper reader = new ReadHelper(ByteVector.wrap(m.data));
                 User xx = null;
                 while ((xx = User.read(reader)) != null) {
