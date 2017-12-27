@@ -28,7 +28,7 @@ public class Message {
         msg.timestamp = reader.readLong();
 
         msg.data = reader.readBytes();
-        if (msg.data == null || reader.available() != 0)
+        if (msg.data == null)
             return null;
 
         return msg;
