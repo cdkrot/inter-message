@@ -292,9 +292,9 @@ public class DialogActivity extends AppCompatActivity
                     @Override
                     public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                         if (listUsers.isItemChecked(i)) {
-                            listUsers.setItemChecked(i, true);
-                        } else {
                             listUsers.setItemChecked(i, false);
+                        } else {
+                            listUsers.setItemChecked(i, true);
                         }
                     }
                 });
@@ -315,10 +315,12 @@ public class DialogActivity extends AppCompatActivity
                         ArrayList<String> checkedIds = new ArrayList<>();
                         SparseBooleanArray checkedUsers = listUsers.getCheckedItemPositions();
 
-                        for (int i = 0; i < userNames.size(); i++)
-                            if (checkedUsers.get(i)) {
-                                checkedIds.add(userIds.get(i));
-                            }
+                        if (checkedUsers != null) {
+                            for (int i = 0; i < userNames.size(); i++)
+                                if (checkedUsers.get(i)) {
+                                    checkedIds.add(userIds.get(i));
+                                }
+                        }
 
                         if (!checkedIds.isEmpty()) {
                             Controller.addUsers(checkedIds, chatId);
