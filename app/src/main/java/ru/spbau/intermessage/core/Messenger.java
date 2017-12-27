@@ -147,7 +147,7 @@ public class Messenger extends ServiceCommon {
                         lst.add(new Tuple3<User, String, Message>(res.first, doGetUserName(res.first), res.second));
                     }
                     
-                    callback.accept(total, lst);
+                    callback.accept(since, lst);
                 }
             });
     }
@@ -303,9 +303,6 @@ public class Messenger extends ServiceCommon {
             m.write(writer);
 
             storage.getList("msg." + ch.id + "." + u.publicKey).push(writer.getData().toBytes());
-
-            u.write(writer);
-            storage.getList("allmsg." + ch.id).push(writer.getData().toBytes());
             
             for (User member: getChatMembers(ch))
                 recalcNeedsSync(member);
@@ -322,6 +319,9 @@ public class Messenger extends ServiceCommon {
                 for (EventListener listener: listeners)
                     listener.onChatAddition(ch);
             } else {
+                u.write(writer);
+                storage.getList("allmsg." + ch.id).push(writer.getData().toBytes());
+                
                 for (EventListener listener: listeners)
                     listener.onMessage(ch, doGetUserName(u), u, m);             
             }
