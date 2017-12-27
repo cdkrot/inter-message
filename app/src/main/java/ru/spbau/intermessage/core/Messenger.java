@@ -124,24 +124,19 @@ public class Messenger extends ServiceCommon {
     public void changeUserName(String newname) {
         postRequest(new RunnableRequest() {
                 public void run() {
-                    storage.get("id.username").setString(newname);
+                    doSetUserName(identity.user(), newname);
                 }
             });
     }
 
-    public String getOwnName() {
-        IStorage.Union a = storage.get("id.username");
-
-        if (a.getType() != IStorage.ObjectType.STRING)
-            return a.getString();
-        else
-            return "";
-    }
-    
     public void getListOfChats(Consumer<List<Pair<String, Chat>>> callback) {
         postRequest(new RunnableRequest() {
                 public void run() {
-                    callback.accept(new ArrayList<Pair<String, Chat>>());
+                    List<Pair<String, Chat>> res = new ArrayList<Pair<String, Chat>>();
+                    for (Chat ch: getChatsWithUser(identity.user()))
+                        res.add(new Pair(doGetChatName(ch), ch));
+
+                    callback.accept(res);
                 }
             });
     }
@@ -149,7 +144,17 @@ public class Messenger extends ServiceCommon {
     public void getLastMessages(Chat chat, int limit, BiConsumer<Integer, List<Tuple3<User, String, Message>>> callback) {
         postRequest(new RunnableRequest() {
                 public void run() {
-                    callback.accept(0, new ArrayList<Tuple3<User, String, Message>>());
+                    int total = doGetMessageCount(chat);
+                    int since = Math.max(0, total - limit);
+                    
+                    List<Tuple3<User, String, Message>> lst = new ArrayList<Tuple3<User, String, Message>>();
+                    for (int i = since; i != total; ++i) {
+                        Pair<User, Message> res = doGetMessage(chat, i);
+
+                        lst.add(new Tuple3<User, String, Message>(res.first, doGetUserName(res.first), res.second));
+                    }
+                    
+                    callback.accept(total, lst);
                 }
             });
     }
@@ -157,34 +162,59 @@ public class Messenger extends ServiceCommon {
     public void getMessagesSince(Chat chat, int from, int limit, Consumer<List<Tuple3<User, String, Message>>> callback) {
         postRequest(new RunnableRequest() {
                 public void run() {
-                    callback.accept(new ArrayList<Tuple3<User, String, Message>>());;
+                    int total = doGetMessageCount(chat);
+                    int until = Math.min(total, from + limit);
+                    
+                    List<Tuple3<User, String, Message>> lst = new ArrayList<Tuple3<User, String, Message>>();
+                    for (int i = from; i != until; ++i) {
+                        Pair<User, Message> res = doGetMessage(chat, i);
+
+                        lst.add(new Tuple3<User, String, Message>(res.first, doGetUserName(res.first), res.second));
+                    }
+                    
+                    callback.accept(lst);
                 }
             });
     }
 
     public void addUserToChat(Chat chat, User user) {
-        postRequest(new RunnableRequest() {
-                public void run() {
-                    
-                }
-            });
+        WriteHelper writer = new WriteHelper(new ByteVector());
+        user.write(writer);
+        sendMessage(chat, new Message("!adduser", 228410, writer.getData().toBytes()));
     }
 
     public List<Pair<User, String>> getUsersNearby() {
-        postRequest(new RunnableRequest() {
+        List<Pair<User, String>> res = new ArrayList<Pair<User, String>>();
+        
+        RunnableRequest r = new RunnableRequest() {
                 public void run() {
+                    for (String str: storage.getMatching("user.location.")) {
+                        User u = new User(str.substring("user.location.".length()));
+                        res.add(new Pair<User, String>(u, doGetUserName(u)));
+                    }
                 }
-            });
-        return null;
+            };
+
+        postRequest(r);
+        r.waitCompletion();
+        
+        return res;
     }
 
     public List<Pair<User, String>> getUsersInChat(Chat chat) {
-        postRequest(new RunnableRequest() {
+        List<Pair<User, String>> res = new ArrayList<Pair<User, String>>();
+        
+        RunnableRequest r = new RunnableRequest() {
                 public void run() {
+                    for (User u: getChatMembers(chat))
+                        res.add(new Pair(u, doGetUserName(u)));
                 }
-            });
+            };
 
-        return null;
+        postRequest(r);
+        r.waitCompletion();
+    
+        return res;
     }
     
     /*** INTERNAL, DO NOT USE */
@@ -263,7 +293,10 @@ public class Messenger extends ServiceCommon {
 
     public boolean registerMessage(Chat ch, User u, int id, Message m) {
         System.err.println("Recieved new(?) message " + m.type);
-
+        
+        if (storage.get("chats." + ch.id).getType() != IStorage.ObjectType.STRING)
+            storage.get("chats." + ch.id).setString("new chat");
+        
         int len = storage.getList("msg." + ch.id + "." + u.publicKey).size();
         if (id > len || id < 0)
             return false;
@@ -273,12 +306,36 @@ public class Messenger extends ServiceCommon {
 
             storage.getList("msg." + ch.id + "." + u.publicKey).push(writer.getData().toBytes());
 
+            u.write(writer);
+            storage.getList("allmsg." + ch.id).push(writer.getData().toBytes());
+            
             for (User member: getChatMembers(ch))
                 recalcNeedsSync(member);
+
+            if (m.type.equals("!newchat") || m.type.equals("!useradd")) {
+                ReadHelper reader = new ReadHelper(ByteVector.wrap(m.data));
+                User xx;
+                while ((xx = User.read(reader)) != null) {
+                    storage.get("chatmembers." + ch.id + "." + xx.publicKey).setInt(1);
+                    storage.get("chatswith." + xx.publicKey + "." + ch.id).setInt(1);
+                }
+            }
             
             return true;
         }
         return true;
+    }
+
+    public int doGetMessageCount(Chat ch) {
+        return storage.getList("allmsg." + ch.id).size();
+    }
+    
+    public Pair<User, Message> doGetMessage(Chat ch, int id) {
+        ReadHelper reader = new ReadHelper(ByteVector.wrap(storage.getList("allmsg." + ch.id).get(id).getData()));
+
+        Message m = Message.read(reader);
+        User u = User.read(reader);
+        return new Pair(u, m);
     }
     
     public int needMessage(Chat ch, User u, int i) {
@@ -294,9 +351,7 @@ public class Messenger extends ServiceCommon {
         WriteHelper writer = new WriteHelper(new ByteVector());
         msg.write(writer);
 
-        storage.getList("msg." + ch.id + "." + identity.user().publicKey).push(writer.getData().toBytes());
-
-        System.err.println("tried to send message ");
+        registerMessage(ch, identity.user(), storage.getList("msg." + ch.id + "." + identity.user().publicKey).size(), msg);
         
         for (User u: getChatMembers(ch)) {
             storage.get("user.poor." + u.publicKey).setInt(1);
@@ -306,16 +361,12 @@ public class Messenger extends ServiceCommon {
     public Chat doCreateChat(ArrayList<User> users) {
         String id = "" + (System.currentTimeMillis() % 1000);
 
-        for (User u: users) {
-            storage.get("chatmembers." + id + "." + u.publicKey).setInt(1);
-            storage.get("chatswith." + u.publicKey + "." + id).setInt(1);
-        }
-
-        User u = identity.user(); // self.
-        storage.get("chatmembers." + id + "." + u.publicKey).setInt(1);
-        storage.get("chatswith." + u.publicKey + "." + id).setInt(1);
+        WriteHelper writer = new WriteHelper(new ByteVector());
+        identity.user().write(writer);
+        for (User u: users)
+            u.write(writer);
         
-        doSendMessage(new Chat(id), new Message("newchat", 100500, Util.stringToBytes("chat created")));
+        doSendMessage(new Chat(id), new Message("!newchat", 100500, writer.getData().toBytes()));
 
         return new Chat(id);
     }
@@ -334,7 +385,7 @@ public class Messenger extends ServiceCommon {
         return Message.read(reader);
     }
 
-    public void setUserLocation(User u, String addr) {
+    public void doSetUserLocation(User u, String addr) {
         storage.get("user.location." + u.publicKey).setString(addr);
     }
 
@@ -343,6 +394,26 @@ public class Messenger extends ServiceCommon {
 
         if (obj.getType() != IStorage.ObjectType.STRING)
             return null;
+        return obj.getString();
+    }
+
+    public void doSetUserName(User user, String newname) {
+        storage.get("user.name." + user.publicKey).setString(newname);
+    }
+
+    public String doGetUserName(User user) {
+        IStorage.Union obj = storage.get("user.name." + user.publicKey);
+
+        if (obj.getType() != IStorage.ObjectType.STRING)
+            return "";
+        return obj.getString();
+    }
+
+    public String doGetChatName(Chat chat) {
+        IStorage.Union obj = storage.get("chatname." + chat.id);
+
+        if (obj.getType() != IStorage.ObjectType.STRING)
+            return "";
         return obj.getString();
     }
 };

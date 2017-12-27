@@ -55,10 +55,7 @@ public class Logic implements ILogic {
     
     public ByteVector feed0(ByteVector packet) {
         // TODO: add security check here.
-        System.err.println("KEK1");
         ReadHelper reader = new ReadHelper(packet);
-
-        System.err.println("KEK2");
         
         user = User.read(reader);
         if (user == null || reader.available() != 0)
@@ -66,8 +63,6 @@ public class Logic implements ILogic {
 
         if (!msg.setBusy(user))
             return null;
-        
-        System.err.println("KEK3");
         
         state = 1;
         return getNextTuple();

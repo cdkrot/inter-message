@@ -31,7 +31,8 @@ public class UDPLogic {
         
         writer.writeBytesSimple(head);
         msg.identity.user().write(writer);
-
+        writer.writeString(msg.doGetUserName(msg.identity.user()));
+        
         for (User u: msg.getPoor())
             u.write(writer);
 
@@ -49,9 +50,11 @@ public class UDPLogic {
             return;
         
         User u = User.read(reader);
-        if (u == null)
+        String name = reader.readString();
+        
+        if (u == null || name == null)
             return;
-
+        
         boolean was = false;
         while (reader.available() > 0) {
             User xx = User.read(reader);
@@ -62,7 +65,8 @@ public class UDPLogic {
                 was = true;
         }
 
-        msg.setUserLocation(u, from);
+        msg.doSetUserName(u, name);
+        msg.doSetUserLocation(u, from);
 
         System.err.println("Get valid bcast from " + u.publicKey + " " + was);
         
