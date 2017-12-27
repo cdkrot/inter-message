@@ -19,7 +19,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.inputmethod.EditorInfo;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -283,7 +285,21 @@ public class DialogActivity extends AppCompatActivity
                 final ListView listUsers = new ListView(DialogActivity.this);
                 @SuppressWarnings("unchecked")
                 ArrayAdapter adapter = new ArrayAdapter(DialogActivity.this, android.R.layout.simple_list_item_multiple_choice, userNames);
+
                 listUsers.setAdapter(adapter);
+
+                listUsers.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                        if (listUsers.isItemChecked(i)) {
+                            listUsers.setItemChecked(i, true);
+                        } else {
+                            listUsers.setItemChecked(i, false);
+                        }
+                    }
+                });
+
+
                 alert.setView(listUsers);
 
                 alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
