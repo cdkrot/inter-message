@@ -41,6 +41,9 @@ public class MainActivity extends AppCompatActivity {
         buttonNames.add("Console mode");
         buttonNames.add("Kill application");
 
+        Intent newIntent = new Intent(this, Controller.class);
+        newIntent.setAction("ACTION.TRASH");
+        startService(newIntent);
 
         @SuppressWarnings("unchecked")
         ArrayAdapter mainMenuAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, buttonNames);
