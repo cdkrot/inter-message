@@ -38,11 +38,13 @@ public class Messenger extends ServiceCommon {
     }
 
     private static class ChatCreateRequest extends RequestCommon {
-        public ChatCreateRequest(ArrayList<User> lst) {
+        public ChatCreateRequest(ArrayList<User> lst, String cn) {
             users = lst;
+            chatname = cn;
         }
         
         public Chat result;
+        public String chatname;
         public ArrayList<User> users;
     }
     
@@ -83,6 +85,7 @@ public class Messenger extends ServiceCommon {
             ChatCreateRequest reqc = (ChatCreateRequest)req;
 
             reqc.result = doCreateChat(reqc.users);
+            doSendMessage(reqc.result, getChangeChatName(reqc.result, reqc.chatname));
         }
     }
         
@@ -108,7 +111,7 @@ public class Messenger extends ServiceCommon {
     }
 
     public Chat createChat(String chatname, ArrayList<User> users) {
-        ChatCreateRequest req = new ChatCreateRequest(users);
+        ChatCreateRequest req = new ChatCreateRequest(users, chatname);
         postRequest(req);
         req.waitCompletion();
         return req.result;
@@ -122,6 +125,14 @@ public class Messenger extends ServiceCommon {
             });
     }
 
+
+    public Message getChangeChatName(Chat chat, String newname) {
+        WriteHelper writer = new WriteHelper(new ByteVector());
+        writer.writeString(newname);
+        
+        return new Message("!newname", System.currentTimeMillis() / 1000, writer.getData().toBytes());
+    }
+    
     public void getListOfChats(Lambda1<List<Pair<String, Chat>>> callback) {
         postRequest(new RunnableRequest() {
                 public void run() {
@@ -307,7 +318,14 @@ public class Messenger extends ServiceCommon {
             for (User member: getChatMembers(ch))
                 recalcNeedsSync(member);
 
-            if (m.type.equals("!newchat") || m.type.equals("!adduser")) {
+            if (m.type.equals("!newname")) {
+                ReadHelper reader = new ReadHelper(ByteVector.wrap(m.data));
+
+                String s = reader.readString();
+                if (s != null)
+                    doSetChatName(ch, s);
+            } else if (m.type.equals("!newchat") || m.type.equals("!adduser")) {
+                
                 ReadHelper reader = new ReadHelper(ByteVector.wrap(m.data));
                 User xx = null;
                 while ((xx = User.read(reader)) != null) {
@@ -340,6 +358,15 @@ public class Messenger extends ServiceCommon {
 
         Message m = Message.read(reader);
         User u = User.read(reader);
+
+        if (m == null || u == null) {
+            String blad = "";
+
+            for (byte b: storage.getList("allmsg." + ch.id).get(id).getData())
+                blad += String.format("%02X ", b);
+            throw new RuntimeException((m == null ? "M IS NULL" : "M OK") + (u == null ? "U IS NULL" : "U OK") + "\n" + blad);
+        }
+        
         return new Pair(u, m);
     }
     
@@ -372,7 +399,7 @@ public class Messenger extends ServiceCommon {
             u.write(writer);
         
         doSendMessage(new Chat(id), new Message("!newchat", 100500, writer.getData().toBytes()));
-
+        
         return new Chat(id);
     }
     
@@ -387,7 +414,12 @@ public class Messenger extends ServiceCommon {
         byte[] data = storage.getList("msg." + ch.id + "." + u.publicKey).get(id).getData();
         
         ReadHelper reader = new ReadHelper(ByteVector.wrap(data));
-        return Message.read(reader);
+        
+        Message m = Message.read(reader);
+
+        if (m == null)
+            throw new RuntimeException(data.toString());
+        return m;
     }
 
     public void doSetUserLocation(User u, String addr) {
@@ -414,6 +446,10 @@ public class Messenger extends ServiceCommon {
         return obj.getString();
     }
 
+    public void doSetChatName(Chat chat, String name) {
+        storage.get("chatname." + chat.id).setString(name);
+    }
+        
     public String doGetChatName(Chat chat) {
         IStorage.Union obj = storage.get("chatname." + chat.id);
 
