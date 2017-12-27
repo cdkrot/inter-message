@@ -28,10 +28,17 @@ public class Controller extends IntentService {
 
     private static Messenger messenger = new Messenger(new InMemoryStorage(), getId());
     static {
-        messenger.registerEventListener(new EventListener() {
+        messenger.registerEventListener(new EventListener() { // new message
             @Override
             public void onMessage(Chat chat, Pair<String, User> user, Message message) {
                 receiveMessage(Intermessage.getAppContext(), user.first, chat.id, message);
+            }
+        });
+
+        messenger.registerEventListener(new EventListener() { // addition in new dialog by someone
+            @Override
+            public void onMessage(Chat chat, Pair<String, User> user, Message message) {
+                Controller.requestDialogList(Intermessage.getAppContext());
             }
         });
     }
