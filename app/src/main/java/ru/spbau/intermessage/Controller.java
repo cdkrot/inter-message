@@ -33,7 +33,7 @@ import ru.spbau.intermessage.util.Util;
 
 public class Controller extends IntentService {
 
-    private static Messenger messenger = new Messenger(new InMemoryStorage(), getId());
+    private static Messenger messenger = new Messenger(new Storage(), getId());
     static {
         messenger.registerEventListener(new EventListener() {
             @Override
@@ -360,10 +360,10 @@ public class Controller extends IntentService {
             }
 
             Intent broadcastIntent = new Intent();
-            intent.setAction(DialogActivity.MessageReceiver.ACTION_GET_USERS_FOR_ADD);
+            broadcastIntent.setAction(DialogActivity.MessageReceiver.ACTION_GET_USERS_FOR_ADD);
             broadcastIntent.putExtra("UserNames", userNames);
             broadcastIntent.putExtra("UserIds", userIds);
-            sendBroadcast(intent);
+            sendBroadcast(broadcastIntent);
 
         } else if (ACTION_ADD_USER.equals(action)) {
 
@@ -392,9 +392,9 @@ public class Controller extends IntentService {
             }
 
             Intent broadcastIntent = new Intent();
-            intent.setAction(DialogActivity.MessageReceiver.ACTION_GET_USERS);
+            broadcastIntent.setAction(DialogActivity.MessageReceiver.ACTION_GET_USERS);
             broadcastIntent.putExtra("UserNames", userNames);
-            sendBroadcast(intent);
+            sendBroadcast(broadcastIntent);
 
         }
     }
