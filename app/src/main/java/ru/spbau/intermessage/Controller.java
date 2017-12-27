@@ -1,14 +1,19 @@
 package ru.spbau.intermessage;
 
 import android.app.IntentService;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
+import android.support.v4.app.NotificationCompat;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import ru.spbau.intermessage.core.Chat;
@@ -31,6 +36,25 @@ public class Controller extends IntentService {
         messenger.registerEventListener(new EventListener() {
             @Override
             public void onMessage(Chat chat, String userName, User user, Message message) {
+                NotificationCompat.Builder builder =
+                        new NotificationCompat.Builder(Intermessage.getAppContext())
+                                .setSmallIcon(R.mipmap.ic_launcher_mascot)
+                                .setContentTitle("Dialog notification")
+                                .setContentText("New message(s)");
+                Intent resultIntent = new Intent(Intermessage.getAppContext(), DialogActivity.class);
+                PendingIntent pendingIntent = PendingIntent.getActivity(
+                        Intermessage.getAppContext(),
+                        0,
+                        resultIntent,
+                        PendingIntent.FLAG_UPDATE_CURRENT
+                        );
+                builder.setContentIntent(pendingIntent);
+                builder.setAutoCancel(true);
+
+                NotificationManager notificationManager =
+                        (NotificationManager) Intermessage.getAppContext().getSystemService(NOTIFICATION_SERVICE);
+                notificationManager.notify(1, builder.build());
+
                 receiveMessage(Intermessage.getAppContext(), userName, chat.id, message);
             }
 
@@ -43,6 +67,7 @@ public class Controller extends IntentService {
     }
 
     static ID getId() {
+        Comparator<Integer> c = (a, b) -> a - b;
         SharedPreferences sharedPreferences = Intermessage.getAppContext().getSharedPreferences("preferences", MODE_PRIVATE);
         String publicKey = sharedPreferences.getString("publicKey", "trustno1");
         String privateKey = sharedPreferences.getString("privateKey", "beliveinlie");
