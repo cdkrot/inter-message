@@ -21,6 +21,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
@@ -286,20 +287,10 @@ public class DialogActivity extends AppCompatActivity
                 @SuppressWarnings("unchecked")
                 ArrayAdapter adapter = new ArrayAdapter(DialogActivity.this, android.R.layout.simple_list_item_multiple_choice, userNames);
 
+                listUsers.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE);
+
                 listUsers.setAdapter(adapter);
-
-                listUsers.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                    @Override
-                    public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                        if (listUsers.isItemChecked(i)) {
-                            listUsers.setItemChecked(i, false);
-                        } else {
-                            listUsers.setItemChecked(i, true);
-                        }
-                    }
-                });
-
-
+                
                 alert.setView(listUsers);
 
                 alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
