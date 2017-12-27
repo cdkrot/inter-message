@@ -7,6 +7,7 @@ import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
@@ -50,6 +51,8 @@ public class Controller extends IntentService {
                         );
                 builder.setContentIntent(pendingIntent);
                 builder.setAutoCancel(true);
+                builder.setVibrate(new long[] { 1000, 1000, 1000, 1000, 1000 });
+                builder.setLights(Color.WHITE, 3000, 3000);
 
                 NotificationManager notificationManager =
                         (NotificationManager) Intermessage.getAppContext().getSystemService(NOTIFICATION_SERVICE);
