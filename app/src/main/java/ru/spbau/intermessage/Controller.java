@@ -361,6 +361,8 @@ public class Controller extends IntentService {
 
             Intent broadcastIntent = new Intent();
             broadcastIntent.setAction(DialogActivity.MessageReceiver.ACTION_GET_USERS_FOR_ADD);
+
+            broadcastIntent.putExtra("ChatId", chatId);
             broadcastIntent.putExtra("UserNames", userNames);
             broadcastIntent.putExtra("UserIds", userIds);
             sendBroadcast(broadcastIntent);
@@ -392,6 +394,7 @@ public class Controller extends IntentService {
             }
 
             Intent broadcastIntent = new Intent();
+            broadcastIntent.putExtra("ChatId", chatId);
             broadcastIntent.setAction(DialogActivity.MessageReceiver.ACTION_GET_USERS);
             broadcastIntent.putExtra("UserNames", userNames);
             sendBroadcast(broadcastIntent);
