@@ -68,10 +68,6 @@ public abstract class ServiceCommon {
                 onClose();
             }
         }.start();
-
-        try {
-            Thread.currentThread().sleep(1000);
-        } catch (InterruptedException ex) {}
     }
 
     protected void special() {
