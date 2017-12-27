@@ -68,6 +68,13 @@ public abstract class ServiceCommon {
                 onClose();
             }
         }.start();
+
+        int j = 0;
+        for (int i = 0; i != 1000000; ++i) {
+            j += i;
+        }
+
+        System.err.println(j);
     }
 
     protected void special() {
