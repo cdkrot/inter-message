@@ -26,6 +26,7 @@ import ru.spbau.intermessage.crypto.ID;
 import ru.spbau.intermessage.gui.Item;
 import ru.spbau.intermessage.store.InMemoryStorage;
 import ru.spbau.intermessage.store.Storage;
+import ru.spbau.intermessage.util.Lambda2;
 import ru.spbau.intermessage.util.Pair;
 import ru.spbau.intermessage.util.Tuple3;
 import ru.spbau.intermessage.util.Util;

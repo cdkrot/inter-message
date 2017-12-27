@@ -122,7 +122,7 @@ public class Messenger extends ServiceCommon {
             });
     }
 
-    public void getListOfChats(Consumer<List<Pair<String, Chat>>> callback) {
+    public void getListOfChats(Lambda1<List<Pair<String, Chat>>> callback) {
         postRequest(new RunnableRequest() {
                 public void run() {
                     List<Pair<String, Chat>> res = new ArrayList<Pair<String, Chat>>();
@@ -134,7 +134,7 @@ public class Messenger extends ServiceCommon {
             });
     }
 
-    public void getLastMessages(Chat chat, int limit, BiConsumer<Integer, List<Tuple3<User, String, Message>>> callback) {
+    public void getLastMessages(Chat chat, int limit, Lambda2<Integer, List<Tuple3<User, String, Message>>> callback) {
         postRequest(new RunnableRequest() {
                 public void run() {
                     int total = doGetMessageCount(chat);
@@ -152,7 +152,7 @@ public class Messenger extends ServiceCommon {
             });
     }
 
-    public void getMessagesSince(Chat chat, int from, int limit, Consumer<List<Tuple3<User, String, Message>>> callback) {
+    public void getMessagesSince(Chat chat, int from, int limit, Lambda1<List<Tuple3<User, String, Message>>> callback) {
         postRequest(new RunnableRequest() {
                 public void run() {
                     int total = doGetMessageCount(chat);

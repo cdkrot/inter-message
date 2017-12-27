@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">InterMessage</string>
     <string name="menu_dialogs">Dialogs</string>
-    <string name="menu_options">Options</string>
+    <string name="menu_options">Settings</string>
     <string name="new_dialog">Create new dialog</string>
     <string name="title_activity_dialog">Dialog</string>
     <string name="title_activity_settings">Settings</string>
