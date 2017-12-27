@@ -299,7 +299,7 @@ public class WifiNNetwork implements NNetwork {
     public void create(String addr, ILogic logic) {
         try {
             SocketChannel sock = SocketChannel.open();
-            sock.bind(null);
+            sock.socket().bind(null);
             sock.configureBlocking(false);
             sock.connect(new InetSocketAddress(addr, listenPort));
 
