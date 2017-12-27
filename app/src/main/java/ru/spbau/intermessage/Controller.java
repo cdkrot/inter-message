@@ -53,7 +53,7 @@ public class Controller extends IntentService {
                         );
                 builder.setContentIntent(pendingIntent);
                 builder.setAutoCancel(true);
-                builder.setVibrate(new long[] { 1000, 1000, 1000, 1000, 1000 });
+                builder.setVibrate(new long[] { 500, 300, 300});
                 builder.setLights(Color.WHITE, 3000, 3000);
 
                 NotificationManager notificationManager =
