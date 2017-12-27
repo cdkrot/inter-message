@@ -85,14 +85,7 @@ public class Messenger extends ServiceCommon {
             reqc.result = doCreateChat(reqc.users);
         }
     }
-    
-    protected void onMessage(Chat chat, User user, Message msg) {
-        synchronized (this) {
-            for (EventListener listener: listeners)
-                listener.onMessage(chat, user, msg);
-        }
-    }
-    
+        
     protected void warmUp() {
         network = new WifiNNetwork();
         network.begin(this, storage);
@@ -177,10 +170,15 @@ public class Messenger extends ServiceCommon {
             });
     }
 
-    public void addUserToChat(Chat chat, User user) {
+    public void addUserToChat(Chat chat, User u) {
+        addUsersToChat(chat, Arrays.asList(u));
+    }
+    
+    public void addUsersToChat(Chat chat, List<User> users) {
         WriteHelper writer = new WriteHelper(new ByteVector());
-        user.write(writer);
-        sendMessage(chat, new Message("!adduser", 228410, writer.getData().toBytes()));
+        for (User u: users)
+            u.write(writer);
+        sendMessage(chat, new Message("!adduser", System.currentTimeMillis() / 1000, writer.getData().toBytes()));
     }
 
     public List<Pair<User, String>> getUsersNearby() {
@@ -314,11 +312,18 @@ public class Messenger extends ServiceCommon {
 
             if (m.type.equals("!newchat") || m.type.equals("!useradd")) {
                 ReadHelper reader = new ReadHelper(ByteVector.wrap(m.data));
-                User xx;
+                User xx = null;
                 while ((xx = User.read(reader)) != null) {
+                    
                     storage.get("chatmembers." + ch.id + "." + xx.publicKey).setInt(1);
                     storage.get("chatswith." + xx.publicKey + "." + ch.id).setInt(1);
                 }
+
+                for (EventListener listener: listeners)
+                    listener.onChatAddition(ch);
+            } else {
+                for (EventListener listener: listeners)
+                    listener.onMessage(ch, doGetUserName(u), u, m);             
             }
             
             return true;
