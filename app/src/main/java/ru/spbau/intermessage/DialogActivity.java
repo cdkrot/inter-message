@@ -70,14 +70,14 @@ public class DialogActivity extends AppCompatActivity
         toolbar.setTitle(creatorIntent.getStringExtra("ChatName"));
         setSupportActionBar(toolbar);
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        /*DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
+        navigationView.setNavigationItemSelectedListener(this);*/
 
         //drawer block ends
 
@@ -113,7 +113,7 @@ public class DialogActivity extends AppCompatActivity
         });
     }
 
-    @Override
+    /*@Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
@@ -132,7 +132,7 @@ public class DialogActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
-    }
+    }*/
 
     @Override
     public void onResume() {
@@ -220,7 +220,7 @@ public class DialogActivity extends AppCompatActivity
                         Controller.changeChatName(chatId, enteredName);
                         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
                         toolbar.setTitle(enteredName);
-                        
+
                         Toast.makeText(DialogActivity.this, "New name is set", Toast.LENGTH_SHORT).show();
 
                     } else {
