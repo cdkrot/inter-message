@@ -37,8 +37,7 @@ import ru.spbau.intermessage.core.Message;
 import ru.spbau.intermessage.gui.Item;
 import ru.spbau.intermessage.gui.ItemAdapter;
 
-public class DialogActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+public class DialogActivity extends AppCompatActivity {
 
     static final private List<Item> messages = new ArrayList<>();
     static private String chatId;
