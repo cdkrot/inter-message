@@ -324,6 +324,10 @@ public class Messenger extends ServiceCommon {
                 String s = reader.readString();
                 if (s != null)
                     doSetChatName(ch, s);
+
+                for (EventListener listener: listeners)
+                    listener.onChatAddition(ch);
+
             } else if (m.type.equals("!newchat") || m.type.equals("!adduser")) {
                 
                 ReadHelper reader = new ReadHelper(ByteVector.wrap(m.data));

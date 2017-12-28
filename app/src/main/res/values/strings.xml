@@ -14,4 +14,6 @@
 
     <string name="action_get_users">Users in chat</string>
     <string name="action_add_users">Add users to chat</string>
+    <string name="action_change_dialog_name">Change dialog name</string>
+
 </resources>

@@ -196,6 +196,40 @@ public class DialogActivity extends AppCompatActivity
         } else if (id == R.id.action_add_users) {
             Controller.requestAddUser(this, chatId);
             return true;
+        } else if (id == R.id.action_change_dialog_name) {
+            AlertDialog.Builder alert = new AlertDialog.Builder(this);
+            alert.setMessage("Enter new name of dialog:");
+
+            final EditText input = new EditText(this);
+            input.setInputType(InputType.TYPE_TEXT_FLAG_IME_MULTI_LINE);
+            alert.setView(input);
+
+            alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    //Nothing to do
+                }
+            });
+
+            alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    String enteredName = input.getText().toString();
+                    if (enteredName.length() != 0 && enteredName.length() < 30) {
+
+                        Controller.changeChatName(chatId, enteredName);
+                        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+                        toolbar.setTitle(enteredName);
+                        
+                        Toast.makeText(DialogActivity.this, "New name is set", Toast.LENGTH_SHORT).show();
+
+                    } else {
+                        Toast.makeText(DialogActivity.this, "Incorrect name", Toast.LENGTH_LONG).show();
+                    }
+                }
+            });
+
+            alert.show();
         }
 
         return super.onOptionsItemSelected(item);

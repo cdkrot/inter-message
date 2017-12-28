@@ -13,5 +13,12 @@
         android:title="@string/action_get_users"
         app:showAsAction="never" />
 
+    <item
+        android:id="@+id/action_change_dialog_name"
+        android:orderInCategory="100"
+        android:title="@string/action_change_dialog_name"
+        app:showAsAction="never" />
+
+
 
 </menu>

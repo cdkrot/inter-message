@@ -94,6 +94,7 @@ public class Controller extends IntentService {
     private static final String ACTION_ADD_USER = "Controller.action.ADD_USER";
     private static final String ACTION_ADD_USERS = "Controller.action.ADD_USERS";
     private static final String ACTION_GET_USERS_IN_CHAT = "Controller.action.GET_USERS_IN_CHAT";
+    private static final String ACTION_CHANGE_CHAT_NAME = "Controller.action.CHANGE_CHAT_NAME";
 
     public Controller() {
         super("Controller");
@@ -252,6 +253,15 @@ public class Controller extends IntentService {
         context.startService(intent);
     }
 
+    public static void changeChatName(String chatId, String chatName) {
+        Context context = Intermessage.getAppContext();
+        Intent intent = new Intent(context, Controller.class);
+        intent.setAction(ACTION_CHANGE_CHAT_NAME);
+        intent.putExtra("ChatId", chatId);
+        intent.putExtra("ChatName", chatName);
+        context.startService(intent);
+    }
+
 
     @Override
     protected void onHandleIntent(Intent intent) {
@@ -399,6 +409,10 @@ public class Controller extends IntentService {
             broadcastIntent.putExtra("UserNames", userNames);
             sendBroadcast(broadcastIntent);
 
+        } else if (ACTION_CHANGE_CHAT_NAME.equals(action)) {
+            String chatId = intent.getStringExtra("ChatId");
+            String chatName = intent.getStringExtra("ChatName");
+            messenger.getChangeChatName(new Chat(chatId), chatName);
         }
     }
 }
