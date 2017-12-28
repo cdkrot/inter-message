@@ -195,7 +195,7 @@ public class DialogActivity extends AppCompatActivity {
         } else if (id == R.id.action_add_users) {
             Controller.requestAddUser(this, chatId);
             return true;
-        } else if (id == R.id.action_change_dialog_name) {
+        } /*else if (id == R.id.action_change_dialog_name) {
             AlertDialog.Builder alert = new AlertDialog.Builder(this);
             alert.setMessage("Enter new name of dialog:");
 
@@ -229,7 +229,7 @@ public class DialogActivity extends AppCompatActivity {
             });
 
             alert.show();
-        }
+        }*/
 
         return super.onOptionsItemSelected(item);
     }
@@ -265,6 +265,9 @@ public class DialogActivity extends AppCompatActivity {
 
             } else  if (ACTION_GOT_LAST_MESSAGES.equals(action)){
 
+                //if (messages.size() != 0)
+                //    throw new NullPointerException("SIZE != 0");
+
                 if (messages.size() != 0)
                     return;
 
@@ -273,8 +276,10 @@ public class DialogActivity extends AppCompatActivity {
                 long[] timestamps = intent.getLongArrayExtra("Timestamps");
                 String[] userNames = intent.getStringArrayExtra("UserNames");
                 int length = timestamps.length;
-                int shift = Math.max(0, position - messages.get(0).position + 1);
-                for (int i = length - shift - 1; i >= 0; i--) {
+
+                //if (length != 0)
+                //    throw new NullPointerException("LENGTH != 0");
+                for (int i = 0; i < length; i++) {
                     Item item = new Item();
                     item.position = position + i;
                     item.date = timestamps[i];
@@ -286,6 +291,9 @@ public class DialogActivity extends AppCompatActivity {
                 messagesAdapter.notifyDataSetChanged();
 
             } else if (ACTION_GOT_UPDATES.equals(action)) {
+
+                if (messages.size() == 0)
+                    return;
 
                 int position = intent.getIntExtra("FirstPosition", 0);
                 String[] texts = intent.getStringArrayExtra("Texts");
