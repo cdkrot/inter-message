@@ -13,7 +13,7 @@
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="36dp"
-        android:text="Decentralized messenger for local chatting\n\nCreated by Dmitry Sautin and Alexandr Fedorov\n\nApplication icon by Anastasia  Mayzhegisheva \n (https://morevnaproject.org)"
+        android:text="Decentralized messenger for local chatting\n\nCreated by Dmitry Sayutin and Alexandr Fedorov\n\nApplication icon by Anastasia  Mayzhegisheva \n (https://morevnaproject.org)"
         android:textAppearance="@style/TextAppearance.AppCompat"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
