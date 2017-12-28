@@ -12,6 +12,7 @@ import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
 
+import java.security.spec.ECField;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -86,10 +87,10 @@ public class Controller extends IntentService {
     private static final String ACTION_REQUEST_DIALOGS_LIST = "Controller.action.REQUEST_DIALOGS_LIST";
     private static final String ACTION_RETURN_DIALOGS_LIST = "Controller.action.RETURN_DIALOGS_LIST";
     private static final String ACTION_CREATE_NEW_CHAT = "Controller.action.CREATE_NEW_CHAT";
-    private static final String ACTION_REQUEST_LATEST = "Controller.action.REQUEST_LASTEST";
+    private static final String ACTION_REQUEST_LATEST = "Controller.action.REQUEST_LATEST";
     private static final String ACTION_REQUEST_UPDATES = "Controller.action.REQUEST_UPDATES";
-    private static final String ACTION_RETURN_UPDATES = "Controller.action.RETURN_DIALOGS_LIST";
-    private static final String ACTION_RETURN_LATEST = "Controller.action.RETURN_DIALOGS_LIST";
+    private static final String ACTION_RETURN_UPDATES = "Controller.action.RETURN_UPDATES";
+    private static final String ACTION_RETURN_LATEST = "Controller.action.RETURN_LATEST";
     private static final String ACTION_REQUEST_ADD_USER = "Controller.action.REQUEST_ADD_USER";
     private static final String ACTION_ADD_USER = "Controller.action.ADD_USER";
     private static final String ACTION_ADD_USERS = "Controller.action.ADD_USERS";
@@ -335,7 +336,7 @@ public class Controller extends IntentService {
             broadcastIntent.putExtra("FirstPosition", intent.getIntExtra("FirstPosition", 0));
             sendBroadcast(broadcastIntent);
 
-        } else if (ACTION_REQUEST_UPDATES.equals(action)) {
+        } else if (ACTION_RETURN_UPDATES.equals(action)) {
 
             Intent broadcastIntent = new Intent();
             broadcastIntent.setAction(DialogActivity.MessageReceiver.ACTION_GOT_UPDATES);
