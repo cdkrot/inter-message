@@ -38,8 +38,8 @@ public class MainActivity extends AppCompatActivity {
         name = getString(R.string.menu_options);
         buttonNames.add(name);
         buttonNames.add("About");
-        buttonNames.add("Console mode");
-        buttonNames.add("Kill application");
+        /*buttonNames.add("Console mode");
+        buttonNames.add("Kill application");*/
 
         Intent newIntent = new Intent(this, Controller.class);
         newIntent.setAction("ACTION.TRASH");
@@ -112,10 +112,10 @@ public class MainActivity extends AppCompatActivity {
                             startActivity(intent);
                             break;
 
-                    case 3: intent = new Intent(MainActivity.this, ConsoleActivity.class);
+                    /*case 3: intent = new Intent(MainActivity.this, ConsoleActivity.class);
                             startActivity(intent);
                             break;
-                    case 4: android.os.Process.killProcess(android.os.Process.myPid());
+                    case 4: android.os.Process.killProcess(android.os.Process.myPid());*/
 
                 }
             }
