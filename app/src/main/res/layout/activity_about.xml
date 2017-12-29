@@ -24,10 +24,11 @@
         android:layout_width="wrap_content"
         android:layout_height="312dp"
         android:layout_marginBottom="8dp"
+        android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/AboutInfo"
-        app:srcCompat="@drawable/about_mascot"
-        tools:layout_editor_absoluteX="0dp" />
+        app:srcCompat="@drawable/about_mascot" />
 
 </android.support.constraint.ConstraintLayout>
