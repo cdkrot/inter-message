@@ -19,6 +19,8 @@ public class UDPLogic {
     public UDPLogic(Messenger msg_, IStorage store_) {
         msg = msg_;
         store = store_;
+
+        lastTM = System.currentTimeMillis();
     }
 
     public ByteVector bcast() {
