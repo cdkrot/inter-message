@@ -15,6 +15,7 @@ public class Messenger extends ServiceCommon {
     public Messenger(IStorage store, ID id) {
         storage = store;
         identity = id;
+        super();
     }
     
     private static class ListenerRequest extends RequestCommon {
