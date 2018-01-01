@@ -13,10 +13,10 @@ public class InMemoryStorage implements IStorage {
         @Override
         public String toString() {
             switch (type) {
-            case NULL: return "[NULL]";
-            case INTEGER: return "" + (Integer)data;
-            case STRING: return "\"" + (String)data + "\"";
-            case BYTE_ARRAY: return ((byte[])data).toString();
+                case NULL: return "[NULL]";
+                case INTEGER: return "" + (Integer)data;
+                case STRING: return "\"" + (String)data + "\"";
+                case BYTE_ARRAY: return ((byte[])data).toString();
             }
             return null;
         }
@@ -113,10 +113,11 @@ public class InMemoryStorage implements IStorage {
         List<String> lst = new ArrayList<String>();
 
         for (Map.Entry<String, ObjectContainer> ent: kv.tailMap(group).entrySet())
-            if (ent.getKey().startsWith(group))
+            if (ent.getKey().startsWith(group)) {
                 lst.add(ent.getKey());
-            else
+            } else {
                 break;
+            }
         
         return lst;
     }

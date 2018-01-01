@@ -47,9 +47,9 @@ public class ItemAdapter extends BaseAdapter {
             convertView = inflater.inflate(R.layout.message_layout, parent, false);
 
             holder = new ViewHolder();
-            holder.date = (TextView) convertView.findViewById(R.id.Date);
-            holder.userName = (TextView) convertView.findViewById(R.id.UserName);
-            holder.text = (TextView) convertView.findViewById(R.id.MessageText);
+            holder.date = (TextView) convertView.findViewById(R.id.date);
+            holder.userName = (TextView) convertView.findViewById(R.id.userName);
+            holder.text = (TextView) convertView.findViewById(R.id.messageText);
 
             convertView.setTag(holder);
         } else{

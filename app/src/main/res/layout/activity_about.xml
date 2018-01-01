@@ -4,16 +4,16 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="ru.spbau.intermessage.AboutActivity">
+    tools:context="ru.spbau.intermessage.activities.AboutActivity">
 
     <TextView
-        android:id="@+id/AboutInfo"
+        android:id="@+id/aboutInfo"
         android:layout_width="317dp"
         android:layout_height="118dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="36dp"
-        android:text="Decentralized messenger for local chatting\n\nCreated by Dmitry Sayutin and Alexandr Fedorov\n\nApplication icon by Anastasia  Mayzhegisheva \n (https://morevnaproject.org)"
+        android:text="@string/content_about"
         android:textAppearance="@style/TextAppearance.AppCompat"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -29,7 +29,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/AboutInfo"
+        app:layout_constraintTop_toBottomOf="@+id/aboutInfo"
         app:layout_constraintVertical_bias="1.0"
         app:srcCompat="@drawable/about_mascot" />
 

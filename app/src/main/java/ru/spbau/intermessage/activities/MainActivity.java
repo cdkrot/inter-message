@@ -1,4 +1,4 @@
-package ru.spbau.intermessage;
+package ru.spbau.intermessage.activities;
 
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -16,10 +16,12 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 
+import ru.spbau.intermessage.Controller;
+import ru.spbau.intermessage.R;
 import ru.spbau.intermessage.console.ConsoleActivity;
 import ru.spbau.intermessage.crypto.ID;
 
-//import ru.spbau.intermessage.store.StorageTest;
+//import ru.spbau.intermessage.store.test.StorageTest;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -33,13 +35,11 @@ public class MainActivity extends AppCompatActivity {
 
         ListView mainMenuList = (ListView) findViewById(R.id.mainMenu);
         ArrayList<String> buttonNames = new ArrayList<>();
-        String name = getString(R.string.menu_dialogs);
-        buttonNames.add(name);
-        name = getString(R.string.menu_options);
-        buttonNames.add(name);
-        buttonNames.add("About");
-        /*buttonNames.add("Console mode");
-        buttonNames.add("Kill application");*/
+        buttonNames.add(getString(R.string.menu_dialogs));
+        buttonNames.add(getString(R.string.menu_options));
+        buttonNames.add(getString(R.string.menu_about));
+        buttonNames.add(getString(R.string.menu_console));
+        buttonNames.add(getString(R.string.menu_kill));
 
         Intent newIntent = new Intent(this, Controller.class);
         newIntent.setAction("ACTION.TRASH");
@@ -84,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
                         SharedPreferences.Editor ed = sharedPreferences.edit();
                         ed.putString(PREF_NAME, enteredName);
                         ed.apply();
-                        Controller.changeUserName(MainActivity.this, enteredName);
+                        Controller.changeUserName(enteredName);
                     } else {
                         Toast.makeText(MainActivity.this, "Incorrect name", Toast.LENGTH_LONG).show();
                     }
@@ -112,10 +112,11 @@ public class MainActivity extends AppCompatActivity {
                             startActivity(intent);
                             break;
 
-                    /*case 3: intent = new Intent(MainActivity.this, ConsoleActivity.class);
+                    case 3: intent = new Intent(MainActivity.this, ConsoleActivity.class);
                             startActivity(intent);
                             break;
-                    case 4: android.os.Process.killProcess(android.os.Process.myPid());*/
+
+                    case 4: android.os.Process.killProcess(android.os.Process.myPid());
 
                 }
             }

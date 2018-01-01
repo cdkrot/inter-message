@@ -206,7 +206,7 @@ public class Storage implements IStorage {
                 " (id integer primary key autoincrement,"
                 + "string text,"
                 + "number integer,"
-                + "binary blob" + ");";;
+                + "binary blob" + ");";
 
 
         ListStore(Context context, String key) {
@@ -253,7 +253,7 @@ public class Storage implements IStorage {
             try (SQLiteDatabase sqldb = store.getReadableDatabase();
                  Cursor c = sqldb.rawQuery("select * from " + store.tableName + " where id = " + key, null)) {
                 ListUnion result = new ListUnion(key);
-                if (c != null && c.moveToFirst()){
+                if (c != null && c.moveToFirst()) {
                     if (!c.isNull(1)) {
                         result.string = c.getString(1);
                     } else if (!c.isNull(2)) {

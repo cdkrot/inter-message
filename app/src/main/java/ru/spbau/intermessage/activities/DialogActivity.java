@@ -1,28 +1,21 @@
-package ru.spbau.intermessage;
+package ru.spbau.intermessage.activities;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.text.InputType;
 import android.util.SparseBooleanArray;
 import android.view.KeyEvent;
-import android.support.design.widget.NavigationView;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.AbsListView;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -31,9 +24,9 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
-import ru.spbau.intermessage.core.Message;
+import ru.spbau.intermessage.Controller;
+import ru.spbau.intermessage.R;
 import ru.spbau.intermessage.gui.Item;
 import ru.spbau.intermessage.gui.ItemAdapter;
 
@@ -63,25 +56,12 @@ public class DialogActivity extends AppCompatActivity {
 
         selfUserName = getSharedPreferences(PREF_FILE, MODE_PRIVATE).getString(PREF_NAME, "Default name");
 
-        //drawer block begins
-
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle(creatorIntent.getStringExtra("ChatName"));
         setSupportActionBar(toolbar);
 
-        /*DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.addDrawerListener(toggle);
-        toggle.syncState();
-
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);*/
-
-        //drawer block ends
-
-        ListView messagesList = (ListView)findViewById(R.id.messagesList);
-        final EditText input = (EditText)findViewById(R.id.input);
+        ListView messagesList = findViewById(R.id.messagesList);
+        final EditText input = findViewById(R.id.input);
         messagesAdapter = new ItemAdapter(this, messages);
         messagesList.setAdapter(messagesAdapter);
 
@@ -101,37 +81,13 @@ public class DialogActivity extends AppCompatActivity {
                     newMessage.messageText = text;
                     input.setText("");
 
-                    /*messages.add(newMessage);
-                    messagesAdapter.notifyDataSetChanged();*/
-
-                    Controller.sendMessage(DialogActivity.this, newMessage, chatId);
+                    Controller.sendMessage(newMessage, chatId);
                     handled = true;
                 }
                 return handled;
             }
         });
     }
-
-    /*@Override
-    public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
-        } else {
-            super.onBackPressed();
-        }
-    }
-
-    @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
-        int id = item.getItemId();
-
-        //TODO: Handle navigation view item clicks here.
-
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
-        return true;
-    }*/
 
     @Override
     public void onResume() {
@@ -143,7 +99,7 @@ public class DialogActivity extends AppCompatActivity {
         setIntent(creatorIntent);
 
         if (wasCreated) {
-            Controller.requestAddUser(this, chatId);
+            Controller.requestAddUser(chatId);
         }
 
         if (messageReceiver == null) {
@@ -159,9 +115,9 @@ public class DialogActivity extends AppCompatActivity {
         registerReceiver(messageReceiver, intentFilter);
 
         if (messages.size() == 0) {
-            Controller.requestLastMessages(this, chatId, 20);
+            Controller.requestLastMessages(chatId, 20);
         } else{
-            Controller.requestUpdates(this, chatId, messages.get(messages.size() - 1).position);
+            Controller.requestUpdates(chatId, messages.get(messages.size() - 1).position);
         }
     }
 
@@ -183,19 +139,15 @@ public class DialogActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
         if (id == R.id.action_get_users) {
             Controller.requestUsersInChat(chatId);
             return true;
         } else if (id == R.id.action_add_users) {
-            Controller.requestAddUser(this, chatId);
+            Controller.requestAddUser(chatId);
             return true;
-        } /*else if (id == R.id.action_change_dialog_name) {
+        } else if (id == R.id.action_change_dialog_name) {
             AlertDialog.Builder alert = new AlertDialog.Builder(this);
             alert.setMessage("Enter new name of dialog:");
 
@@ -217,7 +169,7 @@ public class DialogActivity extends AppCompatActivity {
                     if (enteredName.length() != 0 && enteredName.length() < 30) {
 
                         Controller.changeChatName(chatId, enteredName);
-                        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+                        Toolbar toolbar = findViewById(R.id.toolbar);
                         toolbar.setTitle(enteredName);
 
                         Toast.makeText(DialogActivity.this, "New name is set", Toast.LENGTH_SHORT).show();
@@ -229,7 +181,7 @@ public class DialogActivity extends AppCompatActivity {
             });
 
             alert.show();
-        }*/
+        }
 
         return super.onOptionsItemSelected(item);
     }
@@ -300,8 +252,7 @@ public class DialogActivity extends AppCompatActivity {
                 long[] timestamps = intent.getLongArrayExtra("Timestamps");
                 String[] userNames = intent.getStringArrayExtra("UserNames");
                 int length = timestamps.length;
-                int shift = 0;
-                shift = Math.max(0, messages.get(messages.size() - 1).position - position + 1);
+                int shift = Math.max(0, messages.get(messages.size() - 1).position - position + 1);
                 for (int i = shift; i < length; i++) {
                     Item item = new Item();
                     item.position = position + i;

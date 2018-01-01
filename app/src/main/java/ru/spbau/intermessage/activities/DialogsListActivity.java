@@ -1,4 +1,4 @@
-package ru.spbau.intermessage;
+package ru.spbau.intermessage.activities;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -18,6 +18,9 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 
+import ru.spbau.intermessage.Controller;
+import ru.spbau.intermessage.R;
+
 public class DialogsListActivity extends AppCompatActivity {
 
     private MessageReceiver messageReceiver;
@@ -31,7 +34,7 @@ public class DialogsListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dialogs_list);
 
-        ListView dialogsList = (ListView) findViewById(R.id.dialogs);
+        ListView dialogsList = findViewById(R.id.dialogs);
 
         if (buttonNames == null || chatIds == null) {
             buttonNames = new ArrayList<>();
@@ -69,7 +72,7 @@ public class DialogsListActivity extends AppCompatActivity {
                         public void onClick(DialogInterface dialogInterface, int i) {
                             String enteredName = input.getText().toString();
                             if (enteredName.length() != 0 && enteredName.length() < 30) {
-                                Controller.createNewChat(DialogsListActivity.this, enteredName);
+                                Controller.createNewChat(enteredName);
                             } else {
                                 Toast.makeText(DialogsListActivity.this, "Incorrect name of dialog", Toast.LENGTH_LONG).show();
                             }
@@ -95,12 +98,13 @@ public class DialogsListActivity extends AppCompatActivity {
         if (messageReceiver == null) {
             messageReceiver = new DialogsListActivity.MessageReceiver();
         }
+
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(MessageReceiver.ACTION_RECEIVE_DIALOGS_LIST);
         intentFilter.addAction(MessageReceiver.ACTION_CHAT_CREATED);
         registerReceiver(messageReceiver, intentFilter);
 
-        Controller.requestDialogList(this);
+        Controller.requestDialogList();
     }
 
     @Override
@@ -123,12 +127,10 @@ public class DialogsListActivity extends AppCompatActivity {
                 ArrayList<String> names = intent.getStringArrayListExtra("Names");
 
                 buttonNames.clear();
-                buttonNames.add("Create new dialog");
+                buttonNames.add(getString(R.string.action_create_new_dialog));
                 buttonNames.addAll(names);
 
-                ArrayList<String> ids = intent.getStringArrayListExtra("Ids");
-
-                chatIds = ids;
+                chatIds = intent.getStringArrayListExtra("Ids");
 
                 dialogsAdapter.notifyDataSetChanged();
 

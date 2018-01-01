@@ -2,6 +2,10 @@
     <string name="app_name">InterMessage</string>
     <string name="menu_dialogs">Dialogs</string>
     <string name="menu_options">Settings</string>
+    <string name="menu_about">About</string>
+    <string name="menu_console">Console mode</string>
+    <string name="menu_kill">Kill application</string>
+
     <string name="new_dialog">Create new dialog</string>
     <string name="title_activity_dialog">Dialog</string>
     <string name="title_activity_settings">Settings</string>
@@ -12,8 +16,14 @@
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
+    <string name="action_create_new_dialog">Create new dialog</string>
     <string name="action_get_users">Users in chat</string>
     <string name="action_add_users">Add users to chat</string>
     <string name="action_change_dialog_name">Change dialog name</string>
+
+    <string name="content_about">Decentralized messenger for local chatting\n\n
+        Created by Dmitry Sayutin and Alexandr Fedorov\n\n
+        Application icon by Anastasia  Mayzhegisheva\n
+        (https://morevnaproject.org)</string>
 
 </resources>

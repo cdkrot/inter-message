@@ -1,9 +1,13 @@
-package ru.spbau.intermessage.store;
+package ru.spbau.intermessage.store.test;
+
+import org.junit.Assert;
 
 import java.util.List;
 
+import ru.spbau.intermessage.store.IStorage;
 import ru.spbau.intermessage.store.IStorage.Union;
 import ru.spbau.intermessage.store.IStorage.IList;
+import ru.spbau.intermessage.store.Storage;
 
 import static org.junit.Assert.*;
 
@@ -28,7 +32,7 @@ public class StorageTest {
 
     private static void testGet() {
         Union u = store.get("ks");
-        assertEquals(IStorage.ObjectType.NULL, u.getType());
+        Assert.assertEquals(IStorage.ObjectType.NULL, u.getType());
     }
 
     private static void testAdd() {

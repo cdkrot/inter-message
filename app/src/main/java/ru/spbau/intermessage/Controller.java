@@ -1,23 +1,20 @@
 package ru.spbau.intermessage;
 
 import android.app.IntentService;
-import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.os.Build;
-import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
 
-import java.security.spec.ECField;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
+import ru.spbau.intermessage.activities.DialogActivity;
+import ru.spbau.intermessage.activities.DialogsListActivity;
 import ru.spbau.intermessage.core.Chat;
 import ru.spbau.intermessage.core.EventListener;
 import ru.spbau.intermessage.core.Message;
@@ -25,9 +22,7 @@ import ru.spbau.intermessage.core.Messenger;
 import ru.spbau.intermessage.core.User;
 import ru.spbau.intermessage.crypto.ID;
 import ru.spbau.intermessage.gui.Item;
-import ru.spbau.intermessage.store.InMemoryStorage;
 import ru.spbau.intermessage.store.Storage;
-import ru.spbau.intermessage.util.Lambda2;
 import ru.spbau.intermessage.util.Pair;
 import ru.spbau.intermessage.util.Tuple3;
 import ru.spbau.intermessage.util.Util;
@@ -36,22 +31,39 @@ public class Controller extends IntentService {
 
     private static Messenger messenger = new Messenger(new Storage(), getId());
     static {
+        //main listener
         messenger.registerEventListener(new EventListener() {
             @Override
             public void onMessage(Chat chat, String userName, User user, Message message) {
+                receiveMessage(userName, chat.id, message);
+            }
+
+            @Override
+            public void onChatAddition(Chat chat) {
+                requestDialogList();
+            }
+        });
+
+        //notification listener
+        messenger.registerEventListener(new EventListener() {
+            @Override
+            public void onMessage(Chat chat, String uname, User user, Message message) {
                 NotificationCompat.Builder builder =
                         new NotificationCompat.Builder(Intermessage.getAppContext())
                                 .setSmallIcon(R.mipmap.ic_launcher_mascot)
                                 .setContentTitle("Dialog notification")
                                 .setContentText("New message(s)");
+
                 Intent resultIntent = new Intent(Intermessage.getAppContext(), DialogActivity.class);
                 resultIntent.putExtra("ChatId", chat.id);
+
                 PendingIntent pendingIntent = PendingIntent.getActivity(
                         Intermessage.getAppContext(),
                         0,
                         resultIntent,
                         PendingIntent.FLAG_UPDATE_CURRENT
-                        );
+                );
+
                 builder.setContentIntent(pendingIntent);
                 builder.setAutoCancel(true);
                 builder.setVibrate(new long[] { 500, 300, 300});
@@ -60,24 +72,14 @@ public class Controller extends IntentService {
                 NotificationManager notificationManager =
                         (NotificationManager) Intermessage.getAppContext().getSystemService(NOTIFICATION_SERVICE);
                 notificationManager.notify(1, builder.build());
-
-                receiveMessage(Intermessage.getAppContext(), userName, chat.id, message);
             }
 
             @Override
             public void onChatAddition(Chat chat) {
-                requestDialogList(Intermessage.getAppContext());
+
             }
         });
 
-    }
-
-    static ID getId() {
-        Comparator<Integer> c = (a, b) -> a - b;
-        SharedPreferences sharedPreferences = Intermessage.getAppContext().getSharedPreferences("preferences", MODE_PRIVATE);
-        String publicKey = sharedPreferences.getString("publicKey", "trustno1");
-        String privateKey = sharedPreferences.getString("privateKey", "beliveinlie");
-        return new ID(privateKey, publicKey);
     }
 
     private static final String ACTION_SEND_MESSAGE = "Controller.action.SEND";
@@ -101,16 +103,26 @@ public class Controller extends IntentService {
         super("Controller");
     }
 
-    public static void sendMessage(Context context, Item message, String chatId) {
+    private static ID getId() {
+        SharedPreferences sharedPreferences = Intermessage.getAppContext().getSharedPreferences("preferences", MODE_PRIVATE);
+        String publicKey = sharedPreferences.getString("publicKey", "trustno1");
+        String privateKey = sharedPreferences.getString("privateKey", "beliveinlie");
+        return new ID(privateKey, publicKey);
+    }
+
+    public static void sendMessage(Item message, String chatId) {
+        Context context = Intermessage.getAppContext();
         Intent intent = new Intent(context, Controller.class);
         intent.setAction(ACTION_SEND_MESSAGE);
         intent.putExtra("Date", message.date);
         intent.putExtra("Message", message.messageText);
         intent.putExtra("ChatId", chatId);
+
         context.startService(intent);
     }
 
-    public static void requestLastMessages(Context context, String chatId, int limit) {
+    public static void requestLastMessages(String chatId, int limit) {
+        Context context = Intermessage.getAppContext();
         Intent intent = new Intent(context, Controller.class);
         intent.setAction(ACTION_REQUEST_LATEST);
         intent.putExtra("ChatId", chatId);
@@ -119,7 +131,8 @@ public class Controller extends IntentService {
         context.startService(intent);
     }
 
-    public static void requestUpdates(Context context, String chatId, int last) {
+    public static void requestUpdates(String chatId, int last) {
+        Context context = Intermessage.getAppContext();
         Intent intent = new Intent(context, Controller.class);
         intent.setAction(ACTION_REQUEST_UPDATES);
         intent.putExtra("ChatId", chatId);
@@ -128,19 +141,23 @@ public class Controller extends IntentService {
         context.startService(intent);
     }
 
-    public static void receiveMessage(Context context, String userName, String chatId,  Message message) {
+    public static void receiveMessage(String userName, String chatId,  Message message) {
+        Context context = Intermessage.getAppContext();
         Intent intent = new Intent(context, Controller.class);
         intent.setAction(ACTION_RECEIVE_MESSAGE);
         intent.putExtra("User", userName);
         intent.putExtra("Date", message.timestamp);
         intent.putExtra("Message", Util.bytesToString(message.data));
         intent.putExtra("ChatId", chatId);
+
         context.startService(intent);
     }
 
-    public static void requestDialogList(Context context) {
+    public static void requestDialogList() {
+        Context context = Intermessage.getAppContext();
         Intent intent = new Intent(context, Controller.class);
         intent.setAction(ACTION_REQUEST_DIALOGS_LIST);
+
         context.startService(intent);
     }
 
@@ -148,6 +165,7 @@ public class Controller extends IntentService {
         Context context = Intermessage.getAppContext();
         ArrayList<String> chatIds = new ArrayList<>();
         ArrayList<String> chatNames = new ArrayList<>();
+
         for (Pair<String, Chat> c : chats) {
             chatIds.add(c.second.id);
             chatNames.add(c.first);
@@ -157,6 +175,7 @@ public class Controller extends IntentService {
         intent.setAction(Controller.ACTION_RETURN_DIALOGS_LIST);
         intent.putStringArrayListExtra("Ids", chatIds);
         intent.putStringArrayListExtra("Names", chatNames);
+
         context.startService(intent);
     }
 
@@ -165,12 +184,14 @@ public class Controller extends IntentService {
         String[] texts = new String[messages.size()];
         long[] timestamps = new long[messages.size()];
         String[] userNames = new String[messages.size()];
+
         for (int i = 0; i < messages.size(); i++) {
             Tuple3<User, String, Message> tr = messages.get(i);
             texts[i] = Util.bytesToString(tr.third.data);
             timestamps[i] = tr.third.timestamp;
             userNames[i] = tr.second;
         }
+
         Intent intent = new Intent(context, Controller.class);
         intent.setAction(Controller.ACTION_RETURN_LATEST);
         intent.putExtra("FirstPosition", firstPosition);
@@ -204,27 +225,34 @@ public class Controller extends IntentService {
         context.startService(intent);
     }
 
-    public static void changeUserName(Context context, String newName) {
+    public static void changeUserName(String newName) {
+        Context context = Intermessage.getAppContext();
+
         if (newName == null)
             return;
 
         Intent intent = new Intent(context, Controller.class);
         intent.setAction(ACTION_USER_CHANGE_NAME);
         intent.putExtra("NewName", newName);
+
         context.startService(intent);
     }
 
-    public static void createNewChat(Context context, String chatName) {
+    public static void createNewChat(String chatName) {
+        Context context = Intermessage.getAppContext();
         Intent intent = new Intent(context, Controller.class);
         intent.setAction(ACTION_CREATE_NEW_CHAT);
         intent.putExtra("ChatName", chatName);
+
         context.startService(intent);
     }
 
-    public static void requestAddUser(Context context, String chatId) {
+    public static void requestAddUser(String chatId) {
+        Context context = Intermessage.getAppContext();
         Intent intent = new Intent(context, Controller.class);
         intent.setAction(ACTION_REQUEST_ADD_USER);
         intent.putExtra("ChatId", chatId);
+
         context.startService(intent);
     }
 
@@ -234,6 +262,7 @@ public class Controller extends IntentService {
         intent.setAction(ACTION_ADD_USER);
         intent.putExtra("UserId", userId);
         intent.putExtra("ChatId", chatId);
+
         context.startService(intent);
     }
 
@@ -243,6 +272,7 @@ public class Controller extends IntentService {
         intent.setAction(ACTION_ADD_USERS);
         intent.putExtra("UserIds", userIds);
         intent.putExtra("ChatId", chatId);
+
         context.startService(intent);
     }
 
@@ -251,6 +281,7 @@ public class Controller extends IntentService {
         Intent intent = new Intent(context, Controller.class);
         intent.setAction(ACTION_GET_USERS_IN_CHAT);
         intent.putExtra("ChatId", chatId);
+
         context.startService(intent);
     }
 
@@ -260,6 +291,7 @@ public class Controller extends IntentService {
         intent.setAction(ACTION_CHANGE_CHAT_NAME);
         intent.putExtra("ChatId", chatId);
         intent.putExtra("ChatName", chatName);
+
         context.startService(intent);
     }
 
@@ -276,7 +308,8 @@ public class Controller extends IntentService {
             long date = intent.getLongExtra("Date", 0);
             String textMessage = intent.getStringExtra("Message");
             String chatId = intent.getStringExtra("ChatId");
-            messenger.sendMessage(new Chat(chatId), new Message("text", date, Util.stringToBytes(textMessage)));
+            byte[] bytes = Util.stringToBytes(textMessage);
+            messenger.sendMessage(new Chat(chatId), new Message("text", date, bytes));
 
         } else if (ACTION_RECEIVE_MESSAGE.equals(action)) {
 
@@ -289,7 +322,9 @@ public class Controller extends IntentService {
             sendBroadcast(broadcastIntent);
 
         } else if (ACTION_KILL_MESSENGER.equals(action)) {
-            // Kill messenger and listener thread
+
+            android.os.Process.killProcess(android.os.Process.myPid());
+
         } else if (ACTION_USER_CHANGE_NAME.equals(action)) {
 
             String newName = intent.getStringExtra("NewName");
@@ -310,21 +345,25 @@ public class Controller extends IntentService {
 
             Intent broadcastIntent = new Intent();
             broadcastIntent.setAction(DialogsListActivity.MessageReceiver.ACTION_CHAT_CREATED);
-            Chat newChat = messenger.createChat(intent.getStringExtra("ChatName"), new ArrayList<User>());
+            Chat newChat = messenger.createChat(intent.getStringExtra("ChatName"), new ArrayList<>());
             broadcastIntent.putExtra("ChatName", intent.getStringExtra("ChatName"));
             broadcastIntent.putExtra("ChatId", newChat.id);
             sendBroadcast(broadcastIntent);
 
         } else if (ACTION_REQUEST_LATEST.equals(action)) {
+
             int limit = intent.getIntExtra("Limit", 0);
             String chatId = intent.getStringExtra("ChatId");
             messenger.getLastMessages(new Chat(chatId), limit,
                     (firstPosition, messages) -> Controller.returnLatest(chatId, messages, firstPosition));
+
         } else if (ACTION_REQUEST_UPDATES.equals(action)) {
+
             int last = intent.getIntExtra("Last", 0);
             String chatId = intent.getStringExtra("ChatId");
             messenger.getMessagesSince(new Chat(chatId), last + 1, 10000000,
                     (messages) -> Controller.returnUpdates(chatId, messages, last + 1));
+
         } else if (ACTION_RETURN_LATEST.equals(action)) {
 
             Intent broadcastIntent = new Intent();
@@ -411,9 +450,11 @@ public class Controller extends IntentService {
             sendBroadcast(broadcastIntent);
 
         } else if (ACTION_CHANGE_CHAT_NAME.equals(action)) {
+
             String chatId = intent.getStringExtra("ChatId");
             String chatName = intent.getStringExtra("ChatName");
-            messenger.getChangeChatName(new Chat(chatId), chatName);
+            //messenger.changeChatName(new Chat(chatId), chatName);
+
         }
     }
 }
