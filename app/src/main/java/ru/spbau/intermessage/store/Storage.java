@@ -17,7 +17,7 @@ public class Storage implements IStorage {
     @Override
     public Union get(String key) {
         try (SQLiteDatabase sqldb = store.getReadableDatabase();
-             Cursor c = sqldb.rawQuery("select * from " + store.tableName + " where id like '" + key + "'", null)) {
+             Cursor c = sqldb.rawQuery("select * from " + store.TABLE_NAME + " where id like '" + key + "'", null)) {
             UnionImpl result = new UnionImpl(key);
             if (c != null && c.moveToFirst()) {
                 if (!c.isNull(1)) {
@@ -38,7 +38,7 @@ public class Storage implements IStorage {
         List<String> result = new ArrayList<>();
 
         try (SQLiteDatabase sqldb = store.getReadableDatabase();
-             Cursor c = sqldb.rawQuery("select id from " + store.tableName + " where id like '" + group + "%'", null)) {
+             Cursor c = sqldb.rawQuery("select id from " + store.TABLE_NAME + " where id like '" + group + "%'", null)) {
             if (c != null && c.moveToFirst()) {
                 do {
                     result.add(c.getString(0));
@@ -54,25 +54,24 @@ public class Storage implements IStorage {
     }
 
     private class KeyValueStore extends SQLiteOpenHelper{
-        private final String tableName = "keyValueStore";
-        private final String CREATE_TABLE = "create table " + tableName
+        private final String TABLE_NAME = "keyValueStore";
+        private final String CREATE_TABLE = "create table if not exists " + TABLE_NAME
                 + " (id text primary key,"
                 + "string text,"
                 + "number integer,"
                 + "binary blob" + ");";
 
         KeyValueStore(Context context) {
-            super(context, "keyValueStore", null, 1);
+            super(context, "store", null, 1);
+            getWritableDatabase().execSQL(CREATE_TABLE);
         }
 
         @Override
-        public void onCreate(SQLiteDatabase db) {
-            db.execSQL(CREATE_TABLE);
-        }
+        public void onCreate(SQLiteDatabase db) {}
 
         @Override
         public void onUpgrade(SQLiteDatabase db, int i, int i1) {
-            db.execSQL("DROP TABLE IF EXISTS " + tableName);
+            db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
             onCreate(db);
         }
     }
@@ -162,7 +161,7 @@ public class Storage implements IStorage {
             if (getType() != ObjectType.NULL) {
                 clear();
                 try (SQLiteDatabase sqldb = store.getWritableDatabase()) {
-                    sqldb.delete(store.tableName, "id like '" + key + "'", null);
+                    sqldb.delete(store.TABLE_NAME, "id like '" + key + "'", null);
                 }
             }
         }
@@ -181,7 +180,7 @@ public class Storage implements IStorage {
                 cv.put("binary", data);
                 cv.put("number", v);
 
-                sqldb.update(store.tableName, cv, "id like '" + key + "'", null);
+                sqldb.update(store.TABLE_NAME, cv, "id like '" + key + "'", null);
             }
         }
 
@@ -193,7 +192,7 @@ public class Storage implements IStorage {
                 cv.put("binary", data);
                 cv.put("number", v);
 
-                long k = sqldb.insert(store.tableName, null, cv);
+                long k = sqldb.insert(store.TABLE_NAME, null, cv);
                 if (k == -1)
                     throw new NullPointerException("fdfgdggfddfgdgdfdfdfgdgffgddfgfdfddfdgdgdrhrekvhewviuweyiuewyveuyreuivryneiyvtverycireiyveriteiu omcwporewriuy reoimpvyynperiu yniptveyu");
             }
@@ -201,32 +200,33 @@ public class Storage implements IStorage {
     }
 
     private class ListStore extends SQLiteOpenHelper {
-        private final String tableName = "listStore";
-        private final String CREATE_TABLE = "create table " + tableName +
-                " (id integer primary key autoincrement,"
-                + "string text,"
-                + "number integer,"
-                + "binary blob" + ");";
+        private final String TABLE_NAME;
+        private final String CREATE_TABLE;
 
 
         ListStore(Context context, String key) {
-            super(context, "listStore" + key, null, 1);
+            super(context, "store", null, 1);
+            TABLE_NAME = ("listStore." + key).replace('.', '_');
+            CREATE_TABLE = "create table if not exists " + TABLE_NAME +
+                    " (id integer primary key autoincrement,"
+                    + "string text,"
+                    + "number integer,"
+                    + "binary blob" + ");";
+
+            getWritableDatabase().execSQL(CREATE_TABLE);
         }
 
         @Override
-        public void onCreate(SQLiteDatabase db) {
-            db.execSQL(CREATE_TABLE);
-        }
+        public void onCreate(SQLiteDatabase db) {}
 
         @Override
         public void onUpgrade(SQLiteDatabase db, int i, int i1) {
-            db.execSQL("DROP TABLE IF EXISTS " + tableName);
+            db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
             onCreate(db);
         }
 
         private void delete(SQLiteDatabase db) {
-            db.execSQL("DROP TABLE IF EXISTS " + tableName);
-            db.execSQL(CREATE_TABLE);
+            db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
         }
     }
 
@@ -241,7 +241,7 @@ public class Storage implements IStorage {
         @Override
         public int size() {
             try (SQLiteDatabase sqldb = store.getReadableDatabase();
-                 Cursor c = sqldb.rawQuery("select COALESCE(MAX(id), 0) from " + store.tableName, null)) {
+                 Cursor c = sqldb.rawQuery("select COALESCE(MAX(id), 0) from " + store.TABLE_NAME, null)) {
                 c.moveToFirst();
                 return c.getInt(0);
             }
@@ -251,7 +251,7 @@ public class Storage implements IStorage {
         public Union get(int key) {
             key++;
             try (SQLiteDatabase sqldb = store.getReadableDatabase();
-                 Cursor c = sqldb.rawQuery("select * from " + store.tableName + " where id = " + key, null)) {
+                 Cursor c = sqldb.rawQuery("select * from " + store.TABLE_NAME + " where id = " + key, null)) {
                 ListUnion result = new ListUnion(key);
                 if (c != null && c.moveToFirst()) {
                     if (!c.isNull(1)) {
@@ -277,7 +277,7 @@ public class Storage implements IStorage {
             List<Union> result = new ArrayList<>();
 
             try (SQLiteDatabase sqldb = store.getReadableDatabase();
-                 Cursor c = sqldb.rawQuery("select * from " + store.tableName + " where id BETWEEN " + key + " AND " + (key + cnt - 1), null)) {
+                 Cursor c = sqldb.rawQuery("select * from " + store.TABLE_NAME + " where id BETWEEN " + key + " AND " + (key + cnt - 1), null)) {
                 if (c != null && c.moveToFirst()){
                     do {
                         ListUnion union = new ListUnion(key);
@@ -319,7 +319,7 @@ public class Storage implements IStorage {
             cv.put("binary", b);
             cv.put("number", v);
             try (SQLiteDatabase sqldb = store.getWritableDatabase()) {
-                sqldb.insert(store.tableName, null, cv);
+                sqldb.insert(store.TABLE_NAME, null, cv);
             }
         }
 
@@ -425,7 +425,7 @@ public class Storage implements IStorage {
                     cv.put("binary", data);
                     cv.put("number", v);
 
-                    sqldb.update(store.tableName, cv, "id = " + key, null);
+                    sqldb.update(store.TABLE_NAME, cv, "id = " + key, null);
                 }
             }
 
