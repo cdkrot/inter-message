@@ -1,5 +1,7 @@
 package ru.spbau.intermessage.crypto;
 
+import java.security.SecureRandom;
+
 import ru.spbau.intermessage.core.User;
 
 public class ID {
@@ -12,8 +14,8 @@ public class ID {
     private String pubkey;
 
     public static ID create() {
-        String publicKey = Long.toHexString(Double.doubleToLongBits(Math.random()));
-        String privateKey = Long.toHexString(Double.doubleToLongBits(Math.random()));
+        String publicKey = Long.toHexString(Double.doubleToLongBits(new SecureRandom().nextDouble()));
+        String privateKey = Long.toHexString(Double.doubleToLongBits(new SecureRandom().nextDouble()));
         return new ID(privateKey, publicKey);
     }
 
