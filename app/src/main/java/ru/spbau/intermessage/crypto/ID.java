@@ -7,10 +7,10 @@ public class ID {
         privkey = priv;
         pubkey = pub;
     }
-    
+
     private String privkey;
     private String pubkey;
-    
+
     public static ID create() {
         String publicKey = Long.toHexString(Double.doubleToLongBits(Math.random()));
         String privateKey = Long.toHexString(Double.doubleToLongBits(Math.random()));
@@ -28,4 +28,4 @@ public class ID {
     public User user() {
         return new User(pubkey);
     }
-};
+}

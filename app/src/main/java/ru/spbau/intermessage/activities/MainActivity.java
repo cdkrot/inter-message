@@ -41,10 +41,6 @@ public class MainActivity extends AppCompatActivity {
         buttonNames.add(getString(R.string.menu_console));
         buttonNames.add(getString(R.string.menu_kill));
 
-        Intent newIntent = new Intent(this, Controller.class);
-        newIntent.setAction("ACTION.TRASH");
-        startService(newIntent);
-
         @SuppressWarnings("unchecked")
         ArrayAdapter mainMenuAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, buttonNames);
 
@@ -59,6 +55,10 @@ public class MainActivity extends AppCompatActivity {
             ed.putString("privateKey", id.priv());
             ed.commit();
         }
+
+        Intent newIntent = new Intent(this, Controller.class);
+        newIntent.setAction("ACTION.START");
+        startService(newIntent);
 
         if (userName.length() == 0) {
             AlertDialog.Builder alert = new AlertDialog.Builder(this);
