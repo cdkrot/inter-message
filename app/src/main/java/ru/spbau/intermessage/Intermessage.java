@@ -15,6 +15,7 @@ public class Intermessage extends Application implements Application.ActivityLif
     public void onCreate() {
         super.onCreate();
         Intermessage.context = getApplicationContext();
+        registerActivityLifecycleCallbacks(this);
     }
 
     public static Context getAppContext() {
