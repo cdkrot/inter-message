@@ -26,7 +26,8 @@ public class ConsoleActivity extends AppCompatActivity {
         ListView logList = (ListView)findViewById(R.id.logList);
 
 
-        @SuppressWarnings("unchecked") final ArrayAdapter<String> logAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, log);
+        @SuppressWarnings("unchecked")
+        ArrayAdapter<String> logAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, log);
 
         final EditText input = (EditText)findViewById(R.id.input);
         logList.setAdapter(logAdapter);
@@ -51,6 +52,6 @@ public class ConsoleActivity extends AppCompatActivity {
     }
 
     private void handleCommand(String command) {
-
+        // Not handled yet
     }
 }

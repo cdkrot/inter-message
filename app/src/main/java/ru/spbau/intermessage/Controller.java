@@ -27,6 +27,10 @@ import ru.spbau.intermessage.util.Pair;
 import ru.spbau.intermessage.util.Tuple3;
 import ru.spbau.intermessage.util.Util;
 
+
+/**
+ * Intent service which provides communication between Messenger and UI
+ */
 public class Controller extends IntentService {
 
     private static Messenger messenger = new Messenger(new Storage(), getId());
@@ -79,7 +83,7 @@ public class Controller extends IntentService {
 
             @Override
             public void onChatAddition(Chat chat) {
-
+                // Nothing to do
             }
         });
 
@@ -231,8 +235,9 @@ public class Controller extends IntentService {
     public static void changeUserName(String newName) {
         Context context = Intermessage.getAppContext();
 
-        if (newName == null)
+        if (newName == null) {
             return;
+        }
 
         Intent intent = new Intent(context, Controller.class);
         intent.setAction(ACTION_USER_CHANGE_NAME);

@@ -77,7 +77,6 @@ public class Storage implements IStorage {
     }
 
     private class UnionImpl implements Union {
-
         String key;
         String string = null;
         byte[] data = null;
@@ -230,6 +229,9 @@ public class Storage implements IStorage {
         }
     }
 
+    /**
+     * Class for storing and updating lists of various data in database
+     */
     private class UnionList implements IList {
 
         final private ListStore store;
@@ -269,7 +271,7 @@ public class Storage implements IStorage {
         }
 
         /**
-         * Returns Unions with ids from key to key + cnt - 1
+         * Return Unions with ids from key to key + cnt - 1
          */
         @Override
         public Union[] getBatch(int key, int cnt) {
@@ -329,7 +331,6 @@ public class Storage implements IStorage {
         }
 
         private class ListUnion implements Union {
-
             int key;
             String string = null;
             byte[] data = null;
