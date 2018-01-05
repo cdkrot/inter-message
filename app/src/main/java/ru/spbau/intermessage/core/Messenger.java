@@ -11,10 +11,86 @@ import ru.spbau.intermessage.store.InMemoryStorage;
 import java.util.*;
 import java.util.function.*;
 
-public class Messenger extends ServiceCommon {
+public class Messenger {
+    protected Queue<RequestCommon> queue = new ArrayDeque<RequestCommon>();
+    protected Set<EventListener> listeners = new HashSet<EventListener>();
+    protected NNetwork network;
+    public final ID identity;
+    protected IStorage storage;
+
     public Messenger(IStorage store, ID id) {
         storage = store;
         identity = id;
+
+        new Thread() {
+            public void run() {
+                synchronized (queue) {
+                    network = new WifiNNetwork();
+                    network.begin(Messenger.this, storage);
+                    queue.notify();
+                }
+                
+                while (true) {
+                    RequestCommon r;
+                    while (true) {
+                        synchronized (queue) {
+                            if (!queue.isEmpty())
+                                break;
+                        }
+                        
+                        network.work();
+                    }
+
+                    synchronized (queue) {
+                        r = queue.poll();
+                    }
+                    
+                    // process new request.
+                    if (r == null)
+                        break; // termination.
+
+                    if (r instanceof RunnableRequest)
+                        ((RunnableRequest)(r)).run();
+                    else
+                        handleRequest(r);
+                    
+                    r.complete();
+                }
+
+                network.close();
+            }
+        }.start();
+
+        synchronized (queue) {
+            while (network == null)
+                try {
+                    queue.wait();
+                } catch (InterruptedException ex) {} // poor java.
+        }   
+    }
+
+    protected static class RequestCommon {
+        public boolean completed = false;
+
+        public void waitCompletion() {
+            synchronized (this) {
+                while (!completed)
+                    try {
+                        this.wait();
+                    } catch (InterruptedException ex) {} // poor java.
+            }
+        }
+        
+        public void complete() {
+            synchronized (this) {
+                completed = true;
+                this.notifyAll();
+            }
+        }
+    }
+
+    protected abstract static class RunnableRequest extends RequestCommon {
+        public abstract void run();
     }
     
     private static class ListenerRequest extends RequestCommon {
@@ -47,20 +123,20 @@ public class Messenger extends ServiceCommon {
         public String chatname;
         public ArrayList<User> users;
     }
-    
-    protected Set<EventListener> listeners = new HashSet<EventListener>();
-    protected NNetwork network;
-    public final ID identity;
-    protected IStorage storage;
 
-    protected void special() {
-        network.work();
+    protected void postRequest(RequestCommon req) {
+        synchronized (queue) {
+            queue.add(req);
+            
+            network.interrupt();
+            queue.notify();
+        }
     }
 
-    protected void interrupt() {
-        network.interrupt();
-        super.interrupt();
+    public void close() {
+        postRequest(null);
     }
+
     
     protected void handleRequest(RequestCommon req) {
         System.out.println(req.toString());
@@ -89,15 +165,6 @@ public class Messenger extends ServiceCommon {
         }
     }
         
-    protected void warmUp() {
-        network = new WifiNNetwork();
-        network.begin(this, storage);
-    }
-    
-    protected void onClose() {
-        network.close();
-    }
-    
     public void registerEventListener(EventListener listener) {
         postRequest(new ListenerRequest(true, listener));
     }

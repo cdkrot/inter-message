@@ -8,6 +8,7 @@ import ru.spbau.intermessage.util.ReadHelper;
 import ru.spbau.intermessage.util.WriteHelper;
 
 // ask to give us new messages.
+// states:
 // 0: I: nothing
 // 0: O: write our id.
 // 1: I: (chat, subid, id)
@@ -24,12 +25,12 @@ public class SLogic implements ILogic {
     private User subid;
     private int  subsubid;
 
-    private User xxx;
+    private User peer;
     
-    public SLogic(Messenger msg_, IStorage store_, User xxx_) {
+    public SLogic(Messenger msg_, IStorage store_, User peer_) {
         msg = msg_;
         store = store_;
-        xxx = xxx_;
+        peer = peer_;
     }
 
     public ByteVector feed0(ByteVector packet) {
@@ -96,6 +97,6 @@ public class SLogic implements ILogic {
     }
 
     public void disconnect() {
-        msg.setNotBusy(xxx);
+        msg.setNotBusy(peer);
     }
 };

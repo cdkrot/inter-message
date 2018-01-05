@@ -95,15 +95,13 @@ public class WifiNNetwork implements NNetwork {
             if (writing)
                 return false;
             
-            System.out.printf("Get %d, recv: %d, income: %d, magicAcc: %d\n", (int)b, (recv == null ? -1 : recv.size()), income, magicAccepter);
             if (magicAccepter == -1) {
                 recv.pushBack(b);
                 if (recv.size() == income) {
                     pending = logic.feed(recv);
 
                     if (pending == null) {
-                        System.err.println("LOGIC EOF");
-                        return false; // END OF LINE.
+                        return false; // END OF LOGIC.
                     } else {
                         off = -6;
                         writing = true;
@@ -144,7 +142,7 @@ public class WifiNNetwork implements NNetwork {
             bts[0] = bts[1] = bts[2] = bts[3] = (byte)255;
             return InetAddress.getByAddress(bts);
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            throw new RuntimeException(ex); // should never happen.
         }
     }
   
@@ -168,7 +166,6 @@ public class WifiNNetwork implements NNetwork {
                 buf.flip();
                 
                 int r = udpsock.send(buf, new InetSocketAddress(bcast, udpPort));
-                System.out.printf("Send bcast %d bytes\n", r);
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
@@ -180,7 +177,6 @@ public class WifiNNetwork implements NNetwork {
             ByteBuffer buf = ByteBuffer.allocate(8192);
             InetSocketAddress addr = (InetSocketAddress)udpsock.receive(buf);
 
-            System.out.println("incoming udp");
 
             for (NetworkInterface netint: Collections.list(NetworkInterface.getNetworkInterfaces())) {
                 Enumeration<InetAddress> list = netint.getInetAddresses();
@@ -223,18 +219,13 @@ public class WifiNNetwork implements NNetwork {
         }
         
         if (helper.writing && helper.token.isWritable()) {
-            System.err.println("WRITING");
             try {
                 if (helper.outbuf.remaining() == 0) {
                     helper.outbuf.clear();
 
                     int r;
-                    System.err.print("OUT:");
-                    while (helper.outbuf.remaining() > 0 && (r = helper.getOutput()) != -1) {
-                        System.err.print(" " + r);
+                    while (helper.outbuf.remaining() > 0 && (r = helper.getOutput()) != -1)
                         helper.outbuf.put((byte)r);
-                    }
-                    System.err.println("");
 
                     helper.outbuf.flip();
                 }
@@ -247,20 +238,15 @@ public class WifiNNetwork implements NNetwork {
                 throw new RuntimeException(ex);
             }
         } else if (!helper.writing && helper.token.isReadable()) {
-            System.err.println("READING");
             try {
                 helper.inbuf.clear();
                 int cnt = helper.sock.read(helper.inbuf);
                 if (cnt == -1)
                     return false;
-
-                System.err.print("IN:");
                 
                 for (int pos = 0; pos != helper.inbuf.position(); ++pos) {
-                    if (!helper.onInput(helper.inbuf.get(pos))) {
-                        System.err.println("... FAIL");
+                    if (!helper.onInput(helper.inbuf.get(pos)))
                         return false;
-                    }
                 }
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
@@ -344,8 +330,6 @@ public class WifiNNetwork implements NNetwork {
                     if (!handle(helper)) {
                         iter.remove();
 
-                        System.err.println("EPICFAIL");
-
                         helper.token.cancel();
                         helper.logic.disconnect();
                         helper.sock.close();
@@ -365,11 +349,9 @@ public class WifiNNetwork implements NNetwork {
     }
 
     public void interrupt() {
-        System.err.println("interrupting");
         synchronized (this) {
             epoll.wakeup();
         }
-        System.err.println("interrupt done");
     }
     
     public void close() {

@@ -6,7 +6,7 @@ public interface ILogic {
     // return null to close or responce to send.
     public ByteVector feed(ByteVector packet);
 
-    // got disconnected.
-    // trivial implementation should be fine.
+    // connection is closed
+    // (either by us or the other side).
     public void disconnect();
 };
