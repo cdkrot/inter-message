@@ -32,14 +32,15 @@ import ru.spbau.intermessage.gui.ItemAdapter;
 
 public class DialogActivity extends AppCompatActivity {
 
-    static final private List<Item> messages = new ArrayList<>();
-    static private String chatId;
+    private static final List<Item> messages = new ArrayList<>();
+    private static String chatId;
     private MessageReceiver messageReceiver;
     private ItemAdapter messagesAdapter;
     private String selfUserName;
 
     private final String PREF_FILE = "preferences";
     private final String PREF_NAME = "userName";
+    private static final int NEW_MESSAGES_LIMIT = 20;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,10 +76,8 @@ public class DialogActivity extends AppCompatActivity {
                     if (text.length() == 0)
                         return false;
 
-                    Item newMessage = new Item();
-                    newMessage.date = System.currentTimeMillis() / 1000L;
-                    newMessage.userName = selfUserName;
-                    newMessage.messageText = text;
+                    long date = System.currentTimeMillis() / 1000L;
+                    Item newMessage = new Item(selfUserName, text, date, 0);
                     input.setText("");
 
                     Controller.sendMessage(newMessage, chatId);
@@ -105,6 +104,7 @@ public class DialogActivity extends AppCompatActivity {
         if (messageReceiver == null) {
             messageReceiver = new MessageReceiver();
         }
+
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(MessageReceiver.ACTION_RECEIVE);
         intentFilter.addAction(MessageReceiver.ACTION_GOT_LAST_MESSAGES);
@@ -115,7 +115,7 @@ public class DialogActivity extends AppCompatActivity {
         registerReceiver(messageReceiver, intentFilter);
 
         if (messages.size() == 0) {
-            Controller.requestLastMessages(chatId, 20);
+            Controller.requestLastMessages(chatId, NEW_MESSAGES_LIMIT);
         } else{
             Controller.requestUpdates(chatId, messages.get(messages.size() - 1).position);
         }
@@ -206,22 +206,17 @@ public class DialogActivity extends AppCompatActivity {
                 String text = intent.getStringExtra("Message");
                 long date = intent.getLongExtra("Date", 0);
                 String userName = intent.getStringExtra("User");
-
-                Item newMessage = new Item();
-                newMessage.date = date;
-                newMessage.messageText = text;
-                newMessage.userName = userName;
+                int position = (messages.size() == 0 ? 0 : messages.get(messages.size() - 1).position + 1);
+                Item newMessage = new Item(userName, text, date, position);
 
                 messages.add(newMessage);
                 messagesAdapter.notifyDataSetChanged();
 
             } else  if (ACTION_GOT_LAST_MESSAGES.equals(action)){
 
-                //if (messages.size() != 0)
-                //    throw new NullPointerException("SIZE != 0");
-
-                if (messages.size() != 0)
+                if (messages.size() != 0) {
                     return;
+                }
 
                 int position = intent.getIntExtra("FirstPosition", 0);
                 String[] texts = intent.getStringArrayExtra("Texts");
@@ -229,14 +224,8 @@ public class DialogActivity extends AppCompatActivity {
                 String[] userNames = intent.getStringArrayExtra("UserNames");
                 int length = timestamps.length;
 
-                //if (length != 0)
-                //    throw new NullPointerException("LENGTH != 0");
                 for (int i = 0; i < length; i++) {
-                    Item item = new Item();
-                    item.position = position + i;
-                    item.date = timestamps[i];
-                    item.messageText = texts[i];
-                    item.userName = userNames[i];
+                    Item item = new Item(userNames[i], texts[i], timestamps[i], position + i);
                     messages.add(item);
                 }
 
@@ -244,8 +233,9 @@ public class DialogActivity extends AppCompatActivity {
 
             } else if (ACTION_GOT_UPDATES.equals(action)) {
 
-                if (messages.size() == 0)
+                if (messages.size() == 0) {
                     return;
+                }
 
                 int position = intent.getIntExtra("FirstPosition", 0);
                 String[] texts = intent.getStringArrayExtra("Texts");
@@ -254,11 +244,7 @@ public class DialogActivity extends AppCompatActivity {
                 int length = timestamps.length;
                 int shift = Math.max(0, messages.get(messages.size() - 1).position - position + 1);
                 for (int i = shift; i < length; i++) {
-                    Item item = new Item();
-                    item.position = position + i;
-                    item.date = timestamps[i];
-                    item.messageText = texts[i];
-                    item.userName = userNames[i];
+                    Item item = new Item(userNames[i], texts[i], timestamps[i], position + i);
                     messages.add(item);
                 }
 
@@ -288,7 +274,7 @@ public class DialogActivity extends AppCompatActivity {
                 alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        //Nothing to do
+                        // Nothing to do
                     }
                 });
 
@@ -329,7 +315,7 @@ public class DialogActivity extends AppCompatActivity {
                 alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int _unused) {
-                        //nothing to do
+                        // Nothing to do
                     }
                 });
 

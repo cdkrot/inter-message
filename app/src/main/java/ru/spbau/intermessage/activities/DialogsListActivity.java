@@ -25,8 +25,8 @@ public class DialogsListActivity extends AppCompatActivity {
 
     private MessageReceiver messageReceiver;
 
-    static private ArrayList<String> buttonNames;
-    static private ArrayList<String> chatIds;
+    private static ArrayList<String> buttonNames;
+    private static ArrayList<String> chatIds;
     private ArrayAdapter dialogsAdapter;
 
     @Override
