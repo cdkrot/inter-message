@@ -14,12 +14,12 @@ public class Intermessage extends Application implements Application.ActivityLif
 
     public void onCreate() {
         super.onCreate();
-        Intermessage.context = getApplicationContext();
+        context = getApplicationContext();
         registerActivityLifecycleCallbacks(this);
     }
 
     public static Context getAppContext() {
-        return Intermessage.context;
+        return context;
     }
 
     @Override
