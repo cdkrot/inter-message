@@ -33,7 +33,16 @@ import ru.spbau.intermessage.util.Util;
  */
 public class Controller extends IntentService {
 
-    private static Messenger messenger = new Messenger(new Storage(), getId());
+    private static Messenger messenger;
+
+    static {
+        try {
+            messenger = new Messenger(new Storage(), getId());
+        } catch (java.io.IOException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+    
     static {
         //main listener
         messenger.registerEventListener(new EventListener() {

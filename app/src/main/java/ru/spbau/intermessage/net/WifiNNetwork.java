@@ -43,8 +43,6 @@ public class WifiNNetwork implements NNetwork {
             if (writing) {
                 pending = logic.feed(null);
             }
-
-            System.err.println("CREATED NEW SOCKET + " + writing);
         }
 
         public boolean writing;        
@@ -149,61 +147,53 @@ public class WifiNNetwork implements NNetwork {
     private DatagramChannel udpsock;
     private UDPLogic udplogic;
     
-    private void doUDPWrite() {
+    private void doUDPWrite() throws IOException {
         ByteVector vec = udplogic.bcast();
 
         if (vec != null) {
-            try {
-                ByteBuffer buf = ByteBuffer.allocate(vec.size() + 6);
-                buf.clear();
-                for (int i = 0; i != magic.length; ++i)
-                    buf.put(magic[i]);
+            ByteBuffer buf = ByteBuffer.allocate(vec.size() + 6);
+            buf.clear();
+            for (int i = 0; i != magic.length; ++i)
+                buf.put(magic[i]);
                 buf.put((byte)(vec.size() / 256));
                 buf.put((byte)(vec.size() % 256));
                 
                 buf.put(vec.data(), 0, vec.size());
-
+                
                 buf.flip();
                 
                 int r = udpsock.send(buf, new InetSocketAddress(bcast, udpPort));
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
-            }
         }
     }
 
-    private void doUDPRead() {
-        try {
-            ByteBuffer buf = ByteBuffer.allocate(8192);
-            InetSocketAddress addr = (InetSocketAddress)udpsock.receive(buf);
-
-
-            for (NetworkInterface netint: Collections.list(NetworkInterface.getNetworkInterfaces())) {
-                Enumeration<InetAddress> list = netint.getInetAddresses();
-                for (InetAddress self: Collections.list(list))
-                    if (self.equals(addr.getAddress()))
-                        return;
-                // ignoring udp's from ourself.
-            }
-            
-            if (buf.position() >= 6) {
-                for (int i = 0; i != magic.length; ++i)
-                    if (buf.get(i) != magic[i])
-                        return;
-
-                int len = buf.get(4) * 256 + buf.get(5);
-                if (len != buf.position() - 6)
+    private void doUDPRead() throws IOException {
+        ByteBuffer buf = ByteBuffer.allocate(8192);
+        InetSocketAddress addr = (InetSocketAddress)udpsock.receive(buf);
+        
+        
+        for (NetworkInterface netint: Collections.list(NetworkInterface.getNetworkInterfaces())) {
+            Enumeration<InetAddress> list = netint.getInetAddresses();
+            for (InetAddress self: Collections.list(list))
+                if (self.equals(addr.getAddress()))
                     return;
-
-                ByteVector res = new ByteVector(len);
-                for (int i = 0; i != len; ++i)
-                    res.set(i, buf.get(6 + i));
-
-                udplogic.recieve(addr.getHostName(), res);
-            }
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
+            // ignoring udp's from ourself.
         }
+        
+        if (buf.position() >= 6) {
+            for (int i = 0; i != magic.length; ++i)
+                if (buf.get(i) != magic[i])
+                    return;
+            
+            int len = buf.get(4) * 256 + buf.get(5);
+            if (len != buf.position() - 6)
+                return;
+            
+            ByteVector res = new ByteVector(len);
+            for (int i = 0; i != len; ++i)
+                res.set(i, buf.get(6 + i));
+            
+            udplogic.recieve(addr.getHostName(), res);
+            }
     }
 
     private boolean handle(Helper helper) {
@@ -235,7 +225,8 @@ public class WifiNNetwork implements NNetwork {
                 else
                     helper.writing = false;
             } catch (IOException ex) {
-                throw new RuntimeException(ex);
+                helper.logic.disconnect();
+                return false;
             }
         } else if (!helper.writing && helper.token.isReadable()) {
             try {
@@ -249,37 +240,32 @@ public class WifiNNetwork implements NNetwork {
                         return false;
                 }
             } catch (IOException ex) {
-                throw new RuntimeException(ex);
+                helper.logic.disconnect();
+                return false;
             }
         }
 
         return true;
     }
             
-    public void begin(Messenger msg_, IStorage store_) {
+    public void begin(Messenger msg_, IStorage store_) throws IOException {
         msg = msg_;
         store = store_;
 
-        try {
-            epoll = Selector.open();
-            bcast = getBroadcast();
-            
-            System.out.println(bcast.getHostName());
-            
-            ServerSocketChannel sock = ServerSocketChannel.open();
-            sock.configureBlocking(false);
-            sock.socket().bind(new InetSocketAddress(listenPort));
-            sock.register(epoll, sock.validOps(), sock);
-            
-            udpsock = DatagramChannel.open();
-            udpsock.configureBlocking(false);
-            udpsock.socket().bind(new InetSocketAddress(udpPort));
-            udpsock.socket().setBroadcast(true);
-            udplogic = new UDPLogic(msg, store);
-            udpsock.register(epoll, udpsock.validOps(), udpsock);
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
-        }
+        epoll = Selector.open();
+        bcast = getBroadcast();
+        
+        ServerSocketChannel sock = ServerSocketChannel.open();
+        sock.configureBlocking(false);
+        sock.socket().bind(new InetSocketAddress(listenPort));
+        sock.register(epoll, sock.validOps(), sock);
+        
+        udpsock = DatagramChannel.open();
+        udpsock.configureBlocking(false);
+        udpsock.socket().bind(new InetSocketAddress(udpPort));
+        udpsock.socket().setBroadcast(true);
+        udplogic = new UDPLogic(msg, store);
+        udpsock.register(epoll, udpsock.validOps(), udpsock);
     }
 
     public void create(String addr, ILogic logic) {
@@ -297,15 +283,7 @@ public class WifiNNetwork implements NNetwork {
         }
     }
 
-    public void work() {
-        try {
-            workDo();
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-    
-    public void workDo() throws IOException {
+    public void work() throws IOException {
         synchronized (this) {
             epoll.select();
             
@@ -354,11 +332,7 @@ public class WifiNNetwork implements NNetwork {
         }
     }
     
-    public void close() {
-        try {
-            epoll.close();
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
-        }
+    public void close() throws IOException {
+        epoll.close();
     }
 }

@@ -9,7 +9,8 @@ import ru.spbau.intermessage.store.IStorage;
 import ru.spbau.intermessage.store.InMemoryStorage;
 
 import java.util.*;
-import java.util.function.*;
+
+import java.io.IOException;
 
 public class Messenger {
     protected Queue<RequestCommon> queue = new ArrayDeque<RequestCommon>();
@@ -18,17 +19,20 @@ public class Messenger {
     public final ID identity;
     protected IStorage storage;
 
-    public Messenger(IStorage store, ID id) {
+    public Messenger(IStorage store, ID id) throws IOException {
         storage = store;
         identity = id;
 
+        network = new WifiNNetwork();
+        network.begin(Messenger.this, storage);
+        
         new Thread() {
             public void run() {
-                synchronized (queue) {
-                    network = new WifiNNetwork();
-                    network.begin(Messenger.this, storage);
-                    queue.notify();
-                }
+                //synchronized (queue) {
+                //   network = new WifiNNetwork();
+                //   network.begin(Messenger.this, storage);
+                //   queue.notify();
+                //}
                 
                 while (true) {
                     RequestCommon r;
@@ -37,8 +41,12 @@ public class Messenger {
                             if (!queue.isEmpty())
                                 break;
                         }
-                        
-                        network.work();
+
+                        try {
+                            network.work();
+                        } catch (IOException ex) {
+                            throw new RuntimeException(ex);
+                        }
                     }
 
                     synchronized (queue) {
@@ -57,16 +65,20 @@ public class Messenger {
                     r.complete();
                 }
 
-                network.close();
+                try {
+                    network.close();
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
             }
         }.start();
 
-        synchronized (queue) {
-            while (network == null)
-                try {
-                    queue.wait();
-                } catch (InterruptedException ex) {} // poor java.
-        }   
+        //synchronized (queue) {
+        //    while (network == null)
+        //        try {
+        //            queue.wait();
+        //        } catch (InterruptedException ex) {} // poor java.
+        //}   
     }
 
     protected static class RequestCommon {
@@ -356,10 +368,15 @@ public class Messenger {
         busy.remove(u.publicKey);
     }
     
-    public void syncWith(User u) {
+    public boolean syncWith(User u) {
         if (!setBusy(u))
-            return;
-        network.create(storage.get("user.location." + u.publicKey).getString(), new SLogic(this, storage, u));
+            return false;
+        try {
+            network.create(storage.get("user.location." + u.publicKey).getString(), new SLogic(this, storage, u));
+            return true;
+        } catch (IOException ex) {
+            return false;
+        }
     }
     
     public void sentMessageToParty(User u, Chat ch, User sub, int id) {
