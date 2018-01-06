@@ -15,7 +15,7 @@ import java.io.IOException;
 public class Messenger {
     protected Queue<RequestCommon> queue = new ArrayDeque<RequestCommon>();
     protected Set<EventListener> listeners = new HashSet<EventListener>();
-    protected NNetwork network;
+    protected Network network;
     public final ID identity;
     protected IStorage storage;
 
@@ -23,7 +23,7 @@ public class Messenger {
         storage = store;
         identity = id;
 
-        network = new WifiNNetwork();
+        network = new WifiNetwork();
         network.begin(Messenger.this, storage);
         
         new Thread() {
@@ -305,7 +305,11 @@ public class Messenger {
         return res;
     }
     
-    /*** INTERNAL, DO NOT USE */
+    /**
+      * Methods below must be run within
+      * Messenger's thread,
+      * So they shouldn't be called directly from UI's code.
+      */
     
     public ArrayList<Chat> getChatsWithUser(User u) {
         ArrayList<Chat> list = new ArrayList<Chat>();

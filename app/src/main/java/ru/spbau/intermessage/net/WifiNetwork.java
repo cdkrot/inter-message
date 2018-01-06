@@ -11,7 +11,7 @@ import java.util.*;
 
 import ru.spbau.intermessage.util.ByteVector;
 
-public class WifiNNetwork implements NNetwork {
+public class WifiNetwork implements Network {
     private Messenger msg;
     private IStorage store;
 

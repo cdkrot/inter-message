@@ -5,7 +5,7 @@ import ru.spbau.intermessage.store.IStorage;
 
 import java.io.IOException;
 
-public interface NNetwork {
+public interface Network {
     public void begin(Messenger msg, IStorage store) throws IOException;
     public void create(String addr, ILogic logic) throws IOException;
     public void work() throws IOException;
