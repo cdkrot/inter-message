@@ -14,8 +14,9 @@ public class ID {
     private String pubkey;
 
     public static ID create() {
-        String publicKey = Long.toHexString(Double.doubleToLongBits(new SecureRandom().nextDouble()));
-        String privateKey = Long.toHexString(Double.doubleToLongBits(new SecureRandom().nextDouble()));
+        SecureRandom secureRandom = new SecureRandom();
+        String publicKey = Long.toHexString(Double.doubleToLongBits(secureRandom.nextDouble()));
+        String privateKey = Long.toHexString(Double.doubleToLongBits(secureRandom.nextDouble()));
         return new ID(privateKey, publicKey);
     }
 

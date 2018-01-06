@@ -85,8 +85,9 @@ public class InMemoryStorage implements IStorage {
     private TreeMap<String, ListContainer> lists = new TreeMap<String, ListContainer>();
     
     public InMemoryStorage() {}
-    
-    public Union get(final String key) {            
+
+    @Override
+    public Union get(String key) {
         return new UnionBase() {
             @Override
             protected ObjectContainer fetch() {
@@ -108,7 +109,8 @@ public class InMemoryStorage implements IStorage {
             }
         };
     }
-    
+
+    @Override
     public List<String> getMatching(String group) {
         List<String> lst = new ArrayList<String>();
 
@@ -122,6 +124,7 @@ public class InMemoryStorage implements IStorage {
         return lst;
     }
 
+    @Override
     public IStorage.IList getList(final String key) {
         return new IList() {
             protected ListContainer fetch() {
@@ -140,15 +143,18 @@ public class InMemoryStorage implements IStorage {
                 return lists.get(key);
             }
 
+            @Override
             public void delete() {
                 lists.remove(key);
             }
-            
+
+            @Override
             public int size() {
                 ListContainer cont = fetch();
                 return (cont == null ? 0 : cont.data.size());
             }
 
+            @Override
             public Union get(final int i) {
                 return new UnionBase() {
                     protected ObjectContainer fetch() {
@@ -166,24 +172,28 @@ public class InMemoryStorage implements IStorage {
                 };
             }
 
+            @Override
             public Union[] getBatch(int i, int cnt) {
                 throw new UnsupportedOperationException();
             }
-            
+
             public void push() {
                 forceFetch().data.add(new ObjectContainer());
             }
-            
+
+            @Override
             public void push(int value) {
                 push();
                 get(fetch().data.size() - 1).setInt(value);
             }
 
+            @Override
             public void push(String value) {
                 push();
                 get(fetch().data.size() - 1).setString(value);
             }
 
+            @Override
             public void push(byte[] value) {
                 push();
                 get(fetch().data.size() - 1).setData(value);

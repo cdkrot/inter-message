@@ -1,5 +1,7 @@
 package ru.spbau.intermessage.net;
 
+import android.support.annotation.Nullable;
+
 import ru.spbau.intermessage.core.*;
 import ru.spbau.intermessage.store.IStorage;
 
@@ -52,7 +54,8 @@ public class Logic implements ILogic {
 
         return writer.getData();
     }
-    
+
+    @Nullable
     public ByteVector feed0(ByteVector packet) {
         // TODO: add security check here.
         ReadHelper reader = new ReadHelper(packet);
@@ -68,6 +71,7 @@ public class Logic implements ILogic {
         return getNextTuple();
     }
 
+    @Nullable
     public ByteVector feed1(ByteVector packet) {
         ReadHelper reader = new ReadHelper(packet);
 
@@ -86,7 +90,8 @@ public class Logic implements ILogic {
             return writer.getData();
         }
     }
-    
+
+    @Nullable
     public ByteVector feed2(ByteVector packet) {
         ReadHelper reader = new ReadHelper(packet);
         String str = reader.readString();
@@ -97,7 +102,8 @@ public class Logic implements ILogic {
         state = 1;
         return getNextTuple();
     }
-    
+
+    @Override
     public ByteVector feed(ByteVector packet) {
         switch (state) {
         case 0: return feed0(packet);
@@ -107,6 +113,7 @@ public class Logic implements ILogic {
         return null;
     }
 
+    @Override
     public void disconnect() {
         if (user != null)
             msg.setNotBusy(user);

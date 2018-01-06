@@ -75,7 +75,7 @@ public class ByteVector {
         return storage.length;
     }
 
-    /* direct access to the vector */
+    /** direct access to the vector */
     public byte[] data() {
         return storage;
     }
@@ -87,12 +87,12 @@ public class ByteVector {
         return res;
     }
     
-    /* wraps reusing provided array (be careful) */
+    /** wraps reusing provided array (be careful) */
     public static ByteVector wrap(byte[] bt) {
         return new ByteVector(bt);
     }
 
-    /* wraps reusing provided array (be careful) */
+    /** wraps reusing provided array (be careful) */
     public static ByteVector dup(byte[] bt) {
         byte[] b2 = new byte[bt.length];
         for (int i = 0; i != bt.length; ++i)

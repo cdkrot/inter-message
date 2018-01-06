@@ -10,8 +10,8 @@ public interface IStorage {
         INTEGER(3);
 
         public final int id;
-        private ObjectType(int theId) {
-            id = theId;
+        private ObjectType(int id) {
+            this.id = id;
         }
     };
     

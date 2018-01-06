@@ -2,7 +2,6 @@
 package ru.spbau.intermessage.net;
 
 import ru.spbau.intermessage.core.*;
-import ru.spbau.intermessage.store.IStorage;
 
 import ru.spbau.intermessage.util.ByteVector;
 import ru.spbau.intermessage.util.WriteHelper;
@@ -10,28 +9,26 @@ import ru.spbau.intermessage.util.ReadHelper;
 
 public class UDPLogic {
     private Messenger msg;
-    private IStorage store;
     private long lastTM = 0;
 
-    private long delta = 3 * 1000;
-    private byte[] head = {85, 83, 69, 82};    
+    private static final long DELTA = 3 * 1000;
+    private static final byte[] HEAD = {85, 83, 69, 82};
     
-    public UDPLogic(Messenger msg_, IStorage store_) {
+    public UDPLogic(Messenger msg_) {
         msg = msg_;
-        store = store_;
 
         lastTM = System.currentTimeMillis();
     }
 
     public ByteVector bcast() {
-        if (lastTM + delta > System.currentTimeMillis())
+        if (lastTM + DELTA > System.currentTimeMillis())
             return null;
         
         lastTM = System.currentTimeMillis();
         
         WriteHelper writer = new WriteHelper(new ByteVector());
         
-        writer.writeBytesSimple(head);
+        writer.writeBytesSimple(HEAD);
         msg.identity.user().write(writer);
         writer.writeString(msg.doGetUserName(msg.identity.user()));
         
@@ -43,10 +40,10 @@ public class UDPLogic {
 
     public void recieve(String from, ByteVector data) {
         // TODO: check identity.
-        
+
         ReadHelper reader = new ReadHelper(data);
         
-        if (!reader.skip(head))
+        if (!reader.skip(HEAD))
             return;
         
         User u = User.read(reader);

@@ -1,14 +1,16 @@
 package ru.spbau.intermessage.core;
 
+import android.support.annotation.Nullable;
+
 import ru.spbau.intermessage.util.ReadHelper;
 import ru.spbau.intermessage.util.WriteHelper;
 
 public class User {
-    public User() {}
     public User(String s) {publicKey = s;}
     
-    public String publicKey;
-    
+    public final String publicKey;
+
+    @Nullable
     public static User read(ReadHelper helper) {
         String s = helper.readString();
         if (s == null)

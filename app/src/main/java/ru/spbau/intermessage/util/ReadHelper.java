@@ -1,5 +1,7 @@
 package ru.spbau.intermessage.util;
 
+import android.support.annotation.Nullable;
+
 public class ReadHelper {
     private ByteVector vec;
     private int pos;
@@ -46,6 +48,7 @@ public class ReadHelper {
         return res;
     }
 
+    @Nullable
     public String readString() {
         byte[] bts = readBytes();
 
@@ -55,6 +58,7 @@ public class ReadHelper {
         return Util.bytesToString(bts);
     }
 
+    @Nullable
     public byte[] readBytes() {
         if (available() < 4)
             return null;

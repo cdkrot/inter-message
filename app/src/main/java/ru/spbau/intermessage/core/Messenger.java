@@ -1,5 +1,7 @@
 package ru.spbau.intermessage.core;
 
+import android.support.annotation.Nullable;
+
 import ru.spbau.intermessage.core.Message;
 import ru.spbau.intermessage.net.*;
 
@@ -13,11 +15,11 @@ import java.util.*;
 import java.io.IOException;
 
 public class Messenger {
-    protected Queue<RequestCommon> queue = new ArrayDeque<RequestCommon>();
-    protected Set<EventListener> listeners = new HashSet<EventListener>();
-    protected Network network;
+    private Queue<RequestCommon> queue = new ArrayDeque<RequestCommon>();
+    private Set<EventListener> listeners = new HashSet<EventListener>();
+    private Network network;
     public final ID identity;
-    protected IStorage storage;
+    private IStorage storage;
 
     public Messenger(IStorage store, ID id) throws IOException {
         storage = store;
@@ -330,6 +332,7 @@ public class Messenger {
         }
     }
 
+    @Nullable
     public Tuple3<Chat, User, Integer> getNextMessageFor(User u) {
         for (Chat chat: getChatsWithUser(u)) {
             for (User member: getChatMembers(chat)) {
@@ -362,7 +365,7 @@ public class Messenger {
         if (!setBusy(u))
             return false;
         try {
-            network.create(storage.get("user.location." + u.publicKey).getString(), new SLogic(this, storage, u));
+            network.create(storage.get("user.location." + u.publicKey).getString(), new SLogic(this, u));
             return true;
         } catch (IOException ex) {
             return false;
@@ -436,16 +439,8 @@ public class Messenger {
 
         Message m = Message.read(reader);
         User u = User.read(reader);
-
-        if (m == null || u == null) {
-            String blad = "";
-
-            for (byte b: storage.getList("allmsg." + ch.id).get(id).getData())
-                blad += String.format("%02X ", b);
-            throw new RuntimeException((m == null ? "M IS NULL" : "M OK") + (u == null ? "U IS NULL" : "U OK") + "\n" + blad);
-        }
         
-        return new Pair(u, m);
+        return new Pair<User, Message>(u, m);
     }
     
     public int needMessage(Chat ch, User u, int i) {
@@ -504,6 +499,7 @@ public class Messenger {
         storage.get("user.location." + u.publicKey).setString(addr);
     }
 
+    @Nullable
     public String getUserLocation(User u) {
         IStorage.Union obj = storage.get("user.location." + u.publicKey);
 

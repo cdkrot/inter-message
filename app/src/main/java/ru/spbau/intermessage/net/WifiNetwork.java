@@ -15,9 +15,9 @@ public class WifiNetwork implements Network {
     private Messenger msg;
     private IStorage store;
 
-    private static final int listenPort = 5202;
-    private static final int udpPort = 5203;
-    private static final byte[] magic = {69, 77, 83, 71}; // EMSG.
+    private static final int LISTEN_PORT = 5202;
+    private static final int UDP_PORT = 5203;
+    private static final byte[] MAGIC = {69, 77, 83, 71}; // EMSG.
     
     private Selector epoll;
     private InetAddress bcast;
@@ -45,30 +45,30 @@ public class WifiNetwork implements Network {
             }
         }
 
-        public boolean writing;        
-        public ILogic logic;
-        
-        public SelectionKey token;
-        
-        public SocketChannel sock;
+        private boolean writing;
+        private ILogic logic;
 
-        public int off = -6;
+        private SelectionKey token;
 
-        public ByteVector recv = null;
-        public ByteVector pending = null;
-        
-        public int income = -1;
+        private SocketChannel sock;
 
-        public int magicAccepter = 0;
+        private int off = -6;
 
-        public ByteBuffer outbuf, inbuf;
+        private ByteVector recv = null;
+        private ByteVector pending = null;
+
+        private int income = -1;
+
+        private int magicAccepter = 0;
+
+        private ByteBuffer outbuf, inbuf;
         
         public int getOutput() {
             if (pending == null)
                 return -1;
             
             if (off < -2) {
-                return magic[(off++) + 6];
+                return MAGIC[(off++) + 6];
             }
             
             if (off == -2) {
@@ -89,6 +89,7 @@ public class WifiNetwork implements Network {
             }
             return res;
         }
+
         public boolean onInput(byte b) {
             if (writing)
                 return false;
@@ -111,7 +112,7 @@ public class WifiNetwork implements Network {
             }
             
             if (magicAccepter < 4) {
-                if (magic[magicAccepter] != b)
+                if (MAGIC[magicAccepter] != b)
                     return false;
                 magicAccepter += 1;
                 return true;
@@ -132,7 +133,7 @@ public class WifiNetwork implements Network {
             }
             return false;
         }
-    };
+    }
 
     private InetAddress getBroadcast() {
         try {
@@ -153,8 +154,8 @@ public class WifiNetwork implements Network {
         if (vec != null) {
             ByteBuffer buf = ByteBuffer.allocate(vec.size() + 6);
             buf.clear();
-            for (int i = 0; i != magic.length; ++i)
-                buf.put(magic[i]);
+            for (int i = 0; i != MAGIC.length; ++i)
+                buf.put(MAGIC[i]);
                 buf.put((byte)(vec.size() / 256));
                 buf.put((byte)(vec.size() % 256));
                 
@@ -162,7 +163,7 @@ public class WifiNetwork implements Network {
                 
                 buf.flip();
                 
-                int r = udpsock.send(buf, new InetSocketAddress(bcast, udpPort));
+                int r = udpsock.send(buf, new InetSocketAddress(bcast, UDP_PORT));
         }
     }
 
@@ -180,8 +181,8 @@ public class WifiNetwork implements Network {
         }
         
         if (buf.position() >= 6) {
-            for (int i = 0; i != magic.length; ++i)
-                if (buf.get(i) != magic[i])
+            for (int i = 0; i != MAGIC.length; ++i)
+                if (buf.get(i) != MAGIC[i])
                     return;
             
             int len = buf.get(4) * 256 + buf.get(5);
@@ -247,7 +248,8 @@ public class WifiNetwork implements Network {
 
         return true;
     }
-            
+
+    @Override
     public void begin(Messenger msg_, IStorage store_) throws IOException {
         msg = msg_;
         store = store_;
@@ -257,23 +259,24 @@ public class WifiNetwork implements Network {
         
         ServerSocketChannel sock = ServerSocketChannel.open();
         sock.configureBlocking(false);
-        sock.socket().bind(new InetSocketAddress(listenPort));
+        sock.socket().bind(new InetSocketAddress(LISTEN_PORT));
         sock.register(epoll, sock.validOps(), sock);
         
         udpsock = DatagramChannel.open();
         udpsock.configureBlocking(false);
-        udpsock.socket().bind(new InetSocketAddress(udpPort));
+        udpsock.socket().bind(new InetSocketAddress(UDP_PORT));
         udpsock.socket().setBroadcast(true);
-        udplogic = new UDPLogic(msg, store);
+        udplogic = new UDPLogic(msg);
         udpsock.register(epoll, udpsock.validOps(), udpsock);
     }
 
+    @Override
     public void create(String addr, ILogic logic) {
         try {
             SocketChannel sock = SocketChannel.open();
             sock.socket().bind(null);
             sock.configureBlocking(false);
-            sock.connect(new InetSocketAddress(addr, listenPort));
+            sock.connect(new InetSocketAddress(addr, LISTEN_PORT));
 
             // creating "listening" connection.
             Helper helper = new Helper(sock, logic, true);
@@ -283,6 +286,7 @@ public class WifiNetwork implements Network {
         }
     }
 
+    @Override
     public void work() throws IOException {
         synchronized (this) {
             epoll.select();
@@ -326,12 +330,14 @@ public class WifiNetwork implements Network {
         }
     }
 
+    @Override
     public void interrupt() {
         synchronized (this) {
             epoll.wakeup();
         }
     }
-    
+
+    @Override
     public void close() throws IOException {
         epoll.close();
     }

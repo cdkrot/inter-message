@@ -470,7 +470,8 @@ public class Controller extends IntentService {
 
             String chatId = intent.getStringExtra("ChatId");
             String chatName = intent.getStringExtra("ChatName");
-            //messenger.changeChatName(new Chat(chatId), chatName);
+            Chat chat = new Chat(chatId);
+            messenger.sendMessage(chat, messenger.getChangeChatName(chat, chatName));
 
         }
     }

@@ -1,5 +1,7 @@
 package ru.spbau.intermessage.core;
 
+import android.support.annotation.Nullable;
+
 import ru.spbau.intermessage.util.ByteVector;
 import ru.spbau.intermessage.util.ReadHelper;
 import ru.spbau.intermessage.util.WriteHelper;
@@ -16,6 +18,7 @@ public class Message {
     public long timestamp;
     public byte[] data;
 
+    @Nullable
     public static Message read(ReadHelper reader) {
         Message msg = new Message();
         
