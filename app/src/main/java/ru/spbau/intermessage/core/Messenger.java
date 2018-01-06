@@ -28,12 +28,6 @@ public class Messenger {
         
         new Thread() {
             public void run() {
-                //synchronized (queue) {
-                //   network = new WifiNNetwork();
-                //   network.begin(Messenger.this, storage);
-                //   queue.notify();
-                //}
-                
                 while (true) {
                     RequestCommon r;
                     while (true) {
@@ -72,13 +66,6 @@ public class Messenger {
                 }
             }
         }.start();
-
-        //synchronized (queue) {
-        //    while (network == null)
-        //        try {
-        //            queue.wait();
-        //        } catch (InterruptedException ex) {} // poor java.
-        //}   
     }
 
     protected static class RequestCommon {
@@ -305,11 +292,10 @@ public class Messenger {
         return res;
     }
     
-    /**
-      * Methods below must be run within
-      * Messenger's thread,
-      * So they shouldn't be called directly from UI's code.
-      */
+    /* Methods below must be run within
+     * Messenger's thread,
+     * So they shouldn't be called directly from UI's code.
+     */
     
     public ArrayList<Chat> getChatsWithUser(User u) {
         ArrayList<Chat> list = new ArrayList<Chat>();
