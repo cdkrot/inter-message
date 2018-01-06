@@ -37,8 +37,6 @@ public class UDPLogic {
         
         for (User u: msg.getPoor())
             u.write(writer);
-
-        System.err.println("Sent bcast");
         
         return writer.getData();
     }
@@ -61,7 +59,7 @@ public class UDPLogic {
         while (reader.available() > 0) {
             User xx = User.read(reader);
             if (xx == null)
-                return;
+                return; // invalid packet.
 
             if (xx.equals(msg.identity.user()))
                 was = true;
@@ -69,8 +67,6 @@ public class UDPLogic {
 
         msg.doSetUserName(u, name);
         msg.doSetUserLocation(u, from);
-
-        System.err.println("Get valid bcast from " + u.publicKey + " " + was);
         
         if (was)
             msg.syncWith(u);

@@ -1,4 +1,3 @@
-ru/spbau/intermessage/core/ServiceCommon.java
 ru/spbau/intermessage/core/Message.java
 ru/spbau/intermessage/core/EventListener.java
 ru/spbau/intermessage/core/User.java
@@ -14,11 +13,11 @@ ru/spbau/intermessage/util/Tuple3.java
 ru/spbau/intermessage/util/Pair.java
 ru/spbau/intermessage/util/ByteVector.java
 ru/spbau/intermessage/util/Util.java
+ru/spbau/intermessage/util/Lambda1.java
+ru/spbau/intermessage/util/Lambda2.java
 ru/spbau/intermessage/net/UDPLogic.java
 ru/spbau/intermessage/net/NNetwork.java
 ru/spbau/intermessage/net/ILogic.java
 ru/spbau/intermessage/net/SLogic.java
 ru/spbau/intermessage/net/Logic.java
-ru/spbau/intermessage/net/WifiNetwork.java
 ru/spbau/intermessage/net/WifiNNetwork.java
-ru/spbau/intermessage/net/Network.java
