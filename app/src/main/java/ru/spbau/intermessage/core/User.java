@@ -6,9 +6,11 @@ import ru.spbau.intermessage.util.ReadHelper;
 import ru.spbau.intermessage.util.WriteHelper;
 
 public class User {
-    public User(String s) {publicKey = s;}
-    
     public final String publicKey;
+
+    public User(String s) {
+        publicKey = s;
+    }
 
     @Nullable
     public static User read(ReadHelper helper) {

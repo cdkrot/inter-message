@@ -6,9 +6,11 @@ import ru.spbau.intermessage.util.ReadHelper;
 import ru.spbau.intermessage.util.WriteHelper;
 
 public class Chat {
-    public Chat(String id_) {id = id_;}
-    
     public final String id;
+
+    public Chat(String id) {
+        this.id = id;
+    }
 
     @Nullable
     public static Chat read(ReadHelper helper) {

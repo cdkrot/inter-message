@@ -125,7 +125,7 @@ public class InMemoryStorage implements IStorage {
     }
 
     @Override
-    public IStorage.IList getList(final String key) {
+    public IStorage.IList getList(String key) {
         return new IList() {
             protected ListContainer fetch() {
                 return lists.get(key);
@@ -155,7 +155,7 @@ public class InMemoryStorage implements IStorage {
             }
 
             @Override
-            public Union get(final int i) {
+            public Union get(   int i) {
                 return new UnionBase() {
                     protected ObjectContainer fetch() {
                         return fetchXX().data.get(i);
