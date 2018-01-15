@@ -33,6 +33,23 @@ import ru.spbau.intermessage.util.Util;
  */
 public class Controller extends IntentService {
 
+    private static final String ACTION_SEND_MESSAGE = "Controller.action.SEND";
+    private static final String ACTION_RECEIVE_MESSAGE = "Controller.action.RECEIVE";
+    private static final String ACTION_KILL_MESSENGER = "Controller.action.KILL";
+    private static final String ACTION_USER_CHANGE_NAME = "Controller.action.USER_CHANGE_NAME";
+    private static final String ACTION_REQUEST_DIALOGS_LIST = "Controller.action.REQUEST_DIALOGS_LIST";
+    private static final String ACTION_RETURN_DIALOGS_LIST = "Controller.action.RETURN_DIALOGS_LIST";
+    private static final String ACTION_CREATE_NEW_CHAT = "Controller.action.CREATE_NEW_CHAT";
+    private static final String ACTION_REQUEST_LATEST = "Controller.action.REQUEST_LATEST";
+    private static final String ACTION_REQUEST_UPDATES = "Controller.action.REQUEST_UPDATES";
+    private static final String ACTION_RETURN_UPDATES = "Controller.action.RETURN_UPDATES";
+    private static final String ACTION_RETURN_LATEST = "Controller.action.RETURN_LATEST";
+    private static final String ACTION_REQUEST_ADD_USER = "Controller.action.REQUEST_ADD_USER";
+    private static final String ACTION_ADD_USER = "Controller.action.ADD_USER";
+    private static final String ACTION_ADD_USERS = "Controller.action.ADD_USERS";
+    private static final String ACTION_GET_USERS_IN_CHAT = "Controller.action.GET_USERS_IN_CHAT";
+    private static final String ACTION_CHANGE_CHAT_NAME = "Controller.action.CHANGE_CHAT_NAME";
+
     private static Messenger messenger;
 
     static {
@@ -97,23 +114,6 @@ public class Controller extends IntentService {
         });
 
     }
-
-    private static final String ACTION_SEND_MESSAGE = "Controller.action.SEND";
-    private static final String ACTION_RECEIVE_MESSAGE = "Controller.action.RECEIVE";
-    private static final String ACTION_KILL_MESSENGER = "Controller.action.KILL";
-    private static final String ACTION_USER_CHANGE_NAME = "Controller.action.USER_CHANGE_NAME";
-    private static final String ACTION_REQUEST_DIALOGS_LIST = "Controller.action.REQUEST_DIALOGS_LIST";
-    private static final String ACTION_RETURN_DIALOGS_LIST = "Controller.action.RETURN_DIALOGS_LIST";
-    private static final String ACTION_CREATE_NEW_CHAT = "Controller.action.CREATE_NEW_CHAT";
-    private static final String ACTION_REQUEST_LATEST = "Controller.action.REQUEST_LATEST";
-    private static final String ACTION_REQUEST_UPDATES = "Controller.action.REQUEST_UPDATES";
-    private static final String ACTION_RETURN_UPDATES = "Controller.action.RETURN_UPDATES";
-    private static final String ACTION_RETURN_LATEST = "Controller.action.RETURN_LATEST";
-    private static final String ACTION_REQUEST_ADD_USER = "Controller.action.REQUEST_ADD_USER";
-    private static final String ACTION_ADD_USER = "Controller.action.ADD_USER";
-    private static final String ACTION_ADD_USERS = "Controller.action.ADD_USERS";
-    private static final String ACTION_GET_USERS_IN_CHAT = "Controller.action.GET_USERS_IN_CHAT";
-    private static final String ACTION_CHANGE_CHAT_NAME = "Controller.action.CHANGE_CHAT_NAME";
 
     public Controller() {
         super("Controller");

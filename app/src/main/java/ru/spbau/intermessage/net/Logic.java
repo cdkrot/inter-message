@@ -33,8 +33,8 @@ public class Logic implements ILogic {
     private User lastuser = null;
     private int lastid = -1;
     
-    public Logic(Messenger msg_, IStorage store_) {
-        msg = msg_;
+    public Logic(Messenger msg, IStorage store_) {
+        this.msg = msg;
         store = store_;
     }
 

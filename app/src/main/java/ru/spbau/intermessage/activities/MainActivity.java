@@ -18,6 +18,7 @@ import android.widget.Toast;
 import java.util.ArrayList;
 
 import ru.spbau.intermessage.Controller;
+import ru.spbau.intermessage.Intermessage;
 import ru.spbau.intermessage.R;
 import ru.spbau.intermessage.console.ConsoleActivity;
 import ru.spbau.intermessage.crypto.ID;
@@ -26,8 +27,8 @@ import ru.spbau.intermessage.crypto.ID;
 
 public class MainActivity extends AppCompatActivity {
 
-    private final String PREF_FILE = "preferences";
-    private final String PREF_NAME = "userName";
+    private static final String PREF_FILE = "preferences";
+    private static final String PREF_NAME = "userName";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,24 +105,21 @@ public class MainActivity extends AppCompatActivity {
         mainMenuList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                switch (i) {
-                    case 0: Intent intent = new Intent(MainActivity.this, DialogsListActivity.class);
-                            startActivity(intent);
-                            break;
-                    case 1: intent = new Intent(MainActivity.this, SettingsActivity.class);
-                            startActivity(intent);
-                            break;
-
-                    case 2: intent = new Intent(MainActivity.this, AboutActivity.class);
-                            startActivity(intent);
-                            break;
-
-                    case 3: intent = new Intent(MainActivity.this, ConsoleActivity.class);
-                            startActivity(intent);
-                            break;
-
-                    case 4: android.os.Process.killProcess(android.os.Process.myPid());
-
+                String name = buttonNames.get(i);
+                if (getString(R.string.menu_dialogs).equals(name)) {
+                    Intent intent = new Intent(MainActivity.this, DialogsListActivity.class);
+                    startActivity(intent);
+                } else if (getString(R.string.menu_options).equals(name)) {
+                    Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+                    startActivity(intent);
+                } else if (getString(R.string.menu_about).equals(name)) {
+                    Intent intent = new Intent(MainActivity.this, AboutActivity.class);
+                    startActivity(intent);
+                } else if (getString(R.string.menu_console).equals(name)) {
+                    Intent intent = new Intent(MainActivity.this, ConsoleActivity.class);
+                    startActivity(intent);
+                } else if (getString(R.string.menu_kill).equals(name)) {
+                    android.os.Process.killProcess(android.os.Process.myPid());
                 }
             }
         });

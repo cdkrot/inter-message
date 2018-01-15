@@ -23,7 +23,7 @@ public class WifiNetwork implements Network {
     private InetAddress bcast;
     
     private class Helper {
-        public Helper(SocketChannel sck, ILogic logic_, boolean firstwrite) {
+        public Helper(SocketChannel sck, ILogic logic, boolean firstwrite) {
             token = null;
             
             sock = sck;
@@ -37,7 +37,7 @@ public class WifiNetwork implements Network {
             outbuf.flip();
             inbuf.clear();
 
-            logic = logic_;
+            this.logic = logic;
             writing = firstwrite;
 
             if (writing) {
@@ -250,9 +250,9 @@ public class WifiNetwork implements Network {
     }
 
     @Override
-    public void begin(Messenger msg_, IStorage store_) throws IOException {
-        msg = msg_;
-        store = store_;
+    public void begin(Messenger msg, IStorage store) throws IOException {
+        this.msg = msg;
+        this.store = store;
 
         epoll = Selector.open();
         bcast = getBroadcast();

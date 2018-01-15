@@ -14,8 +14,8 @@ public class UDPLogic {
     private static final long DELTA = 3 * 1000;
     private static final byte[] HEAD = {85, 83, 69, 82};
     
-    public UDPLogic(Messenger msg_) {
-        msg = msg_;
+    public UDPLogic(Messenger msg) {
+        this.msg = msg;
 
         lastTM = System.currentTimeMillis();
     }

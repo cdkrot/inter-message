@@ -17,7 +17,7 @@ import ru.spbau.intermessage.util.WriteHelper;
 // 2: I: Message
 // 2: O: respond with "ACK", goto 1.
 
-public class SLogic implements ILogic {
+public class ServerLogic implements ILogic {
     private Messenger msg;
     private int state = 0;
 
@@ -27,9 +27,9 @@ public class SLogic implements ILogic {
 
     private User peer;
     
-    public SLogic(Messenger msg_, User peer_) {
-        msg = msg_;
-        peer = peer_;
+    public ServerLogic(Messenger msg, User peer) {
+        this.msg = msg;
+        this.peer = peer;
     }
 
     public ByteVector feed0(ByteVector packet) {

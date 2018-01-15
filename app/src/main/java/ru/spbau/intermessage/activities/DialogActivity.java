@@ -31,16 +31,15 @@ import ru.spbau.intermessage.gui.Item;
 import ru.spbau.intermessage.gui.ItemAdapter;
 
 public class DialogActivity extends AppCompatActivity {
+    private static final String PREF_FILE = "preferences";
+    private static final String PREF_NAME = "userName";
+    private static final int NEW_MESSAGES_LIMIT = 20;
 
     private static final List<Item> messages = new ArrayList<>();
     private static String chatId;
     private MessageReceiver messageReceiver;
     private ItemAdapter messagesAdapter;
     private String selfUserName;
-
-    private final String PREF_FILE = "preferences";
-    private final String PREF_NAME = "userName";
-    private static final int NEW_MESSAGES_LIMIT = 20;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,8 +72,9 @@ public class DialogActivity extends AppCompatActivity {
                 boolean handled = false;
                 if (i == EditorInfo.IME_ACTION_SEND) {
                     String text = input.getText().toString();
-                    if (text.length() == 0)
+                    if (text.length() == 0) {
                         return false;
+                    }
 
                     long date = System.currentTimeMillis() / 1000L;
                     Item newMessage = new Item(selfUserName, text, date, 0);

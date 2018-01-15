@@ -2,13 +2,11 @@ package ru.spbau.intermessage.core;
 
 import android.support.annotation.Nullable;
 
-import ru.spbau.intermessage.core.Message;
 import ru.spbau.intermessage.net.*;
 
 import ru.spbau.intermessage.util.*;
 import ru.spbau.intermessage.crypto.ID;
 import ru.spbau.intermessage.store.IStorage;
-import ru.spbau.intermessage.store.InMemoryStorage;
 
 import java.util.*;
 
@@ -365,7 +363,7 @@ public class Messenger {
         if (!setBusy(u))
             return false;
         try {
-            network.create(storage.get("user.location." + u.publicKey).getString(), new SLogic(this, u));
+            network.create(storage.get("user.location." + u.publicKey).getString(), new ServerLogic(this, u));
             return true;
         } catch (IOException ex) {
             return false;
