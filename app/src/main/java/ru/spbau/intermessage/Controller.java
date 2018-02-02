@@ -21,6 +21,7 @@ import ru.spbau.intermessage.core.Message;
 import ru.spbau.intermessage.core.Messenger;
 import ru.spbau.intermessage.core.User;
 import ru.spbau.intermessage.crypto.ID;
+import ru.spbau.intermessage.gui.Item;
 import ru.spbau.intermessage.gui.ItemMessage;
 import ru.spbau.intermessage.store.Storage;
 import ru.spbau.intermessage.util.Pair;
@@ -130,9 +131,8 @@ public class Controller extends IntentService {
         Context context = Intermessage.getAppContext();
         Intent intent = new Intent(context, Controller.class);
         intent.setAction(ACTION_SEND_MESSAGE);
-        intent.putExtra("Date", message.date);
-        intent.putExtra("Message", message.messageText);
         intent.putExtra("ChatId", chatId);
+        intent.putExtra("Item", message);
 
         context.startService(intent);
     }
@@ -161,9 +161,8 @@ public class Controller extends IntentService {
         Context context = Intermessage.getAppContext();
         Intent intent = new Intent(context, Controller.class);
         intent.setAction(ACTION_RECEIVE_MESSAGE);
-        intent.putExtra("User", userName);
-        intent.putExtra("Date", message.timestamp);
-        intent.putExtra("Message", Util.bytesToString(message.data));
+        String text = Util.bytesToString(message.data);
+        intent.putExtra("Item", new ItemMessage(userName, text, message.timestamp, 0));
         intent.putExtra("ChatId", chatId);
 
         context.startService(intent);
@@ -322,19 +321,15 @@ public class Controller extends IntentService {
         String action = intent.getAction();
         if (ACTION_SEND_MESSAGE.equals(action)) {
 
-            long date = intent.getLongExtra("Date", 0);
-            String textMessage = intent.getStringExtra("Message");
+            ItemMessage item = intent.getParcelableExtra("Item");
             String chatId = intent.getStringExtra("ChatId");
-            byte[] bytes = Util.stringToBytes(textMessage);
-            messenger.sendMessage(new Chat(chatId), new Message("text", date, bytes));
+            messenger.sendMessage(new Chat(chatId), new Message(item.getType(), item.getDate(), item.getData()));
 
         } else if (ACTION_RECEIVE_MESSAGE.equals(action)) {
 
             Intent broadcastIntent = new Intent();
             broadcastIntent.setAction(DialogActivity.MessageReceiver.ACTION_RECEIVE);
-            broadcastIntent.putExtra("User", intent.getStringExtra("User"));
-            broadcastIntent.putExtra("Date", intent.getLongExtra("Date", 0));
-            broadcastIntent.putExtra("Message", intent.getStringExtra("Message"));
+            broadcastIntent.putExtra("Item", (Item) intent.getParcelableExtra("Item"));
             broadcastIntent.putExtra("ChatId", intent.getStringExtra("ChatId"));
             sendBroadcast(broadcastIntent);
 

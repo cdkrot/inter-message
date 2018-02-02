@@ -204,11 +204,9 @@ public class DialogActivity extends AppCompatActivity {
 
             if (ACTION_RECEIVE.equals(action)) {
 
-                String text = intent.getStringExtra("Message");
-                long date = intent.getLongExtra("Date", 0);
-                String userName = intent.getStringExtra("User");
                 int position = (messages.size() == 0 ? 0 : messages.get(messages.size() - 1).getPosition() + 1);
-                ItemMessage newMessage = new ItemMessage(userName, text, date, position);
+                Item newMessage = (Item)intent.getParcelableExtra("Item");
+                newMessage.setPosition(position);
 
                 messages.add(newMessage);
                 messagesAdapter.notifyDataSetChanged();

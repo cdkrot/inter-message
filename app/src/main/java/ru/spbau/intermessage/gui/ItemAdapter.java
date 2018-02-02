@@ -39,11 +39,8 @@ public class ItemAdapter extends BaseAdapter {
         Item item = (Item) getItem(i);
 
         if(convertView == null) {
-
             convertView = item.getConvertView(inflater, parent);
-
             holder = item.createViewHolder(convertView);
-
             convertView.setTag(holder);
         } else{
             holder = (ViewHolder) convertView.getTag();

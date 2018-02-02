@@ -1,5 +1,7 @@
 package ru.spbau.intermessage.gui;
 
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,6 +11,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import ru.spbau.intermessage.R;
+import ru.spbau.intermessage.util.Util;
 
 public class ItemMessage extends AbstractItem{
     private String userName;
@@ -20,6 +23,21 @@ public class ItemMessage extends AbstractItem{
         this.messageText = messageText;
         this.date = date;
         setPosition(position);
+    }
+
+    private ItemMessage(Parcel in) {
+        userName = in.readString();
+        messageText = in.readString();
+        date = in.readLong();
+        setPosition(in.readInt());
+    }
+
+    @Override
+    public void writeToParcel(Parcel out, int flags) {
+        out.writeString(userName);
+        out.writeString(messageText);
+        out.writeLong(date);
+        out.writeInt(getPosition());
     }
 
     @Override
@@ -54,9 +72,34 @@ public class ItemMessage extends AbstractItem{
         userName.setText(this.userName);
     }
 
+    @Override
+    public long getDate() {
+        return date;
+    }
+
+    @Override
+    public String getType() {
+        return "text";
+    }
+
+    @Override
+    public byte[] getData() {
+        return Util.stringToBytes(messageText);
+    }
+
     public class ViewMessageHolder implements ViewHolder {
         TextView date;
         TextView userName;
         TextView text;
     }
+
+    public static final Parcelable.Creator CREATOR = new Parcelable.Creator() {
+        public ItemMessage createFromParcel(Parcel in) {
+            return new ItemMessage(in);
+        }
+
+        public ItemMessage[] newArray(int size) {
+            return new ItemMessage[size];
+        }
+    };
 };

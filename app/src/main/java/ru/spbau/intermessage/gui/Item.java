@@ -1,10 +1,11 @@
 package ru.spbau.intermessage.gui;
 
+import android.os.Parcelable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-public interface Item {
+public interface Item extends Parcelable{
 
     public void setPosition(int position);
 
@@ -15,4 +16,10 @@ public interface Item {
     public ViewHolder createViewHolder(View convertView);
 
     public void handleHolder(ViewHolder holder);
+
+    public long getDate();
+
+    public String getType();
+
+    public byte[] getData();
 }
