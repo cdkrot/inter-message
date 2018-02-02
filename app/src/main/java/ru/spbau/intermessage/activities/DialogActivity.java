@@ -28,6 +28,7 @@ import java.util.List;
 import ru.spbau.intermessage.Controller;
 import ru.spbau.intermessage.R;
 import ru.spbau.intermessage.gui.Item;
+import ru.spbau.intermessage.gui.ItemMessage;
 import ru.spbau.intermessage.gui.ItemAdapter;
 
 public class DialogActivity extends AppCompatActivity {
@@ -77,7 +78,7 @@ public class DialogActivity extends AppCompatActivity {
                     }
 
                     long date = System.currentTimeMillis() / 1000L;
-                    Item newMessage = new Item(selfUserName, text, date, 0);
+                    ItemMessage newMessage = new ItemMessage(selfUserName, text, date, 0);
                     input.setText("");
 
                     Controller.sendMessage(newMessage, chatId);
@@ -117,7 +118,7 @@ public class DialogActivity extends AppCompatActivity {
         if (messages.size() == 0) {
             Controller.requestLastMessages(chatId, NEW_MESSAGES_LIMIT);
         } else{
-            Controller.requestUpdates(chatId, messages.get(messages.size() - 1).position);
+            Controller.requestUpdates(chatId, messages.get(messages.size() - 1).getPosition());
         }
     }
 
@@ -206,8 +207,8 @@ public class DialogActivity extends AppCompatActivity {
                 String text = intent.getStringExtra("Message");
                 long date = intent.getLongExtra("Date", 0);
                 String userName = intent.getStringExtra("User");
-                int position = (messages.size() == 0 ? 0 : messages.get(messages.size() - 1).position + 1);
-                Item newMessage = new Item(userName, text, date, position);
+                int position = (messages.size() == 0 ? 0 : messages.get(messages.size() - 1).getPosition() + 1);
+                ItemMessage newMessage = new ItemMessage(userName, text, date, position);
 
                 messages.add(newMessage);
                 messagesAdapter.notifyDataSetChanged();
@@ -225,7 +226,7 @@ public class DialogActivity extends AppCompatActivity {
                 int length = timestamps.length;
 
                 for (int i = 0; i < length; i++) {
-                    Item item = new Item(userNames[i], texts[i], timestamps[i], position + i);
+                    ItemMessage item = new ItemMessage(userNames[i], texts[i], timestamps[i], position + i);
                     messages.add(item);
                 }
 
@@ -242,9 +243,9 @@ public class DialogActivity extends AppCompatActivity {
                 long[] timestamps = intent.getLongArrayExtra("Timestamps");
                 String[] userNames = intent.getStringArrayExtra("UserNames");
                 int length = timestamps.length;
-                int shift = Math.max(0, messages.get(messages.size() - 1).position - position + 1);
+                int shift = Math.max(0, messages.get(messages.size() - 1).getPosition() - position + 1);
                 for (int i = shift; i < length; i++) {
-                    Item item = new Item(userNames[i], texts[i], timestamps[i], position + i);
+                    ItemMessage item = new ItemMessage(userNames[i], texts[i], timestamps[i], position + i);
                     messages.add(item);
                 }
 

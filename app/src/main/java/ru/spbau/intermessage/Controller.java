@@ -21,7 +21,7 @@ import ru.spbau.intermessage.core.Message;
 import ru.spbau.intermessage.core.Messenger;
 import ru.spbau.intermessage.core.User;
 import ru.spbau.intermessage.crypto.ID;
-import ru.spbau.intermessage.gui.Item;
+import ru.spbau.intermessage.gui.ItemMessage;
 import ru.spbau.intermessage.store.Storage;
 import ru.spbau.intermessage.util.Pair;
 import ru.spbau.intermessage.util.Tuple3;
@@ -126,7 +126,7 @@ public class Controller extends IntentService {
         return new ID(privateKey, publicKey);
     }
 
-    public static void sendMessage(Item message, String chatId) {
+    public static void sendMessage(ItemMessage message, String chatId) {
         Context context = Intermessage.getAppContext();
         Intent intent = new Intent(context, Controller.class);
         intent.setAction(ACTION_SEND_MESSAGE);
