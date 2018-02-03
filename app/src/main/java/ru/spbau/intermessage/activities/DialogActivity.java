@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.v7.app.AlertDialog;
 import android.text.InputType;
 import android.util.SparseBooleanArray;
@@ -23,6 +24,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import ru.spbau.intermessage.Controller;
@@ -218,7 +220,8 @@ public class DialogActivity extends AppCompatActivity {
                 }
 
                 int position = intent.getIntExtra("FirstPosition", 0);
-                Item items[] = (Item[]) intent.getParcelableArrayExtra("Items");
+                Parcelable[] parcels = intent.getParcelableArrayExtra("Items");
+                Item items[] = Arrays.copyOf(parcels, parcels.length, Item[].class);
                 int length = items.length;
 
                 for (int i = 0; i < length; i++) {
@@ -236,7 +239,8 @@ public class DialogActivity extends AppCompatActivity {
                 }
 
                 int position = intent.getIntExtra("FirstPosition", 0);
-                Item items[] = (Item[]) intent.getParcelableArrayExtra("Items");
+                Parcelable[] parcels = intent.getParcelableArrayExtra("Items");
+                Item items[] = Arrays.copyOf(parcels, parcels.length, Item[].class);
                 int length = items.length;
                 int shift = Math.max(0, messages.get(messages.size() - 1).getPosition() - position + 1);
                 for (int i = shift; i < length; i++) {
