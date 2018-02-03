@@ -6,6 +6,7 @@ import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.support.v4.app.NotificationCompat;
 
@@ -24,7 +25,9 @@ import ru.spbau.intermessage.core.User;
 import ru.spbau.intermessage.crypto.ID;
 import ru.spbau.intermessage.gui.Item;
 import ru.spbau.intermessage.gui.MessageItem;
+import ru.spbau.intermessage.gui.PictureItem;
 import ru.spbau.intermessage.store.Storage;
+import ru.spbau.intermessage.util.BitmapHelper;
 import ru.spbau.intermessage.util.Pair;
 import ru.spbau.intermessage.util.Tuple3;
 import ru.spbau.intermessage.util.Util;
@@ -162,8 +165,13 @@ public class Controller extends IntentService {
         Context context = Intermessage.getAppContext();
         Intent intent = new Intent(context, Controller.class);
         intent.setAction(ACTION_RECEIVE_MESSAGE);
-        String text = Util.bytesToString(message.data);
-        intent.putExtra("Item", new MessageItem(userName, text, message.timestamp, 0));
+        if ("text".equals(message.type)) {
+            String text = Util.bytesToString(message.data);
+            intent.putExtra("Item", new MessageItem(userName, text, message.timestamp, 0));
+        } else if ("picture".equals(message.type)) {
+            Bitmap bmp = BitmapHelper.bitmapFromBytes(message.data);
+            intent.putExtra("Item", new PictureItem(userName, bmp, message.timestamp, 0));
+        }
         intent.putExtra("ChatId", chatId);
 
         context.startService(intent);
@@ -234,6 +242,11 @@ public class Controller extends IntentService {
                 long timestamp = tr.third.timestamp;
                 String userName = tr.second;
                 item = new MessageItem(userName, text, timestamp, 0);
+            } else if ("picture".equals(tr.third.type)) {
+                Bitmap bmp = BitmapHelper.bitmapFromBytes(tr.third.data);
+                long timestamp = tr.third.timestamp;
+                String userName = tr.second;
+                item = new PictureItem(userName, bmp, timestamp, 0);
             } else {
                 throw new RuntimeException(new UnknownFormatConversionException("No such type " + tr.third.type));
             }
@@ -323,7 +336,8 @@ public class Controller extends IntentService {
         String action = intent.getAction();
         if (ACTION_SEND_MESSAGE.equals(action)) {
 
-            MessageItem item = intent.getParcelableExtra("Item");
+            Item item = intent.getParcelableExtra("Item");
+
             String chatId = intent.getStringExtra("ChatId");
             messenger.sendMessage(new Chat(chatId), new Message(item.getType(), item.getDate(), item.getData()));
 
