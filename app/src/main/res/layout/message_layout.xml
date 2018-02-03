@@ -1,48 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@drawable/oval">
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:paddingTop="12dp"
+    android:paddingBottom="10dp"
+    android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/userName"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/date"
-        android:layout_alignParentStart="true"
-        android:layout_gravity="start"
-        android:fontFamily="casual"
-        android:paddingBottom="8dp"
-        android:paddingLeft="10dp"
-        android:paddingRight="10dp"
-        android:paddingTop="10dp"
-        android:textColor="@color/colorPrimaryDark" />
+    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/oval">
 
-    <TextView
-        android:id="@+id/date"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentTop="true"
-        android:layout_gravity="end"
-        android:paddingBottom="8dp"
-        android:paddingLeft="10dp"
-        android:paddingRight="10dp"
-        android:paddingTop="10dp"
-        android:textColor="@android:color/holo_blue_dark" />
+        <TextView
+            android:id="@+id/userName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@+id/date"
+            android:layout_alignParentStart="true"
+            android:layout_gravity="start"
+            android:fontFamily="casual"
+            android:paddingBottom="8dp"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:paddingTop="10dp"
+            android:textColor="@color/colorPrimaryDark" />
 
-    <TextView
-        android:id="@+id/messageText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_below="@+id/userName"
-        android:background="@drawable/oval"
-        android:paddingBottom="8dp"
-        android:paddingLeft="10dp"
-        android:paddingRight="10dp"
-        android:paddingTop="5dp"
-        android:textSize="18sp" />
+        <TextView
+            android:id="@+id/date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentTop="true"
+            android:layout_gravity="end"
+            android:paddingBottom="8dp"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:paddingTop="10dp"
+            android:textColor="@android:color/holo_blue_dark" />
+
+        <TextView
+            android:id="@+id/messageText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_below="@+id/userName"
+            android:background="@drawable/oval"
+            android:paddingBottom="8dp"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:paddingTop="5dp"
+            android:textSize="18sp" />
 
 
-</RelativeLayout>
+    </RelativeLayout>
+
+</LinearLayout>
+
