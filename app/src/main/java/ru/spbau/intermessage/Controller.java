@@ -410,11 +410,11 @@ public class Controller extends IntentService {
             int position = 0;
             for (Pair<User, String> p : usersNearby) {
                 while (position != usersInChat.size() &&
-                        p.first.publicKey.compareTo(usersInChat.get(position).first.publicKey) < 0) {
+                        p.first.publicKey.compareTo(usersInChat.get(position).first.publicKey) > 0) {
                     position++;
                 }
                 if (position == usersInChat.size() ||
-                        p.first.publicKey.compareTo(usersInChat.get(position).first.publicKey) > 0) {
+                        p.first.publicKey.compareTo(usersInChat.get(position).first.publicKey) < 0) {
                     userIds.add(p.first.publicKey);
                     userNames.add(p.second);
                 }
