@@ -218,13 +218,12 @@ public class DialogActivity extends AppCompatActivity {
                 }
 
                 int position = intent.getIntExtra("FirstPosition", 0);
-                String[] texts = intent.getStringArrayExtra("Texts");
-                long[] timestamps = intent.getLongArrayExtra("Timestamps");
-                String[] userNames = intent.getStringArrayExtra("UserNames");
-                int length = timestamps.length;
+                Item items[] = (Item[]) intent.getParcelableArrayExtra("Items");
+                int length = items.length;
 
                 for (int i = 0; i < length; i++) {
-                    ItemMessage item = new ItemMessage(userNames[i], texts[i], timestamps[i], position + i);
+                    Item item = items[i];
+                    item.setPosition(position + i);
                     messages.add(item);
                 }
 
@@ -237,13 +236,12 @@ public class DialogActivity extends AppCompatActivity {
                 }
 
                 int position = intent.getIntExtra("FirstPosition", 0);
-                String[] texts = intent.getStringArrayExtra("Texts");
-                long[] timestamps = intent.getLongArrayExtra("Timestamps");
-                String[] userNames = intent.getStringArrayExtra("UserNames");
-                int length = timestamps.length;
+                Item items[] = (Item[]) intent.getParcelableArrayExtra("Items");
+                int length = items.length;
                 int shift = Math.max(0, messages.get(messages.size() - 1).getPosition() - position + 1);
                 for (int i = shift; i < length; i++) {
-                    ItemMessage item = new ItemMessage(userNames[i], texts[i], timestamps[i], position + i);
+                    Item item = items[i];
+                    item.setPosition(position + i);
                     messages.add(item);
                 }
 

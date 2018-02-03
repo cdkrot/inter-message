@@ -12,6 +12,7 @@ import android.support.v4.app.NotificationCompat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UnknownFormatConversionException;
 
 import ru.spbau.intermessage.activities.DialogActivity;
 import ru.spbau.intermessage.activities.DialogsListActivity;
@@ -196,23 +197,13 @@ public class Controller extends IntentService {
 
     public static void returnLatest(String chatId, List<Tuple3<User, String, Message>> messages, int firstPosition) {
         Context context = Intermessage.getAppContext();
-        String[] texts = new String[messages.size()];
-        long[] timestamps = new long[messages.size()];
-        String[] userNames = new String[messages.size()];
 
-        for (int i = 0; i < messages.size(); i++) {
-            Tuple3<User, String, Message> tr = messages.get(i);
-            texts[i] = Util.bytesToString(tr.third.data);
-            timestamps[i] = tr.third.timestamp;
-            userNames[i] = tr.second;
-        }
+        Item items[] = parseMessages(messages);
 
         Intent intent = new Intent(context, Controller.class);
         intent.setAction(Controller.ACTION_RETURN_LATEST);
         intent.putExtra("FirstPosition", firstPosition);
-        intent.putExtra("Timestamps", timestamps);
-        intent.putExtra("UserNames", userNames);
-        intent.putExtra("Texts", texts);
+        intent.putExtra("Items", items);
         intent.putExtra("ChatId", chatId);
 
         context.startService(intent);
@@ -220,24 +211,35 @@ public class Controller extends IntentService {
 
     public static void returnUpdates(String chatId, List<Tuple3<User, String, Message>> messages, int firstPosition) {
         Context context = Intermessage.getAppContext();
-        String[] texts = new String[messages.size()];
-        long[] timestamps = new long[messages.size()];
-        String[] userNames = new String[messages.size()];
-        for (int i = 0; i < messages.size(); i++) {
-            Tuple3<User, String, Message> tr = messages.get(i);
-            texts[i] = Util.bytesToString(tr.third.data);
-            timestamps[i] = tr.third.timestamp;
-            userNames[i] = tr.second;
-        }
+
+        Item items[] = parseMessages(messages);
+
         Intent intent = new Intent(context, Controller.class);
         intent.setAction(Controller.ACTION_RETURN_UPDATES);
         intent.putExtra("FirstPosition", firstPosition);
-        intent.putExtra("Timestamps", timestamps);
-        intent.putExtra("UserNames", userNames);
-        intent.putExtra("Texts", texts);
+        intent.putExtra("Items", items);
         intent.putExtra("ChatId", chatId);
 
         context.startService(intent);
+    }
+
+    private static Item[] parseMessages(List<Tuple3<User, String, Message>> messages) {
+        Item items[] = new Item[messages.size()];
+
+        for (int i = 0; i < messages.size(); i++) {
+            Item item;
+            Tuple3<User, String, Message> tr = messages.get(i);
+            if ("text".equals(tr.third.type)) {
+                String text = Util.bytesToString(tr.third.data);
+                long timestamp = tr.third.timestamp;
+                String userName = tr.second;
+                item = new ItemMessage(userName, text, timestamp, 0);
+            } else {
+                throw new RuntimeException(new UnknownFormatConversionException("No such type " + tr.third.type));
+            }
+            items[i] = item;
+        }
+        return items;
     }
 
     public static void changeUserName(String newName) {
@@ -345,6 +347,7 @@ public class Controller extends IntentService {
         } else if (ACTION_REQUEST_DIALOGS_LIST.equals(action)) {
 
             messenger.getListOfChats(Controller::returnDialogsList);
+
         } else if (ACTION_RETURN_DIALOGS_LIST.equals(action)) {
 
             Intent broadcastIntent = new Intent();
@@ -380,10 +383,8 @@ public class Controller extends IntentService {
 
             Intent broadcastIntent = new Intent();
             broadcastIntent.setAction(DialogActivity.MessageReceiver.ACTION_GOT_LAST_MESSAGES);
-            broadcastIntent.putExtra("UserNames", intent.getStringArrayExtra("UserNames"));
-            broadcastIntent.putExtra("Timestamps", intent.getLongArrayExtra("Timestamps"));
             broadcastIntent.putExtra("ChatId", intent.getStringExtra("ChatId"));
-            broadcastIntent.putExtra("Texts", intent.getStringArrayExtra("Texts"));
+            broadcastIntent.putExtra("Items", intent.getParcelableArrayExtra("Items"));
             broadcastIntent.putExtra("FirstPosition", intent.getIntExtra("FirstPosition", 0));
             sendBroadcast(broadcastIntent);
 
@@ -391,10 +392,8 @@ public class Controller extends IntentService {
 
             Intent broadcastIntent = new Intent();
             broadcastIntent.setAction(DialogActivity.MessageReceiver.ACTION_GOT_UPDATES);
-            broadcastIntent.putExtra("UserNames", intent.getStringArrayExtra("UserNames"));
-            broadcastIntent.putExtra("Timestamps", intent.getLongArrayExtra("Timestamps"));
             broadcastIntent.putExtra("ChatId", intent.getStringExtra("ChatId"));
-            broadcastIntent.putExtra("Texts", intent.getStringArrayExtra("Texts"));
+            broadcastIntent.putExtra("Items", intent.getParcelableArrayExtra("Items"));
             broadcastIntent.putExtra("FirstPosition", intent.getIntExtra("FirstPosition", 0));
             sendBroadcast(broadcastIntent);
 
