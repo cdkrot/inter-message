@@ -87,12 +87,6 @@ public class MessageItem extends AbstractItem {
         return Util.stringToBytes(messageText);
     }
 
-    public class ViewMessageHolder implements ViewHolder {
-        TextView date;
-        TextView userName;
-        TextView text;
-    }
-
     public static final Parcelable.Creator CREATOR = new Parcelable.Creator() {
         public MessageItem createFromParcel(Parcel in) {
             return new MessageItem(in);
@@ -102,4 +96,10 @@ public class MessageItem extends AbstractItem {
             return new MessageItem[size];
         }
     };
+
+    public class ViewMessageHolder implements ViewHolder {
+        TextView date;
+        TextView userName;
+        TextView text;
+    }
 };
