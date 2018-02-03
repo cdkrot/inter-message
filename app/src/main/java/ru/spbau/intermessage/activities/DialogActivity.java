@@ -28,7 +28,7 @@ import java.util.List;
 import ru.spbau.intermessage.Controller;
 import ru.spbau.intermessage.R;
 import ru.spbau.intermessage.gui.Item;
-import ru.spbau.intermessage.gui.ItemMessage;
+import ru.spbau.intermessage.gui.MessageItem;
 import ru.spbau.intermessage.gui.ItemAdapter;
 
 public class DialogActivity extends AppCompatActivity {
@@ -78,7 +78,7 @@ public class DialogActivity extends AppCompatActivity {
                     }
 
                     long date = System.currentTimeMillis() / 1000L;
-                    ItemMessage newMessage = new ItemMessage(selfUserName, text, date, 0);
+                    MessageItem newMessage = new MessageItem(selfUserName, text, date, 0);
                     input.setText("");
 
                     Controller.sendMessage(newMessage, chatId);

@@ -23,7 +23,7 @@ import ru.spbau.intermessage.core.Messenger;
 import ru.spbau.intermessage.core.User;
 import ru.spbau.intermessage.crypto.ID;
 import ru.spbau.intermessage.gui.Item;
-import ru.spbau.intermessage.gui.ItemMessage;
+import ru.spbau.intermessage.gui.MessageItem;
 import ru.spbau.intermessage.store.Storage;
 import ru.spbau.intermessage.util.Pair;
 import ru.spbau.intermessage.util.Tuple3;
@@ -128,7 +128,7 @@ public class Controller extends IntentService {
         return new ID(privateKey, publicKey);
     }
 
-    public static void sendMessage(ItemMessage message, String chatId) {
+    public static void sendMessage(MessageItem message, String chatId) {
         Context context = Intermessage.getAppContext();
         Intent intent = new Intent(context, Controller.class);
         intent.setAction(ACTION_SEND_MESSAGE);
@@ -163,7 +163,7 @@ public class Controller extends IntentService {
         Intent intent = new Intent(context, Controller.class);
         intent.setAction(ACTION_RECEIVE_MESSAGE);
         String text = Util.bytesToString(message.data);
-        intent.putExtra("Item", new ItemMessage(userName, text, message.timestamp, 0));
+        intent.putExtra("Item", new MessageItem(userName, text, message.timestamp, 0));
         intent.putExtra("ChatId", chatId);
 
         context.startService(intent);
@@ -233,7 +233,7 @@ public class Controller extends IntentService {
                 String text = Util.bytesToString(tr.third.data);
                 long timestamp = tr.third.timestamp;
                 String userName = tr.second;
-                item = new ItemMessage(userName, text, timestamp, 0);
+                item = new MessageItem(userName, text, timestamp, 0);
             } else {
                 throw new RuntimeException(new UnknownFormatConversionException("No such type " + tr.third.type));
             }
@@ -323,7 +323,7 @@ public class Controller extends IntentService {
         String action = intent.getAction();
         if (ACTION_SEND_MESSAGE.equals(action)) {
 
-            ItemMessage item = intent.getParcelableExtra("Item");
+            MessageItem item = intent.getParcelableExtra("Item");
             String chatId = intent.getStringExtra("ChatId");
             messenger.sendMessage(new Chat(chatId), new Message(item.getType(), item.getDate(), item.getData()));
 

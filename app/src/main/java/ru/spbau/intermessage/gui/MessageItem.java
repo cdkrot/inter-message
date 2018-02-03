@@ -13,19 +13,19 @@ import java.util.Date;
 import ru.spbau.intermessage.R;
 import ru.spbau.intermessage.util.Util;
 
-public class ItemMessage extends AbstractItem{
+public class MessageItem extends AbstractItem {
     private String userName;
     private String messageText;
     private long date;
 
-    public ItemMessage(String userName, String messageText, long date, int position) {
+    public MessageItem(String userName, String messageText, long date, int position) {
         this.userName = userName;
         this.messageText = messageText;
         this.date = date;
         setPosition(position);
     }
 
-    private ItemMessage(Parcel in) {
+    private MessageItem(Parcel in) {
         userName = in.readString();
         messageText = in.readString();
         date = in.readLong();
@@ -94,12 +94,12 @@ public class ItemMessage extends AbstractItem{
     }
 
     public static final Parcelable.Creator CREATOR = new Parcelable.Creator() {
-        public ItemMessage createFromParcel(Parcel in) {
-            return new ItemMessage(in);
+        public MessageItem createFromParcel(Parcel in) {
+            return new MessageItem(in);
         }
 
-        public ItemMessage[] newArray(int size) {
-            return new ItemMessage[size];
+        public MessageItem[] newArray(int size) {
+            return new MessageItem[size];
         }
     };
 };
