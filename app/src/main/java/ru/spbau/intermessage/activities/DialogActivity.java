@@ -10,10 +10,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.provider.MediaStore;
-import android.support.v4.content.FileProvider;
 import android.support.v7.app.AlertDialog;
 import android.text.InputType;
-import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.KeyEvent;
 import android.support.v7.app.AppCompatActivity;
@@ -29,7 +27,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -218,7 +215,6 @@ public class DialogActivity extends AppCompatActivity {
         } else if (id == R.id.action_send_image) {
             Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
             intent.setType("image/*");
-            Log.d("Image", "Started========================");
             startActivityForResult(intent, IMAGE_REQUEST_CODE);
 
             return true;
@@ -231,14 +227,14 @@ public class DialogActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        Log.d("Intent", requestCode + " " + (resultCode == RESULT_OK) + " " + (whereResult == null));
-
-        if (resultCode != RESULT_OK)
+        if (resultCode != RESULT_OK) {
             return;
+        }
 
         if (requestCode == IMAGE_REQUEST_CODE) {
-            if (data == null || data.getData() == null)
+            if (data == null || data.getData() == null) {
                 return;
+            }
             Uri uri = data.getData();
 
             try {
@@ -251,20 +247,17 @@ public class DialogActivity extends AppCompatActivity {
                 Toast.makeText(DialogActivity.this, "Unable to complete the operation", Toast.LENGTH_LONG).show();
             }
         } else if (requestCode == PHOTO_REQUEST_CODE) {
-            if (whereResult == null)
+            if (whereResult == null) {
                 return;
+            }
 
             try {
-                //TODO
-                //FileInputStream stream = new FileInputStream(new File(whereResult.getPath()));
                 Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), whereResult);
                 bitmap = BitmapHelper.scaleBitmap(bitmap);
 
                 Item item = new PictureItem(selfUserName, bitmap);
-                Log.d("Intent", "Message send " + bitmap.getWidth() + " " +bitmap.getHeight());
                 Controller.sendMessage(item, chatId);
             } catch (IOException e) {
-                Log.d("Intent", "Error:" + e.getMessage());
                 Toast.makeText(DialogActivity.this, "Unable to complete the operation", Toast.LENGTH_LONG).show();
             }
         }
