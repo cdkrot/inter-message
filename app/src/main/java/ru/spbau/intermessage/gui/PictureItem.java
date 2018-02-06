@@ -27,6 +27,12 @@ public class PictureItem extends AbstractItem {
         setPosition(position);
     }
 
+    public PictureItem(String userName, Bitmap bmp) {
+        this.userName = userName;
+        this.bmp = bmp;
+        this.date = System.currentTimeMillis() / 1000L;
+    }
+
     private PictureItem(Parcel in) {
         userName = in.readString();
         int length = in.readInt();
@@ -105,9 +111,14 @@ public class PictureItem extends AbstractItem {
         }
     };
 
-    public class ViewPictureHolder implements ViewHolder {
+    public static class ViewPictureHolder implements ViewHolder {
         TextView date;
         TextView userName;
         ImageView image;
+
+        @Override
+        public String getType() {
+            return "picture";
+        }
     }
 }

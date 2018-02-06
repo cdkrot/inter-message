@@ -25,6 +25,12 @@ public class MessageItem extends AbstractItem {
         setPosition(position);
     }
 
+    public MessageItem(String userName, String messageText) {
+        this.userName = userName;
+        this.messageText = messageText;
+        this.date = System.currentTimeMillis() / 1000L;
+    }
+
     private MessageItem(Parcel in) {
         userName = in.readString();
         messageText = in.readString();
@@ -97,9 +103,14 @@ public class MessageItem extends AbstractItem {
         }
     };
 
-    public class ViewMessageHolder implements ViewHolder {
+    public static class ViewMessageHolder implements ViewHolder {
         TextView date;
         TextView userName;
         TextView text;
+
+        @Override
+        public String getType() {
+            return "text";
+        }
     }
 };

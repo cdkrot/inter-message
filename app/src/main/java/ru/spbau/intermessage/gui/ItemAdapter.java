@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import java.util.List;
+import java.util.Objects;
 
 public class ItemAdapter extends BaseAdapter {
 
@@ -33,12 +34,17 @@ public class ItemAdapter extends BaseAdapter {
     }
 
     @Override
+    public int getItemViewType(int i) {
+        return ((Item) getItem(i)).getType().hashCode();
+    }
+
+    @Override
     public View getView(int i, View convertView, ViewGroup parent) {
         ViewHolder holder;
 
         Item item = (Item) getItem(i);
 
-        if(convertView == null) {
+        if (convertView == null) {
             convertView = item.getConvertView(inflater, parent);
             holder = item.createViewHolder(convertView);
             convertView.setTag(holder);

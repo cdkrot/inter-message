@@ -131,7 +131,7 @@ public class Controller extends IntentService {
         return new ID(privateKey, publicKey);
     }
 
-    public static void sendMessage(MessageItem message, String chatId) {
+    public static void sendMessage(Item message, String chatId) {
         Context context = Intermessage.getAppContext();
         Intent intent = new Intent(context, Controller.class);
         intent.setAction(ACTION_SEND_MESSAGE);
