@@ -47,8 +47,10 @@ public class Controller extends IntentService {
     private static final String ACTION_RETURN_DIALOGS_LIST = "Controller.action.RETURN_DIALOGS_LIST";
     private static final String ACTION_CREATE_NEW_CHAT = "Controller.action.CREATE_NEW_CHAT";
     private static final String ACTION_REQUEST_LATEST = "Controller.action.REQUEST_LATEST";
+    private static final String ACTION_REQUEST_FIRST = "Controller.action.REQUEST_FIRST";
     private static final String ACTION_REQUEST_UPDATES = "Controller.action.REQUEST_UPDATES";
     private static final String ACTION_RETURN_UPDATES = "Controller.action.RETURN_UPDATES";
+    private static final String ACTION_RETURN_FIRST = "Controller.action.RETURN_FIRST";
     private static final String ACTION_RETURN_LATEST = "Controller.action.RETURN_LATEST";
     private static final String ACTION_REQUEST_ADD_USER = "Controller.action.REQUEST_ADD_USER";
     private static final String ACTION_ADD_USER = "Controller.action.ADD_USER";
@@ -163,6 +165,17 @@ public class Controller extends IntentService {
         context.startService(intent);
     }
 
+    public static void requestFirstMessages(String chatId, int first, int limit) {
+        Context context = Intermessage.getAppContext();
+        Intent intent = new Intent(context, Controller.class);
+        intent.setAction(ACTION_REQUEST_FIRST);
+        intent.putExtra("ChatId", chatId);
+        intent.putExtra("Limit", limit);
+        intent.putExtra("First", first);
+
+        context.startService(intent);
+    }
+
     public static void receiveMessage(String userName, String chatId,  Message message) {
         Context context = Intermessage.getAppContext();
         Intent intent = new Intent(context, Controller.class);
@@ -229,6 +242,20 @@ public class Controller extends IntentService {
 
         Intent intent = new Intent(context, Controller.class);
         intent.setAction(Controller.ACTION_RETURN_UPDATES);
+        intent.putExtra("FirstPosition", firstPosition);
+        intent.putExtra("Items", items);
+        intent.putExtra("ChatId", chatId);
+
+        context.startService(intent);
+    }
+
+    public static void returnFirst(String chatId, List<Tuple3<User, String, Message>> messages, int firstPosition) {
+        Context context = Intermessage.getAppContext();
+
+        Item items[] = parseMessages(messages);
+
+        Intent intent = new Intent(context, Controller.class);
+        intent.setAction(Controller.ACTION_RETURN_FIRST);
         intent.putExtra("FirstPosition", firstPosition);
         intent.putExtra("Items", items);
         intent.putExtra("ChatId", chatId);
@@ -402,6 +429,14 @@ public class Controller extends IntentService {
             messenger.getMessagesSince(new Chat(chatId), last + 1, 10000000,
                     (messages) -> Controller.returnUpdates(chatId, messages, last + 1));
 
+        } else if (ACTION_REQUEST_FIRST.equals(action)) {
+
+            int first = intent.getIntExtra("First", 0);
+            int limit = Math.min(first, intent.getIntExtra("Limit", 0));
+            String chatId = intent.getStringExtra("ChatId");
+            messenger.getMessagesSince(new Chat(chatId), first - limit, limit,
+                    (messages) -> Controller.returnFirst(chatId, messages, first - limit);
+
         } else if (ACTION_RETURN_LATEST.equals(action)) {
 
             Intent broadcastIntent = new Intent();
@@ -415,6 +450,15 @@ public class Controller extends IntentService {
 
             Intent broadcastIntent = new Intent();
             broadcastIntent.setAction(DialogActivity.MessageReceiver.ACTION_GOT_UPDATES);
+            broadcastIntent.putExtra("ChatId", intent.getStringExtra("ChatId"));
+            broadcastIntent.putExtra("Items", intent.getParcelableArrayExtra("Items"));
+            broadcastIntent.putExtra("FirstPosition", intent.getIntExtra("FirstPosition", 0));
+            sendBroadcast(broadcastIntent);
+
+        } else if (ACTION_RETURN_FIRST.equals(action)) {
+
+            Intent broadcastIntent = new Intent();
+            broadcastIntent.setAction(DialogActivity.MessageReceiver.ACTION_GOT_FIRST);
             broadcastIntent.putExtra("ChatId", intent.getStringExtra("ChatId"));
             broadcastIntent.putExtra("Items", intent.getParcelableArrayExtra("Items"));
             broadcastIntent.putExtra("FirstPosition", intent.getIntExtra("FirstPosition", 0));

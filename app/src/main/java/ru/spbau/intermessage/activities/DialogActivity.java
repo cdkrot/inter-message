@@ -53,6 +53,7 @@ public class DialogActivity extends AppCompatActivity {
 
     private static final int IMAGE_REQUEST_CODE = 3;
     private static final int PHOTO_REQUEST_CODE = 5;
+    private static final int PRELOAD_INDEX = 5;
     private static Uri whereResult;
 
     @Override
@@ -79,6 +80,23 @@ public class DialogActivity extends AppCompatActivity {
         final EditText input = findViewById(R.id.input);
         messagesAdapter = new ItemAdapter(this, messages);
         messagesList.setAdapter(messagesAdapter);
+
+        messagesList.setOnScrollListener(new AbsListView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(AbsListView absListView, int i) {
+                //Nothing to do
+            }
+
+            @Override
+            public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+                if (visibleItemCount == 0 || (!messages.isEmpty() && messages.get(0).getPosition() == 0))
+                    return;
+
+                if (firstVisibleItem < PRELOAD_INDEX) {
+                    Controller.requestFirstMessages(chatId, messages.get(0).getPosition(), NEW_MESSAGES_LIMIT);
+                }
+            }
+        });
 
 
         input.setOnEditorActionListener(new TextView.OnEditorActionListener() {
