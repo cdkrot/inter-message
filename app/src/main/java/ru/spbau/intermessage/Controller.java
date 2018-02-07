@@ -83,8 +83,9 @@ public class Controller extends IntentService {
         messenger.registerEventListener(new EventListener() {
             @Override
             public void onMessage(Chat chat, String uname, User user, Message message) {
-                if (!Intermessage.isPaused) // Application is open
+                if (!Intermessage.isPaused) { // Application is open
                     return;
+                }
 
                 NotificationCompat.Builder builder =
                         new NotificationCompat.Builder(Intermessage.getAppContext())
