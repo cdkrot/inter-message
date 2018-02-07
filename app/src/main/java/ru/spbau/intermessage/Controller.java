@@ -26,6 +26,7 @@ import ru.spbau.intermessage.crypto.ID;
 import ru.spbau.intermessage.gui.Item;
 import ru.spbau.intermessage.gui.MessageItem;
 import ru.spbau.intermessage.gui.PictureItem;
+import ru.spbau.intermessage.gui.SystemItem;
 import ru.spbau.intermessage.store.Storage;
 import ru.spbau.intermessage.util.BitmapHelper;
 import ru.spbau.intermessage.util.Pair;
@@ -172,6 +173,9 @@ public class Controller extends IntentService {
         } else if ("picture".equals(message.type)) {
             Bitmap bmp = BitmapHelper.bitmapFromBytes(message.data);
             intent.putExtra("Item", new PictureItem(userName, bmp, message.timestamp, 0));
+        } else if ("system".equals(message.type)) {
+            String text = Util.bytesToString(message.data);
+            intent.putExtra("Item", new SystemItem(text, message.timestamp, 0));
         }
         intent.putExtra("ChatId", chatId);
 
@@ -248,6 +252,10 @@ public class Controller extends IntentService {
                 long timestamp = tr.third.timestamp;
                 String userName = tr.second;
                 item = new PictureItem(userName, bmp, timestamp, 0);
+            } else if ("system".equals(tr.third.type)) {
+                String text = Util.bytesToString(tr.third.data);
+                long timestamp = tr.third.timestamp;
+                item = new SystemItem(text, timestamp, 0);
             } else {
                 throw new RuntimeException(new UnknownFormatConversionException("No such type " + tr.third.type));
             }

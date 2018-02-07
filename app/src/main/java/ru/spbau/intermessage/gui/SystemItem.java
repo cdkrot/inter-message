@@ -43,7 +43,7 @@ public class SystemItem extends AbstractItem {
 
     @Override
     public View getConvertView(LayoutInflater inflater, ViewGroup parent) {
-        return inflater.inflate(R.layout.message_layout, parent, false);
+        return inflater.inflate(R.layout.system_info_layout, parent, false);
     }
 
     @Override
