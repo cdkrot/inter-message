@@ -435,7 +435,7 @@ public class Controller extends IntentService {
             int limit = Math.min(first, intent.getIntExtra("Limit", 0));
             String chatId = intent.getStringExtra("ChatId");
             messenger.getMessagesSince(new Chat(chatId), first - limit, limit,
-                    (messages) -> Controller.returnFirst(chatId, messages, first - limit);
+                    (messages) -> Controller.returnFirst(chatId, messages, first - limit));
 
         } else if (ACTION_RETURN_LATEST.equals(action)) {
 
@@ -458,7 +458,7 @@ public class Controller extends IntentService {
         } else if (ACTION_RETURN_FIRST.equals(action)) {
 
             Intent broadcastIntent = new Intent();
-            broadcastIntent.setAction(DialogActivity.MessageReceiver.ACTION_GOT_FIRST);
+            broadcastIntent.setAction(DialogActivity.MessageReceiver.ACTION_GOT_FIRST_MESSAGES);
             broadcastIntent.putExtra("ChatId", intent.getStringExtra("ChatId"));
             broadcastIntent.putExtra("Items", intent.getParcelableArrayExtra("Items"));
             broadcastIntent.putExtra("FirstPosition", intent.getIntExtra("FirstPosition", 0));
