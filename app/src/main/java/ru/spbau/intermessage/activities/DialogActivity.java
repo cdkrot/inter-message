@@ -8,6 +8,7 @@ import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Message;
 import android.os.Parcelable;
 import android.provider.MediaStore;
 import android.support.v7.app.AlertDialog;
@@ -43,7 +44,7 @@ import ru.spbau.intermessage.util.BitmapHelper;
 public class DialogActivity extends AppCompatActivity {
     private static final String PREF_FILE = "preferences";
     private static final String PREF_NAME = "userName";
-    private static final int NEW_MESSAGES_LIMIT = 20;
+    private static final int NEW_MESSAGES_LIMIT = 10;
 
     private static final List<Item> messages = new ArrayList<>();
     private static String chatId;
@@ -89,8 +90,9 @@ public class DialogActivity extends AppCompatActivity {
 
             @Override
             public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-                if (visibleItemCount == 0 || (!messages.isEmpty() && messages.get(0).getPosition() == 0))
+                if (visibleItemCount == 0 || (!messages.isEmpty() && messages.get(0).getPosition() == 0)) {
                     return;
+                }
 
                 if (firstVisibleItem < PRELOAD_INDEX) {
                     Controller.requestFirstMessages(chatId, messages.get(0).getPosition(), NEW_MESSAGES_LIMIT);
@@ -140,6 +142,7 @@ public class DialogActivity extends AppCompatActivity {
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(MessageReceiver.ACTION_RECEIVE);
         intentFilter.addAction(MessageReceiver.ACTION_GOT_LAST_MESSAGES);
+        intentFilter.addAction(MessageReceiver.ACTION_GOT_FIRST_MESSAGES);
         intentFilter.addAction(MessageReceiver.ACTION_GOT_UPDATES);
         intentFilter.addAction(MessageReceiver.ACTION_GET_USERS_FOR_ADD);
         intentFilter.addAction(MessageReceiver.ACTION_GET_USERS);
@@ -285,6 +288,7 @@ public class DialogActivity extends AppCompatActivity {
     public class MessageReceiver extends BroadcastReceiver {
         public static final String ACTION_RECEIVE = "DialogActivity.action.RECEIVE";
         public static final String ACTION_GOT_LAST_MESSAGES = "DialogActivity.action.LAST_MESSAGES";
+        public static final String ACTION_GOT_FIRST_MESSAGES = "DialogActivity.action.FIRST_MESSAGES";
         public static final String ACTION_GOT_UPDATES = "DialogActivity.action.UPDATES";
         public static final String ACTION_GET_USERS_FOR_ADD = "DialogActivity.action.GET_USERS_FOR_ADD";
         public static final String ACTION_GET_USERS = "DialogActivity.action.GET_USERS";
@@ -340,6 +344,26 @@ public class DialogActivity extends AppCompatActivity {
                     Item item = items[i];
                     item.setPosition(position + i);
                     messages.add(item);
+                }
+
+                messagesAdapter.notifyDataSetChanged();
+
+            } else if (ACTION_GOT_FIRST_MESSAGES.equals(action)) {
+
+                if (messages.size() == 0) {
+                    return;
+                }
+
+                int position = intent.getIntExtra("FirstPosition", 0);
+                Parcelable[] parcels = intent.getParcelableArrayExtra("Items");
+                Item items[] = Arrays.copyOf(parcels, parcels.length, Item[].class);
+
+                int length = items.length;
+
+                for (int i = 0; i < length && position + i < messages.get(0).getPosition(); i++) {
+                    Item item = items[i];
+                    item.setPosition(position + i);
+                    messages.add(i, item);
                 }
 
                 messagesAdapter.notifyDataSetChanged();
