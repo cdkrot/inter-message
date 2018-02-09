@@ -5,13 +5,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.TextView;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
-
-import ru.spbau.intermessage.R;
+import java.util.Objects;
 
 public class ItemAdapter extends BaseAdapter {
 
@@ -39,43 +34,26 @@ public class ItemAdapter extends BaseAdapter {
     }
 
     @Override
+    public int getItemViewType(int i) {
+        return ((Item) getItem(i)).getType().hashCode();
+    }
+
+    @Override
     public View getView(int i, View convertView, ViewGroup parent) {
         ViewHolder holder;
 
-        if(convertView == null) {
+        Item item = (Item) getItem(i);
 
-            convertView = inflater.inflate(R.layout.message_layout, parent, false);
-
-            holder = new ViewHolder();
-            holder.date = (TextView) convertView.findViewById(R.id.date);
-            holder.userName = (TextView) convertView.findViewById(R.id.userName);
-            holder.text = (TextView) convertView.findViewById(R.id.messageText);
-
+        if (convertView == null) {
+            convertView = item.getConvertView(inflater, parent);
+            holder = item.createViewHolder(convertView);
             convertView.setTag(holder);
         } else{
             holder = (ViewHolder) convertView.getTag();
         }
 
-        TextView date = holder.date;
-        TextView userName = holder.userName;
-        TextView textMessage = holder.text;
-
-        Item message = (Item) getItem(i);
-
-        textMessage.setText(message.messageText);
-
-        SimpleDateFormat df = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss");
-        Date d = new Date(message.date * 1000);
-        date.setText(df.format(d));
-
-        userName.setText(message.userName);
+        item.handleHolder(holder);
 
         return convertView;
-    }
-
-    private static class ViewHolder {
-        TextView date;
-        TextView userName;
-        TextView text;
     }
 }

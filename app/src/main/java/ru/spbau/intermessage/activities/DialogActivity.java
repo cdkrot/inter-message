@@ -5,7 +5,11 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Parcelable;
+import android.provider.MediaStore;
 import android.support.v7.app.AlertDialog;
 import android.text.InputType;
 import android.util.SparseBooleanArray;
@@ -22,13 +26,19 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import ru.spbau.intermessage.Controller;
 import ru.spbau.intermessage.R;
 import ru.spbau.intermessage.gui.Item;
+import ru.spbau.intermessage.gui.MessageItem;
 import ru.spbau.intermessage.gui.ItemAdapter;
+import ru.spbau.intermessage.gui.PictureItem;
+import ru.spbau.intermessage.util.BitmapHelper;
 
 public class DialogActivity extends AppCompatActivity {
     private static final String PREF_FILE = "preferences";
@@ -41,12 +51,17 @@ public class DialogActivity extends AppCompatActivity {
     private ItemAdapter messagesAdapter;
     private String selfUserName;
 
+    private static final int IMAGE_REQUEST_CODE = 3;
+    private static final int PHOTO_REQUEST_CODE = 5;
+    private static Uri whereResult;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dialog);
 
         Intent creatorIntent = getIntent();
+        whereResult = null;
 
         String id = creatorIntent.getStringExtra("ChatId");
         if (chatId == null || !chatId.equals(id)) {
@@ -76,8 +91,7 @@ public class DialogActivity extends AppCompatActivity {
                         return false;
                     }
 
-                    long date = System.currentTimeMillis() / 1000L;
-                    Item newMessage = new Item(selfUserName, text, date, 0);
+                    MessageItem newMessage = new MessageItem(selfUserName, text);
                     input.setText("");
 
                     Controller.sendMessage(newMessage, chatId);
@@ -117,7 +131,7 @@ public class DialogActivity extends AppCompatActivity {
         if (messages.size() == 0) {
             Controller.requestLastMessages(chatId, NEW_MESSAGES_LIMIT);
         } else{
-            Controller.requestUpdates(chatId, messages.get(messages.size() - 1).position);
+            Controller.requestUpdates(chatId, messages.get(messages.size() - 1).getPosition());
         }
     }
 
@@ -181,9 +195,73 @@ public class DialogActivity extends AppCompatActivity {
             });
 
             alert.show();
+
+            return true;
+        } else if (id == R.id.action_send_photo) {
+            try {
+                File file = BitmapHelper.createImageFile();
+                whereResult = Uri.fromFile(file);
+
+                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                Uri uri = Uri.fromFile(file);
+                intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+
+                startActivityForResult(intent, PHOTO_REQUEST_CODE);
+            } catch (IOException e) {
+                Toast.makeText(DialogActivity.this, "Unable to complete the operation", Toast.LENGTH_LONG).show();
+            }
+
+            return true;
+        } else if (id == R.id.action_send_image) {
+            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+            intent.setType("image/*");
+            startActivityForResult(intent, IMAGE_REQUEST_CODE);
+
+            return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (resultCode != RESULT_OK) {
+            return;
+        }
+
+        if (requestCode == IMAGE_REQUEST_CODE) {
+            if (data == null || data.getData() == null) {
+                return;
+            }
+            Uri uri = data.getData();
+
+            try {
+                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
+                bitmap = BitmapHelper.scaleBitmap(bitmap);
+
+                Item item = new PictureItem(selfUserName, bitmap);
+                Controller.sendMessage(item, chatId);
+            } catch (IOException e) {
+                Toast.makeText(DialogActivity.this, "Unable to complete the operation", Toast.LENGTH_LONG).show();
+            }
+        } else if (requestCode == PHOTO_REQUEST_CODE) {
+            if (whereResult == null) {
+                return;
+            }
+
+            try {
+                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), whereResult);
+                bitmap = BitmapHelper.scaleBitmap(bitmap);
+
+                Item item = new PictureItem(selfUserName, bitmap);
+                Controller.sendMessage(item, chatId);
+            } catch (IOException e) {
+                Toast.makeText(DialogActivity.this, "Unable to complete the operation", Toast.LENGTH_LONG).show();
+            }
+        }
+
     }
 
     public class MessageReceiver extends BroadcastReceiver {
@@ -203,11 +281,9 @@ public class DialogActivity extends AppCompatActivity {
 
             if (ACTION_RECEIVE.equals(action)) {
 
-                String text = intent.getStringExtra("Message");
-                long date = intent.getLongExtra("Date", 0);
-                String userName = intent.getStringExtra("User");
-                int position = (messages.size() == 0 ? 0 : messages.get(messages.size() - 1).position + 1);
-                Item newMessage = new Item(userName, text, date, position);
+                int position = (messages.size() == 0 ? 0 : messages.get(messages.size() - 1).getPosition() + 1);
+                Item newMessage = (Item)intent.getParcelableExtra("Item");
+                newMessage.setPosition(position);
 
                 messages.add(newMessage);
                 messagesAdapter.notifyDataSetChanged();
@@ -219,13 +295,13 @@ public class DialogActivity extends AppCompatActivity {
                 }
 
                 int position = intent.getIntExtra("FirstPosition", 0);
-                String[] texts = intent.getStringArrayExtra("Texts");
-                long[] timestamps = intent.getLongArrayExtra("Timestamps");
-                String[] userNames = intent.getStringArrayExtra("UserNames");
-                int length = timestamps.length;
+                Parcelable[] parcels = intent.getParcelableArrayExtra("Items");
+                Item items[] = Arrays.copyOf(parcels, parcels.length, Item[].class);
+                int length = items.length;
 
                 for (int i = 0; i < length; i++) {
-                    Item item = new Item(userNames[i], texts[i], timestamps[i], position + i);
+                    Item item = items[i];
+                    item.setPosition(position + i);
                     messages.add(item);
                 }
 
@@ -238,13 +314,13 @@ public class DialogActivity extends AppCompatActivity {
                 }
 
                 int position = intent.getIntExtra("FirstPosition", 0);
-                String[] texts = intent.getStringArrayExtra("Texts");
-                long[] timestamps = intent.getLongArrayExtra("Timestamps");
-                String[] userNames = intent.getStringArrayExtra("UserNames");
-                int length = timestamps.length;
-                int shift = Math.max(0, messages.get(messages.size() - 1).position - position + 1);
+                Parcelable[] parcels = intent.getParcelableArrayExtra("Items");
+                Item items[] = Arrays.copyOf(parcels, parcels.length, Item[].class);
+                int length = items.length;
+                int shift = Math.max(0, messages.get(messages.size() - 1).getPosition() - position + 1);
                 for (int i = shift; i < length; i++) {
-                    Item item = new Item(userNames[i], texts[i], timestamps[i], position + i);
+                    Item item = items[i];
+                    item.setPosition(position + i);
                     messages.add(item);
                 }
 

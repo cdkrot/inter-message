@@ -20,6 +20,10 @@
     <string name="action_get_users">Users in chat</string>
     <string name="action_add_users">Add users to chat</string>
     <string name="action_change_dialog_name">Change dialog name</string>
+    <string name="action_send_photo">Shot and send photo</string>
+    <string name="action_send_image">Send image from galery</string>
+
+
 
     <string name="content_about">Decentralized messenger for local chatting\n\n
         Created by Dmitry Sayutin and Alexandr Fedorov\n\n
