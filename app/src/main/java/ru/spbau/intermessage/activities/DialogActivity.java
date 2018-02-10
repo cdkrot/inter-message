@@ -19,7 +19,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsListView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
@@ -34,6 +36,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import ru.spbau.intermessage.Controller;
+import ru.spbau.intermessage.Intermessage;
 import ru.spbau.intermessage.R;
 import ru.spbau.intermessage.gui.Item;
 import ru.spbau.intermessage.gui.MessageItem;
@@ -46,15 +49,16 @@ public class DialogActivity extends AppCompatActivity {
     private static final String PREF_NAME = "userName";
     private static final int NEW_MESSAGES_LIMIT = 10;
 
+    private static final int IMAGE_REQUEST_CODE = 3;
+    private static final int PHOTO_REQUEST_CODE = 5;
+    private static final int PRELOAD_INDEX = 3;
+
     private static final List<Item> messages = new ArrayList<>();
     private static String chatId;
     private MessageReceiver messageReceiver;
     private ItemAdapter messagesAdapter;
     private String selfUserName;
 
-    private static final int IMAGE_REQUEST_CODE = 3;
-    private static final int PHOTO_REQUEST_CODE = 5;
-    private static final int PRELOAD_INDEX = 5;
     private static Uri whereResult;
 
     @Override
@@ -146,6 +150,7 @@ public class DialogActivity extends AppCompatActivity {
         intentFilter.addAction(MessageReceiver.ACTION_GOT_UPDATES);
         intentFilter.addAction(MessageReceiver.ACTION_GET_USERS_FOR_ADD);
         intentFilter.addAction(MessageReceiver.ACTION_GET_USERS);
+        intentFilter.addAction(MessageReceiver.ACTION_CHAT_DELETED);
 
         registerReceiver(messageReceiver, intentFilter);
 
@@ -174,6 +179,9 @@ public class DialogActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+
         int id = item.getItemId();
 
         if (id == R.id.action_get_users) {
@@ -239,6 +247,8 @@ public class DialogActivity extends AppCompatActivity {
             startActivityForResult(intent, IMAGE_REQUEST_CODE);
 
             return true;
+        } else if (id == R.id.action_delete_chat) {
+            Controller.requestChatDeletion(chatId);
         }
 
         return super.onOptionsItemSelected(item);
@@ -292,6 +302,8 @@ public class DialogActivity extends AppCompatActivity {
         public static final String ACTION_GOT_UPDATES = "DialogActivity.action.UPDATES";
         public static final String ACTION_GET_USERS_FOR_ADD = "DialogActivity.action.GET_USERS_FOR_ADD";
         public static final String ACTION_GET_USERS = "DialogActivity.action.GET_USERS";
+        public static final String ACTION_CHAT_DELETED = "DialogActivity.action.CHAT_DELETED";
+
 
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -438,6 +450,11 @@ public class DialogActivity extends AppCompatActivity {
                 });
 
                 alert.show();
+            } else if (ACTION_CHAT_DELETED.equals(action)) {
+                String delChatId = intent.getStringExtra("ChatId");
+                if (chatId.equals(delChatId)) {
+                    finish();
+                }
             }
         }
     }

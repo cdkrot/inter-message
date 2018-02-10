@@ -57,6 +57,8 @@ public class Controller extends IntentService {
     private static final String ACTION_ADD_USERS = "Controller.action.ADD_USERS";
     private static final String ACTION_GET_USERS_IN_CHAT = "Controller.action.GET_USERS_IN_CHAT";
     private static final String ACTION_CHANGE_CHAT_NAME = "Controller.action.CHANGE_CHAT_NAME";
+    private static final String ACTION_DELETE_CHAT = "Controller.action.DELETE_CHAT";
+    private static final String ACTION_CHAT_DELETED = "Controller.action.CHAT_DELETED";
 
     private static Messenger messenger;
 
@@ -362,6 +364,23 @@ public class Controller extends IntentService {
         context.startService(intent);
     }
 
+    public static void requestChatDeletion(String chatId) {
+        Context context = Intermessage.getAppContext();
+        Intent intent = new Intent(context, Controller.class);
+        intent.setAction(ACTION_DELETE_CHAT);
+        intent.putExtra("ChatId", chatId);
+
+        context.startService(intent);
+    }
+
+    public static void onChatDeleted(String chatId) {
+        Context context = Intermessage.getAppContext();
+        Intent intent = new Intent(context, Controller.class);
+        intent.setAction(ACTION_CHAT_DELETED);
+        intent.putExtra("ChatId", chatId);
+
+        context.startService(intent);
+    }
 
     @Override
     protected void onHandleIntent(Intent intent) {
@@ -533,6 +552,20 @@ public class Controller extends IntentService {
             String chatName = intent.getStringExtra("ChatName");
             Chat chat = new Chat(chatId);
             messenger.sendMessage(chat, messenger.getChangeChatName(chat, chatName));
+
+        } else if (ACTION_DELETE_CHAT.equals(action)) {
+
+            String chatId = intent.getStringExtra("ChatId");
+            // TODO messenger.deleteChat(new Chat(chatId), () -> onChatDeleted(chatId));
+
+        } else if (ACTION_CHAT_DELETED.equals(action)) {
+
+            String chatId = intent.getStringExtra("ChatId");
+
+            Intent broadcastIntent = new Intent();
+            broadcastIntent.putExtra("ChatId", chatId);
+            broadcastIntent.setAction(DialogActivity.MessageReceiver.ACTION_CHAT_DELETED);
+            sendBroadcast(broadcastIntent);
 
         }
     }
