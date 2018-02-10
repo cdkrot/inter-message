@@ -51,7 +51,7 @@ public class DialogActivity extends AppCompatActivity {
 
     private static final int IMAGE_REQUEST_CODE = 3;
     private static final int PHOTO_REQUEST_CODE = 5;
-    private static final int PRELOAD_INDEX = 3;
+    private static final int PRELOAD_INDEX = 2;
 
     private static final List<Item> messages = new ArrayList<>();
     private static String chatId;
@@ -371,8 +371,9 @@ public class DialogActivity extends AppCompatActivity {
                 Item items[] = Arrays.copyOf(parcels, parcels.length, Item[].class);
 
                 int length = items.length;
-
-                for (int i = 0; i < length && position + i < messages.get(0).getPosition(); i++) {
+                int first = messages.get(0).getPosition();
+                
+                for (int i = 0; i < length && position + i < first; i++) {
                     Item item = items[i];
                     item.setPosition(position + i);
                     messages.add(i, item);
