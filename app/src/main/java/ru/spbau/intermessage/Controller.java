@@ -267,19 +267,19 @@ public class Controller extends IntentService {
 
     public static void returnManyLatest(String chatId, List<Tuple3<User, String, Message>> messages, int firstPosition) {
         for (int i = 0; i < messages.size(); i++) {
-            returnLatest(chatId, Collections.singletonList(messages.get(i)), firstPosition);
+            returnLatest(chatId, Collections.singletonList(messages.get(i)), firstPosition + i);
         }
     }
 
     public static void returnManyUpdates(String chatId, List<Tuple3<User, String, Message>> messages, int firstPosition) {
         for (int i = 0; i < messages.size(); i++) {
-            returnUpdates(chatId, Collections.singletonList(messages.get(i)), firstPosition);
+            returnUpdates(chatId, Collections.singletonList(messages.get(i)), firstPosition + i);
         }
     }
 
     public static void returnManyFirst(String chatId, List<Tuple3<User, String, Message>> messages, int firstPosition) {
         for (int i = messages.size() - 1; i >= 0; i--) {
-            returnFirst(chatId, Collections.singletonList(messages.get(i)), firstPosition);
+            returnFirst(chatId, Collections.singletonList(messages.get(i)), firstPosition + i);
         }
     }
 
