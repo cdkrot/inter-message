@@ -47,14 +47,15 @@ import ru.spbau.intermessage.util.BitmapHelper;
 public class DialogActivity extends AppCompatActivity {
     private static final String PREF_FILE = "preferences";
     private static final String PREF_NAME = "userName";
-    private static final int NEW_MESSAGES_LIMIT = 10;
+    private static final int NEW_MESSAGES_LIMIT = 20;
 
     private static final int IMAGE_REQUEST_CODE = 3;
     private static final int PHOTO_REQUEST_CODE = 5;
-    private static final int PRELOAD_INDEX = 2;
+    private static final int PRELOAD_INDEX = 1;
 
     private static final List<Item> messages = new ArrayList<>();
     private static String chatId;
+    private static int waitingPosition;
     private MessageReceiver messageReceiver;
     private ItemAdapter messagesAdapter;
     private String selfUserName;
@@ -99,6 +100,7 @@ public class DialogActivity extends AppCompatActivity {
                 }
 
                 if (firstVisibleItem < PRELOAD_INDEX) {
+                    waitingPosition = Math.max(0, messages.get(0).getPosition() - NEW_MESSAGES_LIMIT);
                     Controller.requestFirstMessages(chatId, messages.get(0).getPosition(), NEW_MESSAGES_LIMIT);
                 }
             }
@@ -375,7 +377,9 @@ public class DialogActivity extends AppCompatActivity {
                     messages.add(i, item);
                 }
 
-                messagesAdapter.notifyDataSetChanged();
+                if (position == waitingPosition) {
+                    messagesAdapter.notifyDataSetChanged();
+                }
 
             } else if (ACTION_GET_USERS_FOR_ADD.equals(action)) {
                 ArrayList<String> userNames = intent.getStringArrayListExtra("UserNames");
