@@ -324,10 +324,6 @@ public class DialogActivity extends AppCompatActivity {
 
             } else  if (ACTION_GOT_LAST_MESSAGES.equals(action)){
 
-                if (messages.size() != 0) {
-                    return;
-                }
-
                 int position = intent.getIntExtra("FirstPosition", 0);
                 Parcelable[] parcels = intent.getParcelableArrayExtra("Items");
                 Item items[] = Arrays.copyOf(parcels, parcels.length, Item[].class);

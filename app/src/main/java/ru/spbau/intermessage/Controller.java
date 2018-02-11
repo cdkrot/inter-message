@@ -265,6 +265,24 @@ public class Controller extends IntentService {
         context.startService(intent);
     }
 
+    public static void returnManyLatest(String chatId, List<Tuple3<User, String, Message>> messages, int firstPosition) {
+        for (int i = 0; i < messages.size(); i++) {
+            returnLatest(chatId, Collections.singletonList(messages.get(i)), firstPosition);
+        }
+    }
+
+    public static void returnManyUpdates(String chatId, List<Tuple3<User, String, Message>> messages, int firstPosition) {
+        for (int i = 0; i < messages.size(); i++) {
+            returnUpdates(chatId, Collections.singletonList(messages.get(i)), firstPosition);
+        }
+    }
+
+    public static void returnManyFirst(String chatId, List<Tuple3<User, String, Message>> messages, int firstPosition) {
+        for (int i = messages.size() - 1; i >= 0; i--) {
+            returnFirst(chatId, Collections.singletonList(messages.get(i)), firstPosition);
+        }
+    }
+
     private static Item[] parseMessages(List<Tuple3<User, String, Message>> messages) {
         Item items[] = new Item[messages.size()];
 
@@ -439,14 +457,14 @@ public class Controller extends IntentService {
             int limit = intent.getIntExtra("Limit", 0);
             String chatId = intent.getStringExtra("ChatId");
             messenger.getLastMessages(new Chat(chatId), limit,
-                    (firstPosition, messages) -> Controller.returnLatest(chatId, messages, firstPosition));
+                    (firstPosition, messages) -> Controller.returnManyLatest(chatId, messages, firstPosition));
 
         } else if (ACTION_REQUEST_UPDATES.equals(action)) {
 
             int last = intent.getIntExtra("Last", 0);
             String chatId = intent.getStringExtra("ChatId");
             messenger.getMessagesSince(new Chat(chatId), last + 1, 10000000,
-                    (messages) -> Controller.returnUpdates(chatId, messages, last + 1));
+                    (messages) -> Controller.returnManyUpdates(chatId, messages, last + 1));
 
         } else if (ACTION_REQUEST_FIRST.equals(action)) {
 
@@ -454,7 +472,7 @@ public class Controller extends IntentService {
             int limit = Math.min(first, intent.getIntExtra("Limit", 0));
             String chatId = intent.getStringExtra("ChatId");
             messenger.getMessagesSince(new Chat(chatId), first - limit, limit,
-                    (messages) -> Controller.returnFirst(chatId, messages, first - limit));
+                    (messages) -> Controller.returnManyFirst(chatId, messages, first - limit));
 
         } else if (ACTION_RETURN_LATEST.equals(action)) {
 
