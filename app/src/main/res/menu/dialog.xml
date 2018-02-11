@@ -16,7 +16,7 @@
     <item
         android:id="@+id/action_change_dialog_name"
         android:orderInCategory="100"
-        android:title="@string/action_get_users"
+        android:title="@string/action_change_dialog_name"
         app:showAsAction="never" />
 
     <item
@@ -31,5 +31,10 @@
         android:title="@string/action_send_image"
         app:showAsAction="never" />
 
+    <item
+        android:id="@+id/action_delete_chat"
+        android:orderInCategory="100"
+        android:title="@string/action_delete_chat"
+        app:showAsAction="never" />
 
 </menu>

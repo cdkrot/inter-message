@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 
 import java.util.ArrayList;
@@ -26,9 +27,12 @@ import ru.spbau.intermessage.crypto.ID;
 import ru.spbau.intermessage.gui.Item;
 import ru.spbau.intermessage.gui.MessageItem;
 import ru.spbau.intermessage.gui.PictureItem;
+import ru.spbau.intermessage.gui.SystemItem;
 import ru.spbau.intermessage.store.Storage;
 import ru.spbau.intermessage.util.BitmapHelper;
+import ru.spbau.intermessage.util.ByteVector;
 import ru.spbau.intermessage.util.Pair;
+import ru.spbau.intermessage.util.ReadHelper;
 import ru.spbau.intermessage.util.Tuple3;
 import ru.spbau.intermessage.util.Util;
 
@@ -46,14 +50,18 @@ public class Controller extends IntentService {
     private static final String ACTION_RETURN_DIALOGS_LIST = "Controller.action.RETURN_DIALOGS_LIST";
     private static final String ACTION_CREATE_NEW_CHAT = "Controller.action.CREATE_NEW_CHAT";
     private static final String ACTION_REQUEST_LATEST = "Controller.action.REQUEST_LATEST";
+    private static final String ACTION_REQUEST_FIRST = "Controller.action.REQUEST_FIRST";
     private static final String ACTION_REQUEST_UPDATES = "Controller.action.REQUEST_UPDATES";
     private static final String ACTION_RETURN_UPDATES = "Controller.action.RETURN_UPDATES";
+    private static final String ACTION_RETURN_FIRST = "Controller.action.RETURN_FIRST";
     private static final String ACTION_RETURN_LATEST = "Controller.action.RETURN_LATEST";
     private static final String ACTION_REQUEST_ADD_USER = "Controller.action.REQUEST_ADD_USER";
     private static final String ACTION_ADD_USER = "Controller.action.ADD_USER";
     private static final String ACTION_ADD_USERS = "Controller.action.ADD_USERS";
     private static final String ACTION_GET_USERS_IN_CHAT = "Controller.action.GET_USERS_IN_CHAT";
     private static final String ACTION_CHANGE_CHAT_NAME = "Controller.action.CHANGE_CHAT_NAME";
+    private static final String ACTION_DELETE_CHAT = "Controller.action.DELETE_CHAT";
+    private static final String ACTION_CHAT_DELETED = "Controller.action.CHAT_DELETED";
 
     private static Messenger messenger;
 
@@ -70,7 +78,7 @@ public class Controller extends IntentService {
         messenger.registerEventListener(new EventListener() {
             @Override
             public void onMessage(Chat chat, String userName, User user, Message message) {
-                receiveMessage(userName, chat.id, message);
+                receiveMessage(userName, chat, message);
             }
 
             @Override
@@ -162,18 +170,26 @@ public class Controller extends IntentService {
         context.startService(intent);
     }
 
-    public static void receiveMessage(String userName, String chatId,  Message message) {
+    public static void requestFirstMessages(String chatId, int first, int limit) {
+        Context context = Intermessage.getAppContext();
+        Intent intent = new Intent(context, Controller.class);
+        intent.setAction(ACTION_REQUEST_FIRST);
+        intent.putExtra("ChatId", chatId);
+        intent.putExtra("Limit", limit);
+        intent.putExtra("First", first);
+
+        context.startService(intent);
+    }
+
+    public static void receiveMessage(String userName, Chat chat,  Message message) {
         Context context = Intermessage.getAppContext();
         Intent intent = new Intent(context, Controller.class);
         intent.setAction(ACTION_RECEIVE_MESSAGE);
-        if ("text".equals(message.type)) {
-            String text = Util.bytesToString(message.data);
-            intent.putExtra("Item", new MessageItem(userName, text, message.timestamp, 0));
-        } else if ("picture".equals(message.type)) {
-            Bitmap bmp = BitmapHelper.bitmapFromBytes(message.data);
-            intent.putExtra("Item", new PictureItem(userName, bmp, message.timestamp, 0));
-        }
-        intent.putExtra("ChatId", chatId);
+
+        Item item = parseMessage(message, chat, userName);
+        intent.putExtra("Item", item);
+
+        intent.putExtra("ChatId", chat.id);
 
         context.startService(intent);
     }
@@ -207,7 +223,8 @@ public class Controller extends IntentService {
     public static void returnLatest(String chatId, List<Tuple3<User, String, Message>> messages, int firstPosition) {
         Context context = Intermessage.getAppContext();
 
-        Item items[] = parseMessages(messages);
+        Chat chat = new Chat(chatId);
+        Item items[] = parseMessages(messages, chat);
 
         Intent intent = new Intent(context, Controller.class);
         intent.setAction(Controller.ACTION_RETURN_LATEST);
@@ -221,7 +238,8 @@ public class Controller extends IntentService {
     public static void returnUpdates(String chatId, List<Tuple3<User, String, Message>> messages, int firstPosition) {
         Context context = Intermessage.getAppContext();
 
-        Item items[] = parseMessages(messages);
+        Chat chat = new Chat(chatId);
+        Item items[] = parseMessages(messages, chat);
 
         Intent intent = new Intent(context, Controller.class);
         intent.setAction(Controller.ACTION_RETURN_UPDATES);
@@ -232,27 +250,46 @@ public class Controller extends IntentService {
         context.startService(intent);
     }
 
-    private static Item[] parseMessages(List<Tuple3<User, String, Message>> messages) {
+    public static void returnFirst(String chatId, List<Tuple3<User, String, Message>> messages, int firstPosition) {
+        Context context = Intermessage.getAppContext();
+
+        Chat chat = new Chat(chatId);
+        Item items[] = parseMessages(messages, chat);
+
+        Intent intent = new Intent(context, Controller.class);
+        intent.setAction(Controller.ACTION_RETURN_FIRST);
+        intent.putExtra("FirstPosition", firstPosition);
+        intent.putExtra("Items", items);
+        intent.putExtra("ChatId", chatId);
+
+        context.startService(intent);
+    }
+
+    public static void returnManyLatest(String chatId, List<Tuple3<User, String, Message>> messages, int firstPosition) {
+        for (int i = 0; i < messages.size(); i++) {
+            returnLatest(chatId, Collections.singletonList(messages.get(i)), firstPosition + i);
+        }
+    }
+
+    public static void returnManyUpdates(String chatId, List<Tuple3<User, String, Message>> messages, int firstPosition) {
+        for (int i = 0; i < messages.size(); i++) {
+            returnUpdates(chatId, Collections.singletonList(messages.get(i)), firstPosition + i);
+        }
+    }
+
+    public static void returnManyFirst(String chatId, List<Tuple3<User, String, Message>> messages, int firstPosition) {
+        for (int i = messages.size() - 1; i >= 0; i--) {
+            returnFirst(chatId, Collections.singletonList(messages.get(i)), firstPosition + i);
+        }
+    }
+
+    private static Item[] parseMessages(List<Tuple3<User, String, Message>> messages, Chat chat) {
         Item items[] = new Item[messages.size()];
 
         for (int i = 0; i < messages.size(); i++) {
-            Item item;
-            Tuple3<User, String, Message> tr = messages.get(i);
-            if ("text".equals(tr.third.type)) {
-                String text = Util.bytesToString(tr.third.data);
-                long timestamp = tr.third.timestamp;
-                String userName = tr.second;
-                item = new MessageItem(userName, text, timestamp, 0);
-            } else if ("picture".equals(tr.third.type)) {
-                Bitmap bmp = BitmapHelper.bitmapFromBytes(tr.third.data);
-                long timestamp = tr.third.timestamp;
-                String userName = tr.second;
-                item = new PictureItem(userName, bmp, timestamp, 0);
-            } else {
-                throw new RuntimeException(new UnknownFormatConversionException("No such type " + tr.third.type));
-            }
-            items[i] = item;
+            items[i] = parseMessage(messages.get(i).third, chat, messages.get(i).second);
         }
+
         return items;
     }
 
@@ -327,6 +364,86 @@ public class Controller extends IntentService {
         context.startService(intent);
     }
 
+    public static void requestChatDeletion(String chatId) {
+        Context context = Intermessage.getAppContext();
+        Intent intent = new Intent(context, Controller.class);
+        intent.setAction(ACTION_DELETE_CHAT);
+        intent.putExtra("ChatId", chatId);
+
+        context.startService(intent);
+    }
+
+    public static void onChatDeleted(String chatId) {
+        Context context = Intermessage.getAppContext();
+        Intent intent = new Intent(context, Controller.class);
+        intent.setAction(ACTION_CHAT_DELETED);
+        intent.putExtra("ChatId", chatId);
+
+        context.startService(intent);
+    }
+
+    /**
+     * Converts bytes in Message to appropriate form in Item.
+     * Params chat and user are used only when it is a system message
+     */
+    private static Item parseMessage(Message message, @Nullable Chat chat, @Nullable User user) {
+        if (message.type != null && message.type.length() > 0 && message.type.charAt(0) == '!') {
+            return parseMessage(message, chat, messenger.doGetUserName(user));
+        } else {
+            return parseMessage(message, chat, (String)null);
+        }
+    }
+
+    /**
+     * Converts bytes in Message to appropriate form in Item.
+     * Params chat and userName are used only when it is a system message
+     */
+    private static Item parseMessage(Message message, @Nullable Chat chat, @Nullable String userName) {
+        if ("text".equals(message.type)) {
+            String text = Util.bytesToString(message.data);
+            return new MessageItem(userName, text, message.timestamp, 0);
+        } else if ("picture".equals(message.type)) {
+            Bitmap bmp = BitmapHelper.bitmapFromBytes(message.data);
+            return new PictureItem(userName, bmp, message.timestamp, 0);
+        } else if ("!newname".equals(message.type)) {
+            ReadHelper reader = new ReadHelper(ByteVector.wrap(message.data));
+
+            String newName = reader.readString();
+
+            String text = "Dialog was renamed to " + newName + " by " + userName;
+
+            return new SystemItem(text, message.timestamp, 0);
+        } else if ("!newchat".equals(message.type)) {
+            String chatName = messenger.doGetChatName(chat);
+            String text = "The dialog " + chatName +" was created by " + userName;
+
+            return new SystemItem(text, message.timestamp, 0);
+        } else if ("!adduser".equals(message.type)) {
+            ReadHelper reader = new ReadHelper(ByteVector.wrap(message.data));
+
+            List<String> userNames = new ArrayList<>();
+            User user = null;
+            while ((user = User.read(reader)) != null) {
+                userNames.add(messenger.doGetUserName(user));
+            }
+
+            String text;
+
+            if (userNames.size() == 1) {
+                text = "User " + userNames.get(0) + " was added to the dialog";
+            } else {
+                text = "Users ";
+                for (int i = 0; i + 1 < userNames.size(); i++) {
+                    text = text + userNames.get(i) + (i + 2 != userNames.size() ? ", " : " and ");
+                }
+                text = text + userNames.get(userNames.size() - 1);
+            }
+
+            return new SystemItem(text, message.timestamp, 0);
+        } else {
+            throw new RuntimeException("Unknown type of message");
+        }
+    }
 
     @Override
     protected void onHandleIntent(Intent intent) {
@@ -385,14 +502,22 @@ public class Controller extends IntentService {
             int limit = intent.getIntExtra("Limit", 0);
             String chatId = intent.getStringExtra("ChatId");
             messenger.getLastMessages(new Chat(chatId), limit,
-                    (firstPosition, messages) -> Controller.returnLatest(chatId, messages, firstPosition));
+                    (firstPosition, messages) -> Controller.returnManyLatest(chatId, messages, firstPosition));
 
         } else if (ACTION_REQUEST_UPDATES.equals(action)) {
 
             int last = intent.getIntExtra("Last", 0);
             String chatId = intent.getStringExtra("ChatId");
             messenger.getMessagesSince(new Chat(chatId), last + 1, 10000000,
-                    (messages) -> Controller.returnUpdates(chatId, messages, last + 1));
+                    (messages) -> Controller.returnManyUpdates(chatId, messages, last + 1));
+
+        } else if (ACTION_REQUEST_FIRST.equals(action)) {
+
+            int first = intent.getIntExtra("First", 0);
+            int limit = Math.min(first, intent.getIntExtra("Limit", 0));
+            String chatId = intent.getStringExtra("ChatId");
+            messenger.getMessagesSince(new Chat(chatId), first - limit, limit,
+                    (messages) -> Controller.returnManyFirst(chatId, messages, first - limit));
 
         } else if (ACTION_RETURN_LATEST.equals(action)) {
 
@@ -407,6 +532,15 @@ public class Controller extends IntentService {
 
             Intent broadcastIntent = new Intent();
             broadcastIntent.setAction(DialogActivity.MessageReceiver.ACTION_GOT_UPDATES);
+            broadcastIntent.putExtra("ChatId", intent.getStringExtra("ChatId"));
+            broadcastIntent.putExtra("Items", intent.getParcelableArrayExtra("Items"));
+            broadcastIntent.putExtra("FirstPosition", intent.getIntExtra("FirstPosition", 0));
+            sendBroadcast(broadcastIntent);
+
+        } else if (ACTION_RETURN_FIRST.equals(action)) {
+
+            Intent broadcastIntent = new Intent();
+            broadcastIntent.setAction(DialogActivity.MessageReceiver.ACTION_GOT_FIRST_MESSAGES);
             broadcastIntent.putExtra("ChatId", intent.getStringExtra("ChatId"));
             broadcastIntent.putExtra("Items", intent.getParcelableArrayExtra("Items"));
             broadcastIntent.putExtra("FirstPosition", intent.getIntExtra("FirstPosition", 0));
@@ -481,6 +615,20 @@ public class Controller extends IntentService {
             String chatName = intent.getStringExtra("ChatName");
             Chat chat = new Chat(chatId);
             messenger.sendMessage(chat, messenger.getChangeChatName(chat, chatName));
+
+        } else if (ACTION_DELETE_CHAT.equals(action)) {
+
+            String chatId = intent.getStringExtra("ChatId");
+            // TODO messenger.deleteChat(new Chat(chatId), () -> onChatDeleted(chatId));
+
+        } else if (ACTION_CHAT_DELETED.equals(action)) {
+
+            String chatId = intent.getStringExtra("ChatId");
+
+            Intent broadcastIntent = new Intent();
+            broadcastIntent.putExtra("ChatId", chatId);
+            broadcastIntent.setAction(DialogActivity.MessageReceiver.ACTION_CHAT_DELETED);
+            sendBroadcast(broadcastIntent);
 
         }
     }

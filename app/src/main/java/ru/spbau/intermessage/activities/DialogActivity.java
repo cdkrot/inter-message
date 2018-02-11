@@ -8,6 +8,7 @@ import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Message;
 import android.os.Parcelable;
 import android.provider.MediaStore;
 import android.support.v7.app.AlertDialog;
@@ -18,7 +19,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsListView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
@@ -33,6 +36,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import ru.spbau.intermessage.Controller;
+import ru.spbau.intermessage.Intermessage;
 import ru.spbau.intermessage.R;
 import ru.spbau.intermessage.gui.Item;
 import ru.spbau.intermessage.gui.MessageItem;
@@ -45,14 +49,17 @@ public class DialogActivity extends AppCompatActivity {
     private static final String PREF_NAME = "userName";
     private static final int NEW_MESSAGES_LIMIT = 20;
 
+    private static final int IMAGE_REQUEST_CODE = 3;
+    private static final int PHOTO_REQUEST_CODE = 5;
+    private static final int PRELOAD_INDEX = 1;
+
     private static final List<Item> messages = new ArrayList<>();
     private static String chatId;
+    private static int waitingPosition;
     private MessageReceiver messageReceiver;
     private ItemAdapter messagesAdapter;
     private String selfUserName;
 
-    private static final int IMAGE_REQUEST_CODE = 3;
-    private static final int PHOTO_REQUEST_CODE = 5;
     private static Uri whereResult;
 
     @Override
@@ -79,6 +86,25 @@ public class DialogActivity extends AppCompatActivity {
         final EditText input = findViewById(R.id.input);
         messagesAdapter = new ItemAdapter(this, messages);
         messagesList.setAdapter(messagesAdapter);
+
+        messagesList.setOnScrollListener(new AbsListView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(AbsListView absListView, int i) {
+                //Nothing to do
+            }
+
+            @Override
+            public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+                if (visibleItemCount == 0 || (!messages.isEmpty() && messages.get(0).getPosition() == 0)) {
+                    return;
+                }
+
+                if (firstVisibleItem < PRELOAD_INDEX) {
+                    waitingPosition = Math.max(0, messages.get(0).getPosition() - NEW_MESSAGES_LIMIT);
+                    Controller.requestFirstMessages(chatId, messages.get(0).getPosition(), NEW_MESSAGES_LIMIT);
+                }
+            }
+        });
 
 
         input.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -122,9 +148,11 @@ public class DialogActivity extends AppCompatActivity {
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(MessageReceiver.ACTION_RECEIVE);
         intentFilter.addAction(MessageReceiver.ACTION_GOT_LAST_MESSAGES);
+        intentFilter.addAction(MessageReceiver.ACTION_GOT_FIRST_MESSAGES);
         intentFilter.addAction(MessageReceiver.ACTION_GOT_UPDATES);
         intentFilter.addAction(MessageReceiver.ACTION_GET_USERS_FOR_ADD);
         intentFilter.addAction(MessageReceiver.ACTION_GET_USERS);
+        intentFilter.addAction(MessageReceiver.ACTION_CHAT_DELETED);
 
         registerReceiver(messageReceiver, intentFilter);
 
@@ -153,6 +181,9 @@ public class DialogActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+
         int id = item.getItemId();
 
         if (id == R.id.action_get_users) {
@@ -218,6 +249,8 @@ public class DialogActivity extends AppCompatActivity {
             startActivityForResult(intent, IMAGE_REQUEST_CODE);
 
             return true;
+        } else if (id == R.id.action_delete_chat) {
+            Controller.requestChatDeletion(chatId);
         }
 
         return super.onOptionsItemSelected(item);
@@ -267,9 +300,12 @@ public class DialogActivity extends AppCompatActivity {
     public class MessageReceiver extends BroadcastReceiver {
         public static final String ACTION_RECEIVE = "DialogActivity.action.RECEIVE";
         public static final String ACTION_GOT_LAST_MESSAGES = "DialogActivity.action.LAST_MESSAGES";
+        public static final String ACTION_GOT_FIRST_MESSAGES = "DialogActivity.action.FIRST_MESSAGES";
         public static final String ACTION_GOT_UPDATES = "DialogActivity.action.UPDATES";
         public static final String ACTION_GET_USERS_FOR_ADD = "DialogActivity.action.GET_USERS_FOR_ADD";
         public static final String ACTION_GET_USERS = "DialogActivity.action.GET_USERS";
+        public static final String ACTION_CHAT_DELETED = "DialogActivity.action.CHAT_DELETED";
+
 
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -289,10 +325,6 @@ public class DialogActivity extends AppCompatActivity {
                 messagesAdapter.notifyDataSetChanged();
 
             } else  if (ACTION_GOT_LAST_MESSAGES.equals(action)){
-
-                if (messages.size() != 0) {
-                    return;
-                }
 
                 int position = intent.getIntExtra("FirstPosition", 0);
                 Parcelable[] parcels = intent.getParcelableArrayExtra("Items");
@@ -325,6 +357,29 @@ public class DialogActivity extends AppCompatActivity {
                 }
 
                 messagesAdapter.notifyDataSetChanged();
+
+            } else if (ACTION_GOT_FIRST_MESSAGES.equals(action)) {
+
+                if (messages.size() == 0) {
+                    return;
+                }
+
+                int position = intent.getIntExtra("FirstPosition", 0);
+                Parcelable[] parcels = intent.getParcelableArrayExtra("Items");
+                Item items[] = Arrays.copyOf(parcels, parcels.length, Item[].class);
+
+                int length = items.length;
+                int first = messages.get(0).getPosition();
+                
+                for (int i = 0; i < length && position + i < first; i++) {
+                    Item item = items[i];
+                    item.setPosition(position + i);
+                    messages.add(i, item);
+                }
+
+                if (position == waitingPosition) {
+                    messagesAdapter.notifyDataSetChanged();
+                }
 
             } else if (ACTION_GET_USERS_FOR_ADD.equals(action)) {
                 ArrayList<String> userNames = intent.getStringArrayListExtra("UserNames");
@@ -369,7 +424,11 @@ public class DialogActivity extends AppCompatActivity {
 
                         if (!checkedIds.isEmpty()) {
                             Controller.addUsers(checkedIds, chatId);
-                            Toast.makeText(DialogActivity.this, checkedIds.size() + " users were added", Toast.LENGTH_SHORT).show();
+                            if (checkedIds.size() == 1) {
+                                Toast.makeText(DialogActivity.this, "1 user was added", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(DialogActivity.this, checkedIds.size() + " users were added", Toast.LENGTH_SHORT).show();
+                            }
                         } else {
                             Toast.makeText(DialogActivity.this, "No users were chosen", Toast.LENGTH_SHORT).show();
                         }
@@ -396,6 +455,11 @@ public class DialogActivity extends AppCompatActivity {
                 });
 
                 alert.show();
+            } else if (ACTION_CHAT_DELETED.equals(action)) {
+                String delChatId = intent.getStringExtra("ChatId");
+                if (chatId.equals(delChatId)) {
+                    finish();
+                }
             }
         }
     }

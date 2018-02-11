@@ -15,7 +15,7 @@ import ru.spbau.intermessage.Intermessage;
 
 public class BitmapHelper {
 
-    private static final int IMAGE_SIZE = 512;
+    private static final int IMAGE_SIZE = 504;
 
     public static Bitmap bitmapFromBytes(byte[] bytes) {
         Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
@@ -30,7 +30,7 @@ public class BitmapHelper {
 
     public static byte[] bytesFromBitmap(Bitmap bmp) {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        bmp.compress(Bitmap.CompressFormat.PNG, 100, stream);
+        bmp.compress(Bitmap.CompressFormat.JPEG, 80, stream);
         return stream.toByteArray();
     }
 
