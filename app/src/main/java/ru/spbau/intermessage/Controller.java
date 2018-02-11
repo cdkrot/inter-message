@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 
 import java.util.ArrayList;
@@ -29,7 +30,9 @@ import ru.spbau.intermessage.gui.PictureItem;
 import ru.spbau.intermessage.gui.SystemItem;
 import ru.spbau.intermessage.store.Storage;
 import ru.spbau.intermessage.util.BitmapHelper;
+import ru.spbau.intermessage.util.ByteVector;
 import ru.spbau.intermessage.util.Pair;
+import ru.spbau.intermessage.util.ReadHelper;
 import ru.spbau.intermessage.util.Tuple3;
 import ru.spbau.intermessage.util.Util;
 
@@ -75,7 +78,7 @@ public class Controller extends IntentService {
         messenger.registerEventListener(new EventListener() {
             @Override
             public void onMessage(Chat chat, String userName, User user, Message message) {
-                receiveMessage(userName, chat.id, message);
+                receiveMessage(userName, chat, message);
             }
 
             @Override
@@ -178,21 +181,15 @@ public class Controller extends IntentService {
         context.startService(intent);
     }
 
-    public static void receiveMessage(String userName, String chatId,  Message message) {
+    public static void receiveMessage(String userName, Chat chat,  Message message) {
         Context context = Intermessage.getAppContext();
         Intent intent = new Intent(context, Controller.class);
         intent.setAction(ACTION_RECEIVE_MESSAGE);
-        if ("text".equals(message.type)) {
-            String text = Util.bytesToString(message.data);
-            intent.putExtra("Item", new MessageItem(userName, text, message.timestamp, 0));
-        } else if ("picture".equals(message.type)) {
-            Bitmap bmp = BitmapHelper.bitmapFromBytes(message.data);
-            intent.putExtra("Item", new PictureItem(userName, bmp, message.timestamp, 0));
-        } else if ("system".equals(message.type)) {
-            String text = Util.bytesToString(message.data);
-            intent.putExtra("Item", new SystemItem(text, message.timestamp, 0));
-        }
-        intent.putExtra("ChatId", chatId);
+
+        Item item = parseMessage(message, chat, userName);
+        intent.putExtra("Item", item);
+
+        intent.putExtra("ChatId", chat.id);
 
         context.startService(intent);
     }
@@ -226,7 +223,8 @@ public class Controller extends IntentService {
     public static void returnLatest(String chatId, List<Tuple3<User, String, Message>> messages, int firstPosition) {
         Context context = Intermessage.getAppContext();
 
-        Item items[] = parseMessages(messages);
+        Chat chat = new Chat(chatId);
+        Item items[] = parseMessages(messages, chat);
 
         Intent intent = new Intent(context, Controller.class);
         intent.setAction(Controller.ACTION_RETURN_LATEST);
@@ -240,7 +238,8 @@ public class Controller extends IntentService {
     public static void returnUpdates(String chatId, List<Tuple3<User, String, Message>> messages, int firstPosition) {
         Context context = Intermessage.getAppContext();
 
-        Item items[] = parseMessages(messages);
+        Chat chat = new Chat(chatId);
+        Item items[] = parseMessages(messages, chat);
 
         Intent intent = new Intent(context, Controller.class);
         intent.setAction(Controller.ACTION_RETURN_UPDATES);
@@ -254,7 +253,8 @@ public class Controller extends IntentService {
     public static void returnFirst(String chatId, List<Tuple3<User, String, Message>> messages, int firstPosition) {
         Context context = Intermessage.getAppContext();
 
-        Item items[] = parseMessages(messages);
+        Chat chat = new Chat(chatId);
+        Item items[] = parseMessages(messages, chat);
 
         Intent intent = new Intent(context, Controller.class);
         intent.setAction(Controller.ACTION_RETURN_FIRST);
@@ -283,31 +283,13 @@ public class Controller extends IntentService {
         }
     }
 
-    private static Item[] parseMessages(List<Tuple3<User, String, Message>> messages) {
+    private static Item[] parseMessages(List<Tuple3<User, String, Message>> messages, Chat chat) {
         Item items[] = new Item[messages.size()];
 
         for (int i = 0; i < messages.size(); i++) {
-            Item item;
-            Tuple3<User, String, Message> tr = messages.get(i);
-            if ("text".equals(tr.third.type)) {
-                String text = Util.bytesToString(tr.third.data);
-                long timestamp = tr.third.timestamp;
-                String userName = tr.second;
-                item = new MessageItem(userName, text, timestamp, 0);
-            } else if ("picture".equals(tr.third.type)) {
-                Bitmap bmp = BitmapHelper.bitmapFromBytes(tr.third.data);
-                long timestamp = tr.third.timestamp;
-                String userName = tr.second;
-                item = new PictureItem(userName, bmp, timestamp, 0);
-            } else if ("system".equals(tr.third.type)) {
-                String text = Util.bytesToString(tr.third.data);
-                long timestamp = tr.third.timestamp;
-                item = new SystemItem(text, timestamp, 0);
-            } else {
-                throw new RuntimeException(new UnknownFormatConversionException("No such type " + tr.third.type));
-            }
-            items[i] = item;
+            items[i] = parseMessage(messages.get(i).third, chat, messages.get(i).second);
         }
+
         return items;
     }
 
@@ -398,6 +380,69 @@ public class Controller extends IntentService {
         intent.putExtra("ChatId", chatId);
 
         context.startService(intent);
+    }
+
+    /**
+     * Converts bytes in Message to appropriate form in Item.
+     * Params chat and user are used only when it is a system message
+     */
+    private static Item parseMessage(Message message, @Nullable Chat chat, @Nullable User user) {
+        if (message.type != null && message.type.length() > 0 && message.type.charAt(0) == '!') {
+            return parseMessage(message, chat, messenger.doGetUserName(user));
+        } else {
+            return parseMessage(message, chat, (String)null);
+        }
+    }
+
+    /**
+     * Converts bytes in Message to appropriate form in Item.
+     * Params chat and userName are used only when it is a system message
+     */
+    private static Item parseMessage(Message message, @Nullable Chat chat, @Nullable String userName) {
+        if ("text".equals(message.type)) {
+            String text = Util.bytesToString(message.data);
+            return new MessageItem(userName, text, message.timestamp, 0);
+        } else if ("picture".equals(message.type)) {
+            Bitmap bmp = BitmapHelper.bitmapFromBytes(message.data);
+            return new PictureItem(userName, bmp, message.timestamp, 0);
+        } else if ("!newname".equals(message.type)) {
+            ReadHelper reader = new ReadHelper(ByteVector.wrap(message.data));
+
+            String newName = reader.readString();
+
+            String text = "Dialog was renamed to " + newName + " by " + userName;
+
+            return new SystemItem(text, message.timestamp, 0);
+        } else if ("!newchat".equals(message.type)) {
+            String chatName = messenger.doGetChatName(chat);
+            String text = "The dialog " + chatName +" was created by " + userName;
+
+            return new SystemItem(text, message.timestamp, 0);
+        } else if ("!adduser".equals(message.type)) {
+            ReadHelper reader = new ReadHelper(ByteVector.wrap(message.data));
+
+            List<String> userNames = new ArrayList<>();
+            User user = null;
+            while ((user = User.read(reader)) != null) {
+                userNames.add(messenger.doGetUserName(user));
+            }
+
+            String text;
+
+            if (userNames.size() == 1) {
+                text = "User " + userNames.get(0) + " was added to the dialog";
+            } else {
+                text = "Users ";
+                for (int i = 0; i + 1 < userNames.size(); i++) {
+                    text = text + userNames.get(i) + (i + 2 != userNames.size() ? ", " : " and ");
+                }
+                text = text + userNames.get(userNames.size() - 1);
+            }
+
+            return new SystemItem(text, message.timestamp, 0);
+        } else {
+            throw new RuntimeException("Unknown type of message");
+        }
     }
 
     @Override
