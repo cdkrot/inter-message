@@ -424,7 +424,11 @@ public class DialogActivity extends AppCompatActivity {
 
                         if (!checkedIds.isEmpty()) {
                             Controller.addUsers(checkedIds, chatId);
-                            Toast.makeText(DialogActivity.this, checkedIds.size() + " users were added", Toast.LENGTH_SHORT).show();
+                            if (checkedIds.size() == 1) {
+                                Toast.makeText(DialogActivity.this, "1 user was added", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(DialogActivity.this, checkedIds.size() + " users were added", Toast.LENGTH_SHORT).show()
+                            }
                         } else {
                             Toast.makeText(DialogActivity.this, "No users were chosen", Toast.LENGTH_SHORT).show();
                         }
