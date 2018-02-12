@@ -45,7 +45,7 @@ public class DialogsListActivity extends AppCompatActivity {
 
 
         //noinspection unchecked
-        dialogsAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, buttonNames);
+        dialogsAdapter = new ArrayAdapter(this, R.layout.dialogs_list_item, buttonNames);
 
         dialogsList.setAdapter(dialogsAdapter);
 

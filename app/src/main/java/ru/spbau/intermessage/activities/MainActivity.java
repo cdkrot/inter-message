@@ -47,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
         buttonNames.add(getString(R.string.menu_kill));
 
         @SuppressWarnings("unchecked")
-        ArrayAdapter mainMenuAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, buttonNames);
+        ArrayAdapter mainMenuAdapter = new ArrayAdapter(this, R.layout.simple_list_item, buttonNames);
 
         final SharedPreferences sharedPreferences = getSharedPreferences(PREF_FILE, MODE_PRIVATE);
         String userName = sharedPreferences.getString(PREF_NAME, "");
