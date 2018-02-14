@@ -417,14 +417,15 @@ public class Messenger {
 
                 for (EventListener listener: listeners)
                     listener.onChatAddition(ch);
-            } else {
-                u.write(writer);
-                storage.getList("allmsg." + ch.id).push(writer.getData().toBytes());
-                
-                for (EventListener listener: listeners)
-                    listener.onMessage(ch, doGetUserName(u), u, m);             
             }
-            
+
+            u.write(writer);
+            storage.getList("allmsg." + ch.id).push(writer.getData().toBytes());
+
+
+            for (EventListener listener: listeners)
+                listener.onMessage(ch, doGetUserName(u), u, m);
+
             return true;
         }
         return true;
