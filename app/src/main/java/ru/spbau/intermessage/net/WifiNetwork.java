@@ -302,6 +302,7 @@ public class WifiNetwork implements Network {
                     SocketChannel client = sck.accept();
                     client.configureBlocking(false);
                     // create "sending" connection.
+                    System.err.println("=================== NEW CONN ===========================");
                     Helper helper = new Helper(client, new Logic(msg, store), false);
                     helper.token = client.register(epoll, client.validOps(), helper);
                 }

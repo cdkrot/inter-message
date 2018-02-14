@@ -348,21 +348,23 @@ public class Messenger {
     private HashSet<String> busy = new HashSet<String>();
 
     public boolean setBusy(User u) {
-        if (busy.contains(u.publicKey))
+        if (busy.contains(u.toString()))
             return false;
 
-        busy.add(u.publicKey);
+        busy.add(u.toString());
         return true;
     }
 
     public void setNotBusy(User u) {
-        busy.remove(u.publicKey);
+        busy.remove(u.toString());
     }
     
     public boolean syncWith(User u) {
+        System.err.println("==================== TRY SYNC ===========================");
         if (!setBusy(u))
             return false;
         try {
+            System.err.println("==================== SYNC ===========================");
             network.create(storage.get("user.location." + u.publicKey).getString(), new ServerLogic(this, u));
             return true;
         } catch (IOException ex) {
@@ -415,14 +417,15 @@ public class Messenger {
 
                 for (EventListener listener: listeners)
                     listener.onChatAddition(ch);
-            } else {
-                u.write(writer);
-                storage.getList("allmsg." + ch.id).push(writer.getData().toBytes());
-                
-                for (EventListener listener: listeners)
-                    listener.onMessage(ch, doGetUserName(u), u, m);             
             }
-            
+
+            u.write(writer);
+            storage.getList("allmsg." + ch.id).push(writer.getData().toBytes());
+
+
+            for (EventListener listener: listeners)
+                listener.onMessage(ch, doGetUserName(u), u, m);
+
             return true;
         }
         return true;
@@ -450,6 +453,17 @@ public class Messenger {
         return 0; // don't need.
     }
 
+    public boolean checkFingerprint(byte[] fingerprint, byte[] key) {
+        IStorage.Union obj = storage.get("fingerprint." + Util.toHex(fingerprint));
+
+        if (obj.getType() == IStorage.ObjectType.STRING)
+            return Util.toHex(key) == obj.getString();
+        else {
+            obj.setString(Util.toHex(key));
+            return true;
+        }
+    }
+    
     protected void doSendMessage(Chat ch, Message msg) {
         WriteHelper writer = new WriteHelper(new ByteVector());
         msg.write(writer);

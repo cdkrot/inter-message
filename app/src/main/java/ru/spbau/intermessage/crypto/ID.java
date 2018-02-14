@@ -1,93 +1,119 @@
 package ru.spbau.intermessage.crypto;
 
-import android.util.Log;
-
-import java.security.KeyFactory;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.X509EncodedKeySpec;
-import java.util.Arrays;
-
-import org.apache.commons.codec.binary.Hex;
+import java.security.*;
+import java.security.interfaces.*;
+import java.security.spec.*;
 
 import ru.spbau.intermessage.core.User;
+import ru.spbau.intermessage.util.Util;
+import ru.spbau.intermessage.util.WriteHelper;
+import ru.spbau.intermessage.util.ReadHelper;
+import ru.spbau.intermessage.util.ByteVector;
+
+import javax.crypto.Cipher;
 
 public class ID {
-    private KeyPair keys;
-
-    /**
-     * Safe constructor. Keys will be cleaned after construction
-     * @param priv private key
-     * @param pub public key
-     */
-    public ID(char[] priv, char[] pub) {
+    public RSAPrivateKey privkey;
+    public RSAPublicKey pubkey;
+    
+    private byte[] fingerprint;
+    
+    public ID(RSAPrivateKey privkey, RSAPublicKey pubkey) {
+        this.privkey = privkey;
+        this.pubkey = pubkey;
+        this.fingerprint = getFingerprint(pubkey);
+    }
+    
+    public ID(String pubkey, String privkey) {
         try {
-            byte[] publicBytes = Hex.decodeHex(pub);
-            X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(publicBytes);
-            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-            PublicKey publicKey = keyFactory.generatePublic(pubKeySpec);
-
-            byte[] privateBytes = Hex.decodeHex(priv);
-            PKCS8EncodedKeySpec privKeySpec = new PKCS8EncodedKeySpec(privateBytes);
-            keyFactory = KeyFactory.getInstance("RSA");
-            PrivateKey privateKey = keyFactory.generatePrivate(privKeySpec);
-
-            keys = new KeyPair(publicKey, privateKey);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        } finally {
-            Arrays.fill(priv, 'a');
-            Arrays.fill(pub, 'a');
+            System.err.println("pub: " + pubkey);
+            System.err.println("priv: " + privkey);
+            PKCS8EncodedKeySpec privspec = new PKCS8EncodedKeySpec(Util.decodeHex(privkey));
+            X509EncodedKeySpec pubspec = new X509EncodedKeySpec(Util.decodeHex(pubkey));
+            
+            KeyFactory factory = KeyFactory.getInstance("RSA");
+            this.privkey = (RSAPrivateKey)factory.generatePrivate(privspec);
+            
+            factory = KeyFactory.getInstance("RSA");
+            this.pubkey  = (RSAPublicKey)factory.generatePublic(pubspec);
+        } catch (Exception ex) {
+            // if java has not got RSA it is her own problem.
+            ex.printStackTrace();
+            throw new RuntimeException(ex);
         }
     }
-
-    /**
-     * Unsafe constructor. Use char[] instead of String.
-     * @param priv private key
-     * @param pub public key
-     */
-    public ID(String priv, String pub) {
-        this(priv.toCharArray(), pub.toCharArray());
-    }
-
-    public ID(KeyPair pair) {
-        keys = pair;
-    }
-
+    
     public static ID create() {
         try {
-            KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
-            KeyPair pair = generator.generateKeyPair();
-            return new ID(pair);
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
+            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+            keyGen.initialize(4096);
+            
+            KeyPair pair = keyGen.generateKeyPair();
+            return new ID((RSAPrivateKey)pair.getPrivate(),(RSAPublicKey)pair.getPublic());
+        } catch (Exception ex) {
+            // if java has not got RSA it is her own problem.
+            throw new RuntimeException(ex);
         }
     }
 
     public String priv() {
-        return new String(Hex.encodeHex(keys.getPrivate().getEncoded()));
+        return Util.toHex(privkey.getEncoded());
     }
 
     public String pub() {
-        return new String(Hex.encodeHex(keys.getPublic().getEncoded()));
-    }
-
-    public PublicKey getPublicKey() {
-        return keys.getPublic();
-    }
-
-    public PrivateKey getPrivateKey() {
-        return keys.getPrivate();
+        return Util.toHex(pubkey.getEncoded());
     }
 
     public User user() {
-        return new User(pub());
+        return new User(fingerprint);
+    }
+
+    public void writePubkey(WriteHelper writer) {
+        writer.writeBytes(privkey.getEncoded());
+    }
+
+    public static RSAPublicKey readPubkey(ReadHelper reader) {
+        try {
+            return (RSAPublicKey)(KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(reader.readBytes())));
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+    
+    public ByteVector decode(ByteVector src) {
+        try {
+            Cipher rsa = Cipher.getInstance("RSA");
+            rsa.init(Cipher.DECRYPT_MODE, privkey);
+            return ByteVector.wrap(rsa.doFinal(src.data(), 0, src.size()));
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    public static ByteVector encode(RSAPublicKey pub, ByteVector src) {
+        try {
+            Cipher rsa = Cipher.getInstance("RSA");
+            rsa.init(Cipher.ENCRYPT_MODE, pub);
+            return ByteVector.wrap(rsa.doFinal(src.data(), 0, src.size()));
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+    
+    public static byte[] getFingerprint(RSAPublicKey key) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            md.update(key.getEncoded());
+            return md.digest();
+        } catch (Exception ex) {
+            // if java has not got sha-256 it is her own problem.
+            throw new RuntimeException(ex);
+        }
+    }
+
+    public static byte[] getSecureRandom(int count) {
+        byte[] res = new byte[count];
+        (new SecureRandom()).nextBytes(res);
+        return res;
     }
 };

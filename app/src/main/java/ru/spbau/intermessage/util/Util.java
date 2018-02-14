@@ -1,5 +1,7 @@
 package ru.spbau.intermessage.util;
 
+import org.apache.commons.codec.binary.Hex;
+
 public class Util {
     public static byte[] stringToBytes(String str) {
         try {
@@ -17,5 +19,51 @@ public class Util {
             // java sucks.
             throw new RuntimeException(ex);
         }
+    }
+
+    public static byte[] decodeHex(String s) {
+        try {
+            return Hex.decodeHex(s.toCharArray());
+        } catch (Exception ex) {
+            return null;
+        }
+                
+        
+        // if (s.length() % 2 == 1)
+        //     throw new IllegalArgumentException();
+
+        // s = s.toLowerCase();
+        // byte[] res = new byte[s.length() / 2];
+        
+        // for (int i = 0; i != s.length(); ++i) {
+        //     if ('0' <= s.charAt(i) && s.charAt(i) <= '9')
+        //         res[i / 2] = (byte)(16 * res[i / 2] + s.charAt(i) - '0'); // java, please die.
+        //     else if ('a' <= s.charAt(i) && s.charAt(i) <= 'f')
+        //         res[i / 2] = (byte)(16 * res[i / 2] + s.charAt(i) - 'a' + 10);
+        //     else
+        //         throw new IllegalArgumentException();
+        // }
+
+        // return res;
+    }
+    
+    public static String toHex(byte[] s) {
+        try {
+            return new String(Hex.encodeHex(s));
+        } catch (Exception ex) {
+            return null;
+        }
+        // StringBuilder builder = new StringBuilder();
+
+        // for (byte b: s) {
+        //     char ch = (char)(((char)b) & (char)255);
+        //     builder.append((ch / 16) <= 9 ? (char)('0' + (ch / 16)) : (char)('a' + (ch / 16) - 10));
+        //     builder.append((ch % 16) <= 9 ? (char)('0' + (ch % 16)) : (char)('a' + (ch % 16) - 10));
+        // }
+
+        // if (builder.toString().length() % 2 == 1) {            
+        //     throw new RuntimeException();
+        // }
+        // return builder.toString();
     }
 }
