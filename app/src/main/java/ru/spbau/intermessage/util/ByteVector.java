@@ -92,7 +92,7 @@ public class ByteVector {
         return new ByteVector(bt);
     }
 
-    /** wraps reusing provided array (be careful) */
+    /** wraps copying provided array */
     public static ByteVector dup(byte[] bt) {
         byte[] b2 = new byte[bt.length];
         for (int i = 0; i != bt.length; ++i)

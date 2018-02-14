@@ -29,6 +29,7 @@ import ru.spbau.intermessage.gui.MessageItem;
 import ru.spbau.intermessage.gui.PictureItem;
 import ru.spbau.intermessage.gui.SystemItem;
 import ru.spbau.intermessage.store.Storage;
+import ru.spbau.intermessage.store.InMemoryStorage;
 import ru.spbau.intermessage.util.BitmapHelper;
 import ru.spbau.intermessage.util.ByteVector;
 import ru.spbau.intermessage.util.Pair;
@@ -67,7 +68,7 @@ public class Controller extends IntentService {
 
     static {
         try {
-            messenger = new Messenger(new Storage(), getId());
+            messenger = new Messenger(new InMemoryStorage(), getId());
         } catch (java.io.IOException ex) {
             throw new RuntimeException(ex);
         }
@@ -134,10 +135,11 @@ public class Controller extends IntentService {
     }
 
     private static ID getId() {
-        SharedPreferences sharedPreferences = Intermessage.getAppContext().getSharedPreferences("preferences", MODE_PRIVATE);
-        String publicKey = sharedPreferences.getString("publicKey", "trustno1");
-        String privateKey = sharedPreferences.getString("privateKey", "beliveinlie");
-        return new ID(privateKey, publicKey);
+        return ID.create();
+        // SharedPreferences sharedPreferences = Intermessage.getAppContext().getSharedPreferences("preferences", MODE_PRIVATE);
+        // String publicKey = sharedPreferences.getString("publicKey", "trustno1");
+        // String privateKey = sharedPreferences.getString("privateKey", "beliveinlie");
+        // return new ID(privateKey, publicKey);
     }
 
     public static void sendMessage(Item message, String chatId) {
