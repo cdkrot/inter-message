@@ -58,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
             SharedPreferences.Editor ed = sharedPreferences.edit();
             ed.putString("publicKey", id.pub());
             ed.putString("privateKey", id.priv());
-            ed.commit();
+            ed.apply();
         }
 
         Intent newIntent = new Intent(this, Controller.class);
