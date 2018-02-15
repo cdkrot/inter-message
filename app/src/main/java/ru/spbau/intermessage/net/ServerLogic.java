@@ -17,13 +17,7 @@ import ru.spbau.intermessage.util.WriteHelper;
 // 2: I: Message
 // 2: O: respond with "ACK", goto 1.
 
-// auth:
-// Sent Pubkey
-// Get Pubkey + 512 bytes of random [encryption]
-// Sent this bytes & 512 new random [encryption]
-// (Recieve 512 new bytes and go to the bussiness).
-
-public class ServerLogic implements ILogic {
+public class ServerLogic implements WLogic {
     private Messenger msg;
     private int state = 0;
 
@@ -33,9 +27,12 @@ public class ServerLogic implements ILogic {
 
     private User peer;
     
-    public ServerLogic(Messenger msg, User peer) {
+    public ServerLogic(Messenger msg) {
         this.msg = msg;
-        this.peer = peer;
+    }
+
+    public void setPeer(User u) {
+        peer = u;
     }
     
     public ByteVector feed0(ByteVector packet) {
@@ -96,6 +93,7 @@ public class ServerLogic implements ILogic {
 
     @Nullable
     public ByteVector feed(ByteVector packet) {
+        System.err.println("Server Logic" + state);
         switch (state) {
             case 0: return feed0(packet);
             case 1: return feed1(packet);
@@ -105,6 +103,7 @@ public class ServerLogic implements ILogic {
     }
 
     public void disconnect() {
-        msg.setNotBusy(peer);
+        if (peer != null)
+            msg.setNotBusy(peer);
     }
 };

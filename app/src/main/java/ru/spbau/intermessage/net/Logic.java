@@ -22,7 +22,7 @@ import ru.spbau.intermessage.util.Tuple3;
 // 2: O: (chat, subid, id)
 // 2: *: Update storage.
 
-public class Logic implements ILogic {
+public class Logic implements WLogic {
     private Messenger msg;
     private IStorage store;
     
@@ -38,6 +38,10 @@ public class Logic implements ILogic {
         store = store_;
     }
 
+    public void setPeer(User u) {
+        user = u;
+    }
+    
     public ByteVector getNextTuple() {
         Tuple3<Chat, User, Integer> nextm = msg.getNextMessageFor(user);
         if (nextm == null)
@@ -105,6 +109,7 @@ public class Logic implements ILogic {
 
     @Override
     public ByteVector feed(ByteVector packet) {
+        System.err.println("Logic" + state);
         switch (state) {
         case 0: return feed0(packet);
         case 1: return feed1(packet);

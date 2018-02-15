@@ -365,7 +365,7 @@ public class Messenger {
             return false;
         try {
             System.err.println("==================== SYNC ===========================");
-            network.create(storage.get("user.location." + u.publicKey).getString(), new ServerLogic(this, u));
+            network.create(storage.get("user.location." + u.publicKey).getString(), new ECLogic(new ServerLogic(this), this, u));
             return true;
         } catch (IOException ex) {
             return false;

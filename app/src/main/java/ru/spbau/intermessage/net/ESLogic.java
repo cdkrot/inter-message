@@ -14,7 +14,6 @@ import ru.spbau.intermessage.crypto.ID;
 // encryption server logic.
 
 // perform auth and switch to other logic.
-// TOOOOOOOOOOODOOOOOOOOOOOOO
 // [0] Get Pubkey [no encryption] -> Sent Pubkey + 512 bytes of random [encryption]
 // [1] Recv this bytes + 512 new [encryption] -> sent this bytes [encryption]
 // [2] bussiness [encryption] -> bussiness [encryption].
@@ -86,12 +85,16 @@ public class ESLogic implements ILogic {
     }
     
     public ByteVector feed(ByteVector packet) {
-        switch (state) {
-        case 0: return feed0(packet);
-        case 1: return feed1(packet);
-        case 2: return feed2(packet);
-        }
-        return null;
+        // logic.setPeer(peer);
+        return logic.feed(packet);
+
+        // System.err.println("ESLogic" + state);
+        // switch (state) {
+        // case 0: return feed0(packet);
+        // case 1: return feed1(packet);
+        // case 2: return feed2(packet);
+        // }
+        // return null;
     }
 
     public void disconnect() {
