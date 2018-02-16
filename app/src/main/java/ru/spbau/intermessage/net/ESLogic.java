@@ -27,6 +27,8 @@ public class ESLogic implements ILogic {
     private RSAPublicKey peerKey;
     
     private byte[] toVerify;
+
+    private boolean peerSet = false;
     
     public ESLogic(WLogic logic, Messenger msg) {
         this.msg = msg;
@@ -34,6 +36,8 @@ public class ESLogic implements ILogic {
     }
 
     private ByteVector feed0(ByteVector packet) {
+        ++state;
+
         ReadHelper reader = new ReadHelper(packet);
 
         if ((peerKey = ID.readPubkey(reader)) == null)
@@ -41,8 +45,9 @@ public class ESLogic implements ILogic {
 
         byte[] raw = peerKey.getEncoded();
         byte[] fingerprint = ID.getFingerprint(peerKey);
-
-        if (reader.available() != 0 || !msg.checkFingerprint(fingerprint, raw))
+        peer = new User(fingerprint);
+        
+        if (reader.available() != 0 || !msg.checkFingerprint(fingerprint, raw) || !msg.setBusy(peer))
             return null;
 
         WriteHelper writer = new WriteHelper(new ByteVector());
@@ -74,13 +79,18 @@ public class ESLogic implements ILogic {
         for (int i = 0; i != 512; ++i)
             writer.writeByte(reader.readByte());
         
-        return writer.getData();
+        return ID.encode(peerKey, writer.getData());
     }
 
     public ByteVector feed2(ByteVector packet) {
         if ((packet = msg.identity.decode(packet)) == null)
             return null;
 
+        if (!peerSet) {
+            peerSet = true;
+            logic.setPeer(peer);
+        }
+        
         return ID.encode(peerKey, logic.feed(packet));
     }
     

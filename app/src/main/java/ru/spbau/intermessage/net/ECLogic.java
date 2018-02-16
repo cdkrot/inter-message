@@ -49,10 +49,12 @@ public class ECLogic implements ILogic {
         ++state;
 
         packet = msg.identity.decode(packet);
+        if (packet == null)
+            return null;
         
         ReadHelper reader = new ReadHelper(packet);
-        peerKey = ID.readPubkey(reader);
-
+        System.err.println("[bbb]");
+        
         if ((peerKey = ID.readPubkey(reader)) == null)
             return null;
 
@@ -61,7 +63,7 @@ public class ECLogic implements ILogic {
 
         if (reader.available() != 512 || !peer.equals(new User(fingerprint)) || !msg.checkFingerprint(fingerprint, raw))
             return null;
-        
+
         WriteHelper writer = new WriteHelper(new ByteVector());
         for (int i = 0; i != 512; ++i)
             writer.writeByte(reader.readByte());

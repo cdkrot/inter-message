@@ -303,7 +303,7 @@ public class WifiNetwork implements Network {
                     client.configureBlocking(false);
                     // create "sending" connection.
                     System.err.println("=================== NEW CONN =========================="); 
-                    Helper helper = new Helper(client, new Logic(msg, store), false);
+                    Helper helper = new Helper(client, new ESLogic(new Logic(msg), msg), false);
                     helper.token = client.register(epoll, client.validOps(), helper);
                 }
 

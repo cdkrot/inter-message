@@ -10,14 +10,14 @@ import ru.spbau.intermessage.util.WriteHelper;
 
 // ask to give us new messages.
 // states:
-// 0: I: nothing
-// 0: O: write our id.
+// 0: I: Nothing
+// 0: O: "SYNC".
 // 1: I: (chat, owner, id)
 // 1: O: respond with "SKIP" (goto 1) or "GET" (goto 2)
 // 2: I: Message
 // 2: O: respond with "ACK", goto 1.
 
-public class ServerLogic implements ILogic {
+public class ServerLogic implements WLogic {
     private Messenger msg;
     private int state = 0;
 
@@ -27,17 +27,19 @@ public class ServerLogic implements ILogic {
 
     private User peer;
     
-    public ServerLogic(Messenger msg, User u) {
+    public ServerLogic(Messenger msg) {
         this.msg = msg;
+    }
+
+    public void setPeer(User u) {
         peer = u;
     }
 
     public ByteVector feed0(ByteVector packet) {
+        ++state;
+        
         WriteHelper writer = new WriteHelper(new ByteVector());
-        //writer.writeString("lol");
-        msg.identity.writePubkey(writer);
-
-        state = 1;
+        writer.writeString("SYNC");
         return writer.getData();
     }
 
@@ -110,7 +112,5 @@ public class ServerLogic implements ILogic {
     }
 
     public void disconnect() {
-        if (peer != null)
-            msg.setNotBusy(peer);
     }
 };

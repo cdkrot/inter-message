@@ -16,7 +16,7 @@ import ru.spbau.intermessage.util.Tuple3;
 // somebody asked us to give new messages.
 
 // states:
-// 0: I: Other side identifies, check
+// 0: I: "SYNC"
 // 0: O: (chat, subid, id) to sync in, goto 1.
 // 1: I: SKIP | GET
 // 1: O: SKIP => (chat, subid, id), GET => Message, goto 2.
@@ -25,9 +25,8 @@ import ru.spbau.intermessage.util.Tuple3;
 // 2: O: (chat, subid, id)
 // 2: *: Update storage.
 
-public class Logic implements ILogic {
+public class Logic implements WLogic {
     private Messenger msg;
-    private IStorage store;
     
     private int state = 0;
     private User user = null;
@@ -36,9 +35,12 @@ public class Logic implements ILogic {
     private User lastuser = null;
     private int lastid = -1;
     
-    public Logic(Messenger msg, IStorage store_) {
+    public Logic(Messenger msg) {
         this.msg = msg;
-        store = store_;
+    }
+
+    public void setPeer(User usr) {
+        user = usr;
     }
 
     public ByteVector getNextTuple() {
@@ -63,14 +65,8 @@ public class Logic implements ILogic {
         // TODO: add security check here.
 
         ReadHelper reader = new ReadHelper(packet);
-       // System.err.println(reader.readString());
-        user = new User(ID.getFingerprint(ID.readPubkey(reader)));
-        //RSAPublicKey userkey = ID.readPubkey(reader);
-        //if (userkey == null || reader.available() != 0)
-         //   return null;
-//
-  //      user = new User(ID.getFingerprint(userkey));
-        if (!msg.setBusy(user))
+        String op = reader.readString();
+        if (op == null || !op.equals("SYNC") || reader.available() > 0)
             return null;
         
         state = 1;
@@ -129,7 +125,5 @@ public class Logic implements ILogic {
 
     @Override
     public void disconnect() {
-        if (user != null)
-            msg.setNotBusy(user);
     }
 };
