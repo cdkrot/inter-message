@@ -10,7 +10,7 @@ public class Intermessage extends Application implements Application.ActivityLif
     @SuppressLint("StaticFieldLeak")
     private static Context context;
 
-    public static boolean isPaused = false;
+    private static boolean paused = false;
 
     public void onCreate() {
         super.onCreate();
@@ -20,6 +20,10 @@ public class Intermessage extends Application implements Application.ActivityLif
 
     public static Context getAppContext() {
         return context;
+    }
+
+    public static boolean isPaused() {
+        return paused;
     }
 
     @Override
@@ -34,12 +38,12 @@ public class Intermessage extends Application implements Application.ActivityLif
 
     @Override
     public void onActivityResumed(Activity activity) {
-        isPaused = false;
+        paused = false;
     }
 
     @Override
     public void onActivityPaused(Activity activity) {
-        isPaused = true;
+        paused = true;
     }
 
     @Override
