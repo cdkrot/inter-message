@@ -43,8 +43,6 @@ public class MainActivity extends AppCompatActivity {
         buttonNames.add(getString(R.string.menu_dialogs));
         buttonNames.add(getString(R.string.menu_options));
         buttonNames.add(getString(R.string.menu_about));
-        buttonNames.add(getString(R.string.menu_console));
-        buttonNames.add(getString(R.string.menu_kill));
 
         @SuppressWarnings("unchecked")
         ArrayAdapter mainMenuAdapter = new ArrayAdapter(this, R.layout.simple_list_item, buttonNames);
@@ -115,11 +113,6 @@ public class MainActivity extends AppCompatActivity {
                 } else if (getString(R.string.menu_about).equals(name)) {
                     Intent intent = new Intent(MainActivity.this, AboutActivity.class);
                     startActivity(intent);
-                } else if (getString(R.string.menu_console).equals(name)) {
-                    Intent intent = new Intent(MainActivity.this, ConsoleActivity.class);
-                    startActivity(intent);
-                } else if (getString(R.string.menu_kill).equals(name)) {
-                    android.os.Process.killProcess(android.os.Process.myPid());
                 }
             }
         });
