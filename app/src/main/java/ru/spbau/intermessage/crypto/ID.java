@@ -69,7 +69,7 @@ public class ID {
     }
 
     public void writePubkey(WriteHelper writer) {
-        writer.writeBytes(privkey.getEncoded());
+        writer.writeBytes(pubkey.getEncoded());
     }
 
     public static RSAPublicKey readPubkey(ReadHelper reader) {

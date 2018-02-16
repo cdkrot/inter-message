@@ -85,16 +85,16 @@ public class ESLogic implements ILogic {
     }
     
     public ByteVector feed(ByteVector packet) {
-        // logic.setPeer(peer);
-        return logic.feed(packet);
+        //logic.setPeer(peer);
+        //return logic.feed(packet);
 
-        // System.err.println("ESLogic" + state);
-        // switch (state) {
-        // case 0: return feed0(packet);
-        // case 1: return feed1(packet);
-        // case 2: return feed2(packet);
-        // }
-        // return null;
+        System.err.println("ESLogic" + state);
+        switch (state) {
+        case 0: return feed0(packet);
+        case 1: return feed1(packet);
+        case 2: return feed2(packet);
+        }
+        return null;
     }
 
     public void disconnect() {

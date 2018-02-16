@@ -17,7 +17,7 @@ import ru.spbau.intermessage.util.WriteHelper;
 // 2: I: Message
 // 2: O: respond with "ACK", goto 1.
 
-public class ServerLogic implements WLogic {
+public class ServerLogic implements ILogic {
     private Messenger msg;
     private int state = 0;
 
@@ -27,17 +27,15 @@ public class ServerLogic implements WLogic {
 
     private User peer;
     
-    public ServerLogic(Messenger msg) {
+    public ServerLogic(Messenger msg, User u) {
         this.msg = msg;
-    }
-
-    public void setPeer(User u) {
         peer = u;
     }
-    
+
     public ByteVector feed0(ByteVector packet) {
         WriteHelper writer = new WriteHelper(new ByteVector());
-        msg.identity.user().write(writer);
+        //writer.writeString("lol");
+        msg.identity.writePubkey(writer);
 
         state = 1;
         return writer.getData();
@@ -94,12 +92,21 @@ public class ServerLogic implements WLogic {
     @Nullable
     public ByteVector feed(ByteVector packet) {
         System.err.println("Server Logic" + state);
+        ByteVector res = null;
+
         switch (state) {
-            case 0: return feed0(packet);
-            case 1: return feed1(packet);
-            case 2: return feed2(packet);
+            case 0: res = feed0(packet);
+            break;
+            case 1: res = feed1(packet);
+            break;
+            case 2: res = feed2(packet);
+            break;
         }
-        return null;
+
+        if (res == null)
+            disconnect();
+
+        return res;
     }
 
     public void disconnect() {

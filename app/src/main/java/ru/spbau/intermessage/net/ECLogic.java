@@ -98,17 +98,17 @@ public class ECLogic implements ILogic {
     }
     
     public ByteVector feed(ByteVector packet) {
-        logic.setPeer(peer);
-        return logic.feed(packet);
+        //logic.setPeer(peer);
+        //return logic.feed(packet);
         
-        // System.err.println("ECLogic" + state);
-        // switch (state) {
-        // case 0: return feed0(packet);
-        // case 1: return feed1(packet);
-        // case 2: return feed2(packet);
-        // case 3: return feed3(packet);
-        // }
-        // return null;
+        System.err.println("ECLogic" + state);
+        switch (state) {
+        case 0: return feed0(packet);
+        case 1: return feed1(packet);
+        case 2: return feed2(packet);
+        case 3: return feed3(packet);
+        }
+        return null;
     }
 
     public void disconnect() {

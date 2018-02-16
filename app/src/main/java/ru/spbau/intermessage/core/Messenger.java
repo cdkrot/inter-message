@@ -8,6 +8,7 @@ import ru.spbau.intermessage.util.*;
 import ru.spbau.intermessage.crypto.ID;
 import ru.spbau.intermessage.store.IStorage;
 
+import java.security.interfaces.RSAPublicKey;
 import java.util.*;
 
 import java.io.IOException;
@@ -66,6 +67,20 @@ public class Messenger {
                 }
             }
         }.start();
+
+        WriteHelper writer = new WriteHelper(new ByteVector());
+        writer.writeString("lol kek cheburek");
+        identity.writePubkey(writer);
+
+        ReadHelper reader = new ReadHelper(writer.getData());
+        System.err.println(reader.readString());
+        RSAPublicKey kk = ID.readPubkey(reader);
+
+        if (!kk.equals(identity.pubkey) || reader.available() != 0) {
+            System.err.println("FIASCO");
+            throw new RuntimeException("EPIC");
+        }
+        System.err.println("OK");
     }
 
     protected static class RequestCommon {
@@ -348,6 +363,7 @@ public class Messenger {
     private HashSet<String> busy = new HashSet<String>();
 
     public boolean setBusy(User u) {
+        //return true;
         if (busy.contains(u.toString()))
             return false;
 
@@ -365,7 +381,7 @@ public class Messenger {
             return false;
         try {
             System.err.println("==================== SYNC ===========================");
-            network.create(storage.get("user.location." + u.publicKey).getString(), new ECLogic(new ServerLogic(this), this, u));
+            network.create(storage.get("user.location." + u.publicKey).getString(), new ServerLogic(this, u));
             return true;
         } catch (IOException ex) {
             return false;
@@ -483,7 +499,7 @@ public class Messenger {
         for (User u: users)
             u.write(writer);
         
-        doSendMessage(new Chat(id), new Message("!newchat", 100500, writer.getData().toBytes()));
+        doSendMessage(new Chat(id), new Message("!newchat", System.currentTimeMillis() / 1000, writer.getData().toBytes()));
         
         return new Chat(id);
     }

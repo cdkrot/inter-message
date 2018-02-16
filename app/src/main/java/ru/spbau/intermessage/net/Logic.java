@@ -2,7 +2,10 @@ package ru.spbau.intermessage.net;
 
 import android.support.annotation.Nullable;
 
+import java.security.interfaces.RSAPublicKey;
+
 import ru.spbau.intermessage.core.*;
+import ru.spbau.intermessage.crypto.ID;
 import ru.spbau.intermessage.store.IStorage;
 
 import ru.spbau.intermessage.util.ByteVector;
@@ -22,7 +25,7 @@ import ru.spbau.intermessage.util.Tuple3;
 // 2: O: (chat, subid, id)
 // 2: *: Update storage.
 
-public class Logic implements WLogic {
+public class Logic implements ILogic {
     private Messenger msg;
     private IStorage store;
     
@@ -38,10 +41,6 @@ public class Logic implements WLogic {
         store = store_;
     }
 
-    public void setPeer(User u) {
-        user = u;
-    }
-    
     public ByteVector getNextTuple() {
         Tuple3<Chat, User, Integer> nextm = msg.getNextMessageFor(user);
         if (nextm == null)
@@ -62,12 +61,15 @@ public class Logic implements WLogic {
     @Nullable
     public ByteVector feed0(ByteVector packet) {
         // TODO: add security check here.
-        ReadHelper reader = new ReadHelper(packet);
-        
-        user = User.read(reader);
-        if (user == null || reader.available() != 0)
-            return null;
 
+        ReadHelper reader = new ReadHelper(packet);
+       // System.err.println(reader.readString());
+        user = new User(ID.getFingerprint(ID.readPubkey(reader)));
+        //RSAPublicKey userkey = ID.readPubkey(reader);
+        //if (userkey == null || reader.available() != 0)
+         //   return null;
+//
+  //      user = new User(ID.getFingerprint(userkey));
         if (!msg.setBusy(user))
             return null;
         
@@ -110,12 +112,19 @@ public class Logic implements WLogic {
     @Override
     public ByteVector feed(ByteVector packet) {
         System.err.println("Logic" + state);
+        ByteVector res = null;
         switch (state) {
-        case 0: return feed0(packet);
-        case 1: return feed1(packet);
-        case 2: return feed2(packet);
+        case 0: res = feed0(packet);
+        break;
+        case 1: res = feed1(packet);
+        break;
+        case 2: res = feed2(packet);
+        break;
         }
-        return null;
+
+        if (res == null)
+            disconnect();
+        return res;
     }
 
     @Override
