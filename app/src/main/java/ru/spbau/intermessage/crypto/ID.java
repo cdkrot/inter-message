@@ -35,18 +35,16 @@ public class ID {
         this.fingerprint = getFingerprint(pubkey);
     }
     
-    public ID(String pubkey, String privkey) {
+    public ID(String privkey, String pubkey) {
         try {
-            System.err.println("pub: " + pubkey);
-            System.err.println("priv: " + privkey);
             PKCS8EncodedKeySpec privspec = new PKCS8EncodedKeySpec(Util.decodeHex(privkey));
             X509EncodedKeySpec pubspec = new X509EncodedKeySpec(Util.decodeHex(pubkey));
             
             KeyFactory factory = KeyFactory.getInstance("RSA");
             this.privkey = (RSAPrivateKey)factory.generatePrivate(privspec);
-            
-            factory = KeyFactory.getInstance("RSA");
             this.pubkey  = (RSAPublicKey)factory.generatePublic(pubspec);
+
+            fingerprint = getFingerprint(this.pubkey);
         } catch (Exception ex) {
             // if java has not got RSA it is her own problem.
             ex.printStackTrace();
@@ -118,7 +116,7 @@ public class ID {
     public static ByteVector encode(RSAPublicKey pub, ByteVector src) {
         if (src == null)
             return null;
-        
+
         try {
             WriteHelper writer = new WriteHelper(new ByteVector());
 

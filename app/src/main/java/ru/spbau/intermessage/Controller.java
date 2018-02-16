@@ -69,7 +69,7 @@ public class Controller extends IntentService {
 
     static {
         try {
-            messenger = new Messenger(new InMemoryStorage(), getId());
+            messenger = new Messenger(new Storage(), getId());
         } catch (java.io.IOException ex) {
             throw new RuntimeException(ex);
         }
@@ -136,11 +136,11 @@ public class Controller extends IntentService {
     }
 
     private static ID getId() {
-        return ID.create();
-        // SharedPreferences sharedPreferences = Intermessage.getAppContext().getSharedPreferences("preferences", MODE_PRIVATE);
-        // String publicKey = sharedPreferences.getString("publicKey", "trustno1");
-        // String privateKey = sharedPreferences.getString("privateKey", "beliveinlie");
-        // return new ID(privateKey, publicKey);
+        //return ID.create();
+        SharedPreferences sharedPreferences = Intermessage.getAppContext().getSharedPreferences("preferences", MODE_PRIVATE);
+        String publicKey = sharedPreferences.getString("publicKey", "trustno1");
+        String privateKey = sharedPreferences.getString("privateKey", "beliveinlie");
+        return new ID(privateKey, publicKey);
     }
 
     public static void sendMessage(Item message, String chatId) {
