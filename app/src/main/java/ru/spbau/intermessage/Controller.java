@@ -189,7 +189,7 @@ public class Controller extends IntentService {
         Intent intent = new Intent(context, Controller.class);
         intent.setAction(ACTION_RECEIVE_MESSAGE);
 
-        Item item = parseMessage(message, chat, userName);
+        Item item = MessageParser.parseMessage(messenger, message, chat, userName);
         intent.putExtra("Item", item);
 
         intent.putExtra("ChatId", chat.id);

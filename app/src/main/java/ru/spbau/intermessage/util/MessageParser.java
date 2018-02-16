@@ -30,7 +30,7 @@ public class MessageParser {
      * Converts bytes in Message to appropriate form in Item.
      * Params chat and user are used only when it is a system message
      */
-    private static Item parseMessage(Messenger messenger, Message message, @Nullable Chat chat, @Nullable User user) {
+    public static Item parseMessage(Messenger messenger, Message message, @Nullable Chat chat, @Nullable User user) {
         if (message.type != null && message.type.length() > 0 && message.type.charAt(0) == '!') {
             return parseMessage(messenger, message, chat, messenger.doGetUserName(user));
         } else {
@@ -42,7 +42,7 @@ public class MessageParser {
      * Converts bytes in Message to appropriate form in Item.
      * Params chat and userName are used only when it is a system message
      */
-    private static Item parseMessage(Messenger messenger, Message message, @Nullable Chat chat, @Nullable String userName) {
+    public static Item parseMessage(Messenger messenger, Message message, @Nullable Chat chat, @Nullable String userName) {
         if ("text".equals(message.type)) {
             String text = Util.bytesToString(message.data);
             return new MessageItem(userName, text, message.timestamp, 0);
