@@ -2,7 +2,10 @@ package ru.spbau.intermessage.net;
 
 import android.support.annotation.Nullable;
 
+import java.security.interfaces.RSAPublicKey;
+
 import ru.spbau.intermessage.core.*;
+import ru.spbau.intermessage.crypto.ID;
 import ru.spbau.intermessage.store.IStorage;
 
 import ru.spbau.intermessage.util.ByteVector;
@@ -13,7 +16,7 @@ import ru.spbau.intermessage.util.Tuple3;
 // somebody asked us to give new messages.
 
 // states:
-// 0: I: Other side identifies, check
+// 0: I: "SYNC"
 // 0: O: (chat, subid, id) to sync in, goto 1.
 // 1: I: SKIP | GET
 // 1: O: SKIP => (chat, subid, id), GET => Message, goto 2.
@@ -22,9 +25,8 @@ import ru.spbau.intermessage.util.Tuple3;
 // 2: O: (chat, subid, id)
 // 2: *: Update storage.
 
-public class Logic implements ILogic {
+public class Logic implements WLogic {
     private Messenger msg;
-    private IStorage store;
     
     private int state = 0;
     private User user = null;
@@ -33,9 +35,12 @@ public class Logic implements ILogic {
     private User lastuser = null;
     private int lastid = -1;
     
-    public Logic(Messenger msg, IStorage store_) {
+    public Logic(Messenger msg) {
         this.msg = msg;
-        store = store_;
+    }
+
+    public void setPeer(User usr) {
+        user = usr;
     }
 
     public ByteVector getNextTuple() {
@@ -58,13 +63,10 @@ public class Logic implements ILogic {
     @Nullable
     public ByteVector feed0(ByteVector packet) {
         // TODO: add security check here.
-        ReadHelper reader = new ReadHelper(packet);
-        
-        user = User.read(reader);
-        if (user == null || reader.available() != 0)
-            return null;
 
-        if (!msg.setBusy(user))
+        ReadHelper reader = new ReadHelper(packet);
+        String op = reader.readString();
+        if (op == null || !op.equals("SYNC") || reader.available() > 0)
             return null;
         
         state = 1;
@@ -105,17 +107,23 @@ public class Logic implements ILogic {
 
     @Override
     public ByteVector feed(ByteVector packet) {
+        System.err.println("Logic" + state);
+        ByteVector res = null;
         switch (state) {
-        case 0: return feed0(packet);
-        case 1: return feed1(packet);
-        case 2: return feed2(packet);
+        case 0: res = feed0(packet);
+        break;
+        case 1: res = feed1(packet);
+        break;
+        case 2: res = feed2(packet);
+        break;
         }
-        return null;
+
+        if (res == null)
+            disconnect();
+        return res;
     }
 
     @Override
     public void disconnect() {
-        if (user != null)
-            msg.setNotBusy(user);
     }
 };

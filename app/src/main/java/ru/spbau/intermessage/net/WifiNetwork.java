@@ -81,7 +81,7 @@ public class WifiNetwork implements Network {
                 return pending.size() % 256;
             }
 
-            int res = pending.get(off++);
+            int res = pending.get(off++) & 255;
             if (off == pending.size()) {
                 off = -6;
                 pending = null;
@@ -119,14 +119,14 @@ public class WifiNetwork implements Network {
             }
 
             if (magicAccepter == 4) {
-                income = b;
+                income = b & 255;
                 magicAccepter += 1;
                 return true;
             }
 
             if (magicAccepter == 5) {
                 income *= 256;
-                income += b;
+                income += b & 255;
                 magicAccepter = -1;
                 recv = new ByteVector();
                 return true;
@@ -185,7 +185,7 @@ public class WifiNetwork implements Network {
                 if (buf.get(i) != MAGIC[i])
                     return;
             
-            int len = buf.get(4) * 256 + buf.get(5);
+            int len = (buf.get(4) & 255) * 256 + (buf.get(5) & 255);
             if (len != buf.position() - 6)
                 return;
             
@@ -194,7 +194,7 @@ public class WifiNetwork implements Network {
                 res.set(i, buf.get(6 + i));
             
             udplogic.recieve(addr.getHostName(), res);
-            }
+        }
     }
 
     private boolean handle(Helper helper) {
@@ -302,8 +302,8 @@ public class WifiNetwork implements Network {
                     SocketChannel client = sck.accept();
                     client.configureBlocking(false);
                     // create "sending" connection.
-                    System.err.println("=================== NEW CONN ===========================");
-                    Helper helper = new Helper(client, new Logic(msg, store), false);
+                    System.err.println("=================== NEW CONN =========================="); 
+                    Helper helper = new Helper(client, new ESLogic(new Logic(msg), msg), false);
                     helper.token = client.register(epoll, client.validOps(), helper);
                 }
 

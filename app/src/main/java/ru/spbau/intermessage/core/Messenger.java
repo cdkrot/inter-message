@@ -8,6 +8,7 @@ import ru.spbau.intermessage.util.*;
 import ru.spbau.intermessage.crypto.ID;
 import ru.spbau.intermessage.store.IStorage;
 
+import java.security.interfaces.RSAPublicKey;
 import java.util.*;
 
 import java.io.IOException;
@@ -25,7 +26,7 @@ public class Messenger {
 
         network = new WifiNetwork();
         network.begin(Messenger.this, storage);
-        
+
         new Thread() {
             public void run() {
                 while (true) {
@@ -46,16 +47,16 @@ public class Messenger {
                     synchronized (queue) {
                         r = queue.poll();
                     }
-                    
+
                     // process new request.
                     if (r == null)
                         break; // termination.
 
                     if (r instanceof RunnableRequest)
-                        ((RunnableRequest)(r)).run();
+                        ((RunnableRequest) (r)).run();
                     else
                         handleRequest(r);
-                    
+
                     r.complete();
                 }
 
@@ -66,6 +67,34 @@ public class Messenger {
                 }
             }
         }.start();
+
+        {
+            WriteHelper writer = new WriteHelper(new ByteVector());
+            writer.writeString("lol kek cheburek");
+            identity.writePubkey(writer);
+
+            ReadHelper reader = new ReadHelper(writer.getData());
+            System.err.println(reader.readString());
+            RSAPublicKey kk = ID.readPubkey(reader);
+
+            if (!kk.equals(identity.pubkey) || reader.available() != 0) {
+                System.err.println("FIASCO");
+                throw new RuntimeException("EPIC");
+            }
+        }
+
+        {
+            ByteVector data = new ByteVector();
+            for (int i = 0; i != 800; ++i)
+                data.pushBack((byte)(i * i));
+
+            ByteVector rtt = identity.decode(ID.encode(identity.pubkey, data));
+            if (!rtt.equals(data)) {
+                System.err.println("The fiasco");
+                throw new RuntimeException("Self test failed");
+            }
+        }
+        System.err.println("OK");
     }
 
     protected static class RequestCommon {
@@ -348,6 +377,7 @@ public class Messenger {
     private HashSet<String> busy = new HashSet<String>();
 
     public boolean setBusy(User u) {
+        //return true;
         if (busy.contains(u.toString()))
             return false;
 
@@ -365,7 +395,7 @@ public class Messenger {
             return false;
         try {
             System.err.println("==================== SYNC ===========================");
-            network.create(storage.get("user.location." + u.publicKey).getString(), new ServerLogic(this, u));
+            network.create(storage.get("user.location." + u.publicKey).getString(), new ECLogic(new ServerLogic(this), this, u));
             return true;
         } catch (IOException ex) {
             return false;
@@ -457,7 +487,7 @@ public class Messenger {
         IStorage.Union obj = storage.get("fingerprint." + Util.toHex(fingerprint));
 
         if (obj.getType() == IStorage.ObjectType.STRING)
-            return Util.toHex(key) == obj.getString();
+            return Util.toHex(key).equals(obj.getString());
         else {
             obj.setString(Util.toHex(key));
             return true;
@@ -483,7 +513,7 @@ public class Messenger {
         for (User u: users)
             u.write(writer);
         
-        doSendMessage(new Chat(id), new Message("!newchat", 100500, writer.getData().toBytes()));
+        doSendMessage(new Chat(id), new Message("!newchat", System.currentTimeMillis() / 1000, writer.getData().toBytes()));
         
         return new Chat(id);
     }

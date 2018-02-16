@@ -10,20 +10,14 @@ import ru.spbau.intermessage.util.WriteHelper;
 
 // ask to give us new messages.
 // states:
-// 0: I: nothing
-// 0: O: write our id.
+// 0: I: Nothing
+// 0: O: "SYNC".
 // 1: I: (chat, owner, id)
 // 1: O: respond with "SKIP" (goto 1) or "GET" (goto 2)
 // 2: I: Message
 // 2: O: respond with "ACK", goto 1.
 
-// auth:
-// Sent Pubkey
-// Get Pubkey + 512 bytes of random [encryption]
-// Sent this bytes & 512 new random [encryption]
-// (Recieve 512 new bytes and go to the bussiness).
-
-public class ServerLogic implements ILogic {
+public class ServerLogic implements WLogic {
     private Messenger msg;
     private int state = 0;
 
@@ -33,16 +27,19 @@ public class ServerLogic implements ILogic {
 
     private User peer;
     
-    public ServerLogic(Messenger msg, User peer) {
+    public ServerLogic(Messenger msg) {
         this.msg = msg;
-        this.peer = peer;
     }
-    
-    public ByteVector feed0(ByteVector packet) {
-        WriteHelper writer = new WriteHelper(new ByteVector());
-        msg.identity.user().write(writer);
 
-        state = 1;
+    public void setPeer(User u) {
+        peer = u;
+    }
+
+    public ByteVector feed0(ByteVector packet) {
+        ++state;
+        
+        WriteHelper writer = new WriteHelper(new ByteVector());
+        writer.writeString("SYNC");
         return writer.getData();
     }
 
@@ -96,15 +93,24 @@ public class ServerLogic implements ILogic {
 
     @Nullable
     public ByteVector feed(ByteVector packet) {
+        System.err.println("Server Logic" + state);
+        ByteVector res = null;
+
         switch (state) {
-            case 0: return feed0(packet);
-            case 1: return feed1(packet);
-            case 2: return feed2(packet);
+            case 0: res = feed0(packet);
+            break;
+            case 1: res = feed1(packet);
+            break;
+            case 2: res = feed2(packet);
+            break;
         }
-        return null;
+
+        if (res == null)
+            disconnect();
+
+        return res;
     }
 
     public void disconnect() {
-        msg.setNotBusy(peer);
     }
 };

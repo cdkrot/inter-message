@@ -101,4 +101,17 @@ public class ByteVector {
         return new ByteVector(b2);
     }
 
+    public boolean equals(Object other) {
+        if (other == null || !(other instanceof ByteVector))
+            return false;
+
+        ByteVector otherb = (ByteVector)other;
+
+        if (otherb.size() != size())
+            return false;
+        for (int i = 0; i != size(); ++i)
+            if (get(i) != otherb.get(i))
+                return false;
+        return true;
+    }
 };

@@ -10,14 +10,25 @@ import ru.spbau.intermessage.util.WriteHelper;
 import ru.spbau.intermessage.util.ReadHelper;
 import ru.spbau.intermessage.util.ByteVector;
 
-import javax.crypto.Cipher;
+import javax.crypto.*;
+import javax.crypto.spec.*;
 
 public class ID {
     public RSAPrivateKey privkey;
     public RSAPublicKey pubkey;
     
     private byte[] fingerprint;
-    
+
+    private static KeyGenerator aesKeyGen;
+
+    static {
+        try {
+            aesKeyGen = KeyGenerator.getInstance("AES");
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
     public ID(RSAPrivateKey privkey, RSAPublicKey pubkey) {
         this.privkey = privkey;
         this.pubkey = pubkey;
@@ -69,7 +80,7 @@ public class ID {
     }
 
     public void writePubkey(WriteHelper writer) {
-        writer.writeBytes(privkey.getEncoded());
+        writer.writeBytes(pubkey.getEncoded());
     }
 
     public static RSAPublicKey readPubkey(ReadHelper reader) {
@@ -82,19 +93,46 @@ public class ID {
     
     public ByteVector decode(ByteVector src) {
         try {
+            ReadHelper reader = new ReadHelper(src);
+            byte[] aesbytes = reader.readBytes();
+            if (aesbytes == null)
+                return null;
+
             Cipher rsa = Cipher.getInstance("RSA");
             rsa.init(Cipher.DECRYPT_MODE, privkey);
-            return ByteVector.wrap(rsa.doFinal(src.data(), 0, src.size()));
+
+            Cipher aesCipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+            aesCipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(rsa.doFinal(aesbytes), "AES"));
+
+            byte[] data = reader.readBytes();
+            if (data == null || reader.available() > 0)
+                return null;
+
+            return ByteVector.wrap(aesCipher.doFinal(data));
         } catch (Exception ex) {
+            ex.printStackTrace();
             return null;
         }
     }
 
     public static ByteVector encode(RSAPublicKey pub, ByteVector src) {
+        if (src == null)
+            return null;
+        
         try {
+            WriteHelper writer = new WriteHelper(new ByteVector());
+
             Cipher rsa = Cipher.getInstance("RSA");
+
+            SecretKey aeskey = aesKeyGen.generateKey();
+            Cipher aesCipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+            aesCipher.init(Cipher.ENCRYPT_MODE, aeskey);
+
             rsa.init(Cipher.ENCRYPT_MODE, pub);
-            return ByteVector.wrap(rsa.doFinal(src.data(), 0, src.size()));
+            writer.writeBytes(rsa.doFinal(aeskey.getEncoded()));
+            writer.writeBytes(aesCipher.doFinal(src.data(), 0, src.size()));
+
+            return writer.getData();
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }

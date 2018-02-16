@@ -12,6 +12,8 @@ public class User {
     
     public User(byte[] s) {
         pubKey = s;
+        if (pubKey.length != 32)
+            throw new IllegalArgumentException();
         publicKey = Util.toHex(s);
     }
 

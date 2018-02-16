@@ -14,7 +14,6 @@ import ru.spbau.intermessage.crypto.ID;
 // encryption server logic.
 
 // perform auth and switch to other logic.
-// TOOOOOOOOOOODOOOOOOOOOOOOO
 // [0] Get Pubkey [no encryption] -> Sent Pubkey + 512 bytes of random [encryption]
 // [1] Recv this bytes + 512 new [encryption] -> sent this bytes [encryption]
 // [2] bussiness [encryption] -> bussiness [encryption].
@@ -28,6 +27,8 @@ public class ESLogic implements ILogic {
     private RSAPublicKey peerKey;
     
     private byte[] toVerify;
+
+    private boolean peerSet = false;
     
     public ESLogic(WLogic logic, Messenger msg) {
         this.msg = msg;
@@ -35,6 +36,8 @@ public class ESLogic implements ILogic {
     }
 
     private ByteVector feed0(ByteVector packet) {
+        ++state;
+
         ReadHelper reader = new ReadHelper(packet);
 
         if ((peerKey = ID.readPubkey(reader)) == null)
@@ -42,8 +45,9 @@ public class ESLogic implements ILogic {
 
         byte[] raw = peerKey.getEncoded();
         byte[] fingerprint = ID.getFingerprint(peerKey);
-
-        if (reader.available() != 0 || !msg.checkFingerprint(fingerprint, raw))
+        peer = new User(fingerprint);
+        
+        if (reader.available() != 0 || !msg.checkFingerprint(fingerprint, raw) || !msg.setBusy(peer))
             return null;
 
         WriteHelper writer = new WriteHelper(new ByteVector());
@@ -75,17 +79,26 @@ public class ESLogic implements ILogic {
         for (int i = 0; i != 512; ++i)
             writer.writeByte(reader.readByte());
         
-        return writer.getData();
+        return ID.encode(peerKey, writer.getData());
     }
 
     public ByteVector feed2(ByteVector packet) {
         if ((packet = msg.identity.decode(packet)) == null)
             return null;
 
+        if (!peerSet) {
+            peerSet = true;
+            logic.setPeer(peer);
+        }
+        
         return ID.encode(peerKey, logic.feed(packet));
     }
     
     public ByteVector feed(ByteVector packet) {
+        //logic.setPeer(peer);
+        //return logic.feed(packet);
+
+        System.err.println("ESLogic" + state);
         switch (state) {
         case 0: return feed0(packet);
         case 1: return feed1(packet);
