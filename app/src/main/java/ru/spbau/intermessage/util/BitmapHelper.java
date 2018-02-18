@@ -24,7 +24,7 @@ public class BitmapHelper {
     }
 
     public static Bitmap scaleBitmap(Bitmap bmp) {
-        double ratio = bmp.getHeight() / bmp.getWidth();
+        double ratio = bmp.getHeight() / (double) bmp.getWidth();
         return Bitmap.createScaledBitmap(bmp, IMAGE_SIZE, (int) (IMAGE_SIZE * ratio), false);
     }
 
