@@ -84,6 +84,8 @@ public class MessageParser {
             }
 
             return new SystemItem(text, message.timestamp, 0);
+        } else if ("!leave".equals(message.type)) {
+            return new SystemItem("not implemented", message.timestamp, 0);
         } else {
             throw new RuntimeException("Unknown type of message");
         }

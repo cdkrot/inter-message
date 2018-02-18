@@ -320,7 +320,17 @@ public class Messenger {
     
         return res;
     }
-    
+
+    public void deleteChat(Chat chat) {
+        RunnableRequest r = new RunnableRequest() {
+                public void run() {
+                    doSendMessage(chat, new Message("!leave", System.currentTimeMillis() / 1000, ID.getSecureRandom(32)));
+                }
+            };
+
+        postRequest(r);
+        r.waitCompletion();
+    }
     /* Methods below must be run within
      * Messenger's thread,
      * So they shouldn't be called directly from UI's code.
@@ -329,16 +339,22 @@ public class Messenger {
     public ArrayList<Chat> getChatsWithUser(User u) {
         ArrayList<Chat> list = new ArrayList<Chat>();
         
-        for (String str: storage.getMatching("chatswith." + u.publicKey + "."))
-            list.add(new Chat(str.substring(("chatswith." + u.publicKey + ".").length())));
+        for (String str: storage.getMatching("chatswith." + u.publicKey + ".")) {
+            String chat = str.substring(("chatswith." + u.publicKey + ".").length());
+            list.add(new Chat(chat));
+        }
         return list;
     }
 
     public ArrayList<User> getChatMembers(Chat chat) {
         ArrayList<User> list = new ArrayList<User>();
 
-        for (String str: storage.getMatching("chatmembers." + chat.id + "."))
-            list.add(new User(str.substring(("chatmembers." + chat.id + ".").length())));
+        for (String str: storage.getMatching("chatmembers." + chat.id + ".")) {
+            String usr = str.substring(("chatmembers." + chat.id + ".").length());
+                                        
+            list.add(new User(usr));
+        }
+        
         return list;
     }
     
@@ -346,7 +362,10 @@ public class Messenger {
         storage.get("user.poor." + u.publicKey).setNull();
         
         for (Chat chat: getChatsWithUser(u)) {
-            for (User member: getChatMembers(chat)) {                
+            for (User member: getChatMembers(chat)) {
+                if (storage.get("leavedmembers." + chat.id + "." + u.publicKey).getType() != IStorage.ObjectType.NULL)
+                    continue;
+
                 int we = storage.getList("msg." + chat.id + "." + member.publicKey).size();
                 IStorage.Union handle = storage.get("info." + u.publicKey + "." + chat.id + "." + member.publicKey);
                 int they = (handle.getType() == IStorage.ObjectType.INTEGER ? handle.getInt() : 0);
@@ -425,7 +444,10 @@ public class Messenger {
             for (User member: getChatMembers(ch))
                 recalcNeedsSync(member);
 
-            if (m.type.equals("!newname")) {
+            if (m.type.equals("!leave")) {
+                storage.get("leavedmembers." + ch.id + "." + u.publicKey).setInt(1);
+                recalcNeedsSync(u);
+            } else if (m.type.equals("!newname")) {
                 ReadHelper reader = new ReadHelper(ByteVector.wrap(m.data));
 
                 String s = reader.readString();
@@ -434,15 +456,15 @@ public class Messenger {
 
                 for (EventListener listener: listeners)
                     listener.onChatAddition(ch);
-
             } else if (m.type.equals("!newchat") || m.type.equals("!adduser")) {
-                
                 ReadHelper reader = new ReadHelper(ByteVector.wrap(m.data));
                 User xx = null;
                 while ((xx = User.read(reader)) != null) {
-                    
-                    storage.get("chatmembers." + ch.id + "." + xx.publicKey).setInt(1);
-                    storage.get("chatswith." + xx.publicKey + "." + ch.id).setInt(1);
+                    if (storage.get("leavedmembers." + ch.id + "." + xx.publicKey).getType() == IStorage.ObjectType.NULL) {
+                        storage.get("chatmembers." + ch.id + "." + xx.publicKey).setInt(1);
+                        storage.get("chatswith." + xx.publicKey + "." + ch.id).setInt(1);
+                        recalcNeedsSync(xx);
+                    }
                 }
 
                 for (EventListener listener: listeners)
@@ -451,7 +473,6 @@ public class Messenger {
 
             u.write(writer);
             storage.getList("allmsg." + ch.id).push(writer.getData().toBytes());
-
 
             for (EventListener listener: listeners)
                 listener.onMessage(ch, doGetUserName(u), u, m);
@@ -475,6 +496,9 @@ public class Messenger {
     }
     
     public int needMessage(Chat ch, User u, int i) {
+        if (storage.get("leavedmembers." + ch.id + "." + identity.user().publicKey).getType() != IStorage.ObjectType.NULL)
+            return 0; // it's invalid but let's simply say we don't need.
+        
         int len = storage.getList("msg." + ch.id + "." + u.publicKey).size();
         if (i == len)
             return 1; // yep
@@ -499,10 +523,6 @@ public class Messenger {
         msg.write(writer);
 
         registerMessage(ch, identity.user(), storage.getList("msg." + ch.id + "." + identity.user().publicKey).size(), msg);
-        
-        for (User u: getChatMembers(ch)) {
-            storage.get("user.poor." + u.publicKey).setInt(1);
-        }
     }
     
     public Chat doCreateChat(ArrayList<User> users) {

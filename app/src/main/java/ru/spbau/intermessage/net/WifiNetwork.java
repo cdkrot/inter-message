@@ -294,6 +294,10 @@ public class WifiNetwork implements Network {
             Iterator<SelectionKey> iter = epoll.selectedKeys().iterator();
             
             while (iter.hasNext()) {
+                try {
+                    Thread.currentThread().sleep(100);
+                } catch (InterruptedException ex) {}
+
                 SelectionKey s = iter.next();
                 
                 if (s.isAcceptable()) {

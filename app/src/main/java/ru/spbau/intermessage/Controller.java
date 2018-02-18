@@ -69,7 +69,7 @@ public class Controller extends IntentService {
 
     static {
         try {
-            messenger = new Messenger(new Storage(), getId());
+            messenger = new Messenger(new InMemoryStorage(), getId());
         } catch (java.io.IOException ex) {
             throw new RuntimeException(ex);
         }
@@ -549,8 +549,7 @@ public class Controller extends IntentService {
         } else if (ACTION_DELETE_CHAT.equals(action)) {
 
             String chatId = intent.getStringExtra("ChatId");
-            // TODO messenger.deleteChat(new Chat(chatId), () -> onChatDeleted(chatId));
-
+            messenger.deleteChat(new Chat(chatId));
         } else if (ACTION_CHAT_DELETED.equals(action)) {
 
             String chatId = intent.getStringExtra("ChatId");
