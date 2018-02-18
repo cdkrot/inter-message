@@ -28,21 +28,17 @@ public class MessageParser {
 
     /**
      * Converts bytes in Message to appropriate form in Item.
-     * Params chat and user are used only when it is a system message
+     * Param chat is used only when it is a system message
      */
     public static Item parseMessage(Messenger messenger, Message message, @Nullable Chat chat, @Nullable User user) {
-        if (message.type != null && message.type.length() > 0 && message.type.charAt(0) == '!') {
-            return parseMessage(messenger, message, chat, messenger.doGetUserName(user));
-        } else {
-            return parseMessage(messenger, message, chat, (String)null);
-        }
+        return parseMessage(messenger, message, chat, messenger.doGetUserName(user));
     }
 
     /**
      * Converts bytes in Message to appropriate form in Item.
-     * Params chat and userName are used only when it is a system message
+     * Param chat is used only when it is a system message
      */
-    public static Item parseMessage(Messenger messenger, Message message, @Nullable Chat chat, @Nullable String userName) {
+    public static Item parseMessage(Messenger messenger, Message message, @Nullable Chat chat, String userName) {
         if ("text".equals(message.type)) {
             String text = Util.bytesToString(message.data);
             return new MessageItem(userName, text, message.timestamp, 0);
@@ -76,16 +72,20 @@ public class MessageParser {
             if (userNames.size() == 1) {
                 text = "User " + userNames.get(0) + " was added to the dialog";
             } else {
-                text = "Users ";
+                StringBuilder builder = new StringBuilder();
+                builder.append("Users ");
                 for (int i = 0; i + 1 < userNames.size(); i++) {
-                    text = text + userNames.get(i) + (i + 2 != userNames.size() ? ", " : " and ");
+                   builder.append(userNames.get(i));
+                   builder.append(i + 2 != userNames.size() ? ", " : " and ");
                 }
-                text = text + userNames.get(userNames.size() - 1);
+                builder.append(userNames.get(userNames.size() - 1));
+                builder.append(" were added to dialog");
+                text = builder.toString();
             }
 
             return new SystemItem(text, message.timestamp, 0);
         } else if ("!leave".equals(message.type)) {
-            return new SystemItem("not implemented", message.timestamp, 0);
+            return new SystemItem(userName + " left the dialog", message.timestamp, 0);
         } else {
             throw new RuntimeException("Unknown type of message");
         }

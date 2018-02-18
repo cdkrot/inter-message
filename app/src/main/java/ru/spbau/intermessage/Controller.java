@@ -550,6 +550,8 @@ public class Controller extends IntentService {
 
             String chatId = intent.getStringExtra("ChatId");
             messenger.deleteChat(new Chat(chatId));
+            onChatDeleted(chatId);
+
         } else if (ACTION_CHAT_DELETED.equals(action)) {
 
             String chatId = intent.getStringExtra("ChatId");
