@@ -233,7 +233,8 @@ public class Messenger {
                 public void run() {
                     List<Pair<String, Chat>> res = new ArrayList<Pair<String, Chat>>();
                     for (Chat ch: getChatsWithUser(identity.user()))
-                        res.add(new Pair(doGetChatName(ch), ch));
+                        if (storage.get("leavedmembers." + ch.id + "." + identity.user().publicKey).getType() == IStorage.ObjectType.NULL)
+                            res.add(new Pair(doGetChatName(ch), ch));
 
                     callback.accept(res);
                 }
