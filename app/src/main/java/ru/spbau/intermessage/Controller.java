@@ -386,7 +386,7 @@ public class Controller extends IntentService {
             Item item = intent.getParcelableExtra("Item");
 
             String chatId = intent.getStringExtra("ChatId");
-            messenger.sendMessage(new Chat(chatId), new Message(item.getType(), item.getDate(), item.getData()));
+            messenger.sendMessage(new Chat(chatId), messenger.newMessage(item.getType(), item.getDate(), item.getData()));
 
         } else if (ACTION_RECEIVE_MESSAGE.equals(action)) {
 

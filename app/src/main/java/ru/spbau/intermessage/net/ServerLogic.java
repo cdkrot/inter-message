@@ -13,7 +13,7 @@ import ru.spbau.intermessage.util.WriteHelper;
 // 0: I: Nothing
 // 0: O: "SYNC".
 // 1: I: (chat, owner, id)
-// 1: O: respond with "SKIP" (goto 1) or "GET" (goto 2)
+// 1: O: respond with "SKIP" (goto 1) or "GET" (goto 2) or "GETX" (goto 3) [to get signature].
 // 2: I: Message
 // 2: O: respond with "ACK", goto 1.
 
@@ -26,6 +26,8 @@ public class ServerLogic implements WLogic {
     private int subid;
 
     private User peer;
+
+    private boolean getx;
     
     public ServerLogic(Messenger msg) {
         this.msg = msg;
@@ -68,7 +70,14 @@ public class ServerLogic implements WLogic {
             if (r == 0)
                 writer.writeString("SKIP");
             else {
-                writer.writeString("GET");
+                if (msg.pubkeyByFingerprint(owner.pubKey) != null) {
+                    writer.writeString("GET");
+                    getx = false;
+                } else {
+                    writer.writeString("GETX");
+                    getx = true;
+                }
+                
                 state = 2;
             }
 
@@ -81,9 +90,23 @@ public class ServerLogic implements WLogic {
         ReadHelper reader = new ReadHelper(packet);
         Message m = Message.read(reader);
 
-        if (msg == null || reader.available() > 0 || !msg.registerMessage(chat, owner, subid, m)) {
+        byte[] pubkey = null;
+
+        if (msg == null)
             return null;
-        } else {
+
+        if (getx)
+            pubkey = reader.readBytes();
+        
+        if (reader.available() > 0)
+            return null;
+
+        if (getx && (pubkey == null || !msg.importPubkey(owner.pubKey, pubkey)))
+            return null;
+        
+        if (!msg.verifyMessage(owner, m) || !msg.registerMessage(chat, owner, subid, m))
+            return null;
+        else {
             WriteHelper writer = new WriteHelper(new ByteVector());
             writer.writeString("ACK");
             state = 1;

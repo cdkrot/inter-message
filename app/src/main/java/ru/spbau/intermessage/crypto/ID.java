@@ -135,21 +135,60 @@ public class ID {
             throw new RuntimeException(ex);
         }
     }
-    
-    public static byte[] getFingerprint(RSAPublicKey key) {
+
+    public static byte[] getDigest(ByteVector bts) {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
-            md.update(key.getEncoded());
+            md.update(bts.data(), 0, bts.size());
             return md.digest();
         } catch (Exception ex) {
             // if java has not got sha-256 it is her own problem.
             throw new RuntimeException(ex);
         }
     }
+    
+    public static byte[] getFingerprint(RSAPublicKey key) {
+        return getDigest(ByteVector.wrap(key.getEncoded()));
+    }
 
     public static byte[] getSecureRandom(int count) {
         byte[] res = new byte[count];
         (new SecureRandom()).nextBytes(res);
         return res;
+    }
+
+    public byte[] getSignature(ByteVector data) {
+        try {
+            Signature sig = Signature.getInstance("SHA256withRSA");
+            sig.initSign(privkey);
+            sig.update(data.data(), 0, data.size());
+            return sig.sign();
+        } catch (Exception ex) {
+            // yet another java
+            throw new RuntimeException(ex);
+        }
+    }
+
+    public static boolean verifySignature(RSAPublicKey pubkey, ByteVector data, byte[] signature) {
+        try {
+            Signature sig = Signature.getInstance("SHA256withRSA");
+            sig.initVerify(pubkey);
+            sig.update(data.data(), 0, data.size());
+            return sig.verify(signature);
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    public static RSAPublicKey loadRsaPubkey(byte[] data) {
+        try {
+            X509EncodedKeySpec pubspec = new X509EncodedKeySpec(data);
+
+            KeyFactory factory = KeyFactory.getInstance("RSA");
+            return (RSAPublicKey) factory.generatePublic(pubspec);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return null;
+        }
     }
 };

@@ -19,7 +19,7 @@ import ru.spbau.intermessage.util.Tuple3;
 // 0: I: "SYNC"
 // 0: O: (chat, subid, id) to sync in, goto 1.
 // 1: I: SKIP | GET
-// 1: O: SKIP => (chat, subid, id), GET => Message, goto 2.
+// 1: O: SKIP => (chat, subid, id), GET => Message, goto 2, GETX: Message + Pubkey, goto 2.
 // 1: *: SKIP => Update storage.
 // 2: I: ACK
 // 2: O: (chat, subid, id)
@@ -78,7 +78,7 @@ public class Logic implements WLogic {
         ReadHelper reader = new ReadHelper(packet);
 
         String str = reader.readString();
-        if (str == null || reader.available() != 0 || (!str.equals("GET") && !str.equals("SKIP")))
+        if (str == null || reader.available() != 0 || (!str.equals("GET") && !str.equals("SKIP") && !str.equals("GETX")))
             return null;
 
         if (str.equals("SKIP")) {
@@ -88,6 +88,11 @@ public class Logic implements WLogic {
             Message m = msg.getMessageById(lastchat, lastuser, lastid);
             WriteHelper writer = new WriteHelper(new ByteVector());
             m.write(writer);
+
+            if (str.equals("GETX")) {
+                writer.writeBytes(msg.pubkeyByFingerprint(lastuser.pubKey));
+            }
+            
             state = 2;
             return writer.getData();
         }

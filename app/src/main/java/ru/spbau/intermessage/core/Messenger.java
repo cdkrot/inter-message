@@ -216,12 +216,15 @@ public class Messenger {
             });
     }
 
+    public Message newMessage(String type, long tm, byte[] data) {
+        return new Message(type, tm, data, identity);
+    }
 
     public Message getChangeChatName(Chat chat, String newname) {
         WriteHelper writer = new WriteHelper(new ByteVector());
         writer.writeString(newname);
         
-        return new Message("!newname", System.currentTimeMillis() / 1000, writer.getData().toBytes());
+        return newMessage("!newname", System.currentTimeMillis() / 1000, writer.getData().toBytes());
     }
     
     public void getListOfChats(Lambda1<List<Pair<String, Chat>>> callback) {
@@ -281,7 +284,7 @@ public class Messenger {
         WriteHelper writer = new WriteHelper(new ByteVector());
         for (User u: users)
             u.write(writer);
-        sendMessage(chat, new Message("!adduser", System.currentTimeMillis() / 1000, writer.getData().toBytes()));
+        sendMessage(chat, newMessage("!adduser", System.currentTimeMillis() / 1000, writer.getData().toBytes()));
     }
 
     public List<Pair<User, String>> getUsersNearby() {
@@ -321,7 +324,7 @@ public class Messenger {
     public void deleteChat(Chat chat) {
         RunnableRequest r = new RunnableRequest() {
                 public void run() {
-                    doSendMessage(chat, new Message("!leave", System.currentTimeMillis() / 1000, ID.getSecureRandom(32)));
+                    doSendMessage(chat, newMessage("!leave", System.currentTimeMillis() / 1000, ID.getSecureRandom(32)));
                 }
             };
 
@@ -421,6 +424,12 @@ public class Messenger {
         recalcNeedsSync(u);
     }
 
+    public boolean verifyMessage(User u, Message m) {
+        RSAPublicKey pubkey = ID.loadRsaPubkey(pubkeyByFingerprint(u.pubKey));
+
+        return m.verifySignature(pubkey);
+    }
+    
     public boolean registerMessage(Chat ch, User u, int id, Message m) {
         if (storage.get("chatname." + ch.id).getType() != IStorage.ObjectType.STRING)
             storage.get("chatname." + ch.id).setString("new chat");
@@ -500,13 +509,31 @@ public class Messenger {
         return 0; // don't need.
     }
 
-    public boolean checkFingerprint(byte[] fingerprint, byte[] key) {
+    public byte[] pubkeyByFingerprint(byte[] fingerprint) {
+        if (Arrays.equals(identity.user().pubKey, fingerprint))
+            return identity.pubkey.getEncoded();
+        
         IStorage.Union obj = storage.get("fingerprint." + Util.toHex(fingerprint));
 
         if (obj.getType() == IStorage.ObjectType.STRING)
-            return Util.toHex(key).equals(obj.getString());
+            return Util.decodeHex(obj.getString());
+        return null;
+    }
+
+    public boolean importPubkey(byte[] fingerprint, byte[] key) {
+        RSAPublicKey rkey = ID.loadRsaPubkey(key);
+        if (key == null || !Arrays.equals(ID.getFingerprint(rkey), fingerprint))
+            return false;
+
+        return checkFingerprint(fingerprint, key);
+    }
+    
+    public boolean checkFingerprint(byte[] fingerprint, byte[] key) {
+        byte[] stored = pubkeyByFingerprint(fingerprint);
+        if (stored != null)
+            return Arrays.equals(stored, key);
         else {
-            obj.setString(Util.toHex(key));
+            storage.get("fingerprint." + Util.toHex(fingerprint)).setString(Util.toHex(key));
             return true;
         }
     }
@@ -526,7 +553,7 @@ public class Messenger {
         for (User u: users)
             u.write(writer);
         
-        doSendMessage(new Chat(id), new Message("!newchat", System.currentTimeMillis() / 1000, writer.getData().toBytes()));
+        doSendMessage(new Chat(id), newMessage("!newchat", System.currentTimeMillis() / 1000, writer.getData().toBytes()));
         
         return new Chat(id);
     }
