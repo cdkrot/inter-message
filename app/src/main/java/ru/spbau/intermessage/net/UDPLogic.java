@@ -39,8 +39,6 @@ public class UDPLogic {
     }
 
     public void recieve(String from, ByteVector data) {
-        // TODO: check identity.
-
         ReadHelper reader = new ReadHelper(data);
         
         if (!reader.skip(HEAD))

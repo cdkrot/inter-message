@@ -41,7 +41,6 @@ public class ECLogic implements ILogic {
         WriteHelper writer = new WriteHelper(new ByteVector());
         msg.identity.writePubkey(writer);
 
-        System.err.println(writer.getData());
         return writer.getData();
     }
     
@@ -53,8 +52,7 @@ public class ECLogic implements ILogic {
             return null;
         
         ReadHelper reader = new ReadHelper(packet);
-        System.err.println("[bbb]");
-        
+
         if ((peerKey = ID.readPubkey(reader)) == null)
             return null;
 
@@ -100,10 +98,6 @@ public class ECLogic implements ILogic {
     }
     
     public ByteVector feed(ByteVector packet) {
-        //logic.setPeer(peer);
-        //return logic.feed(packet);
-        
-        System.err.println("ECLogic" + state);
         switch (state) {
         case 0: return feed0(packet);
         case 1: return feed1(packet);

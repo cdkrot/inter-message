@@ -86,6 +86,7 @@ public class DialogsListActivity extends AppCompatActivity {
                     newIntent.putExtra("ChatId", chatIds.get(i - 1));
                     newIntent.putExtra("ChatName", buttonNames.get(i));
                     newIntent.putExtra("Created", false);
+
                     startActivity(newIntent);
                 }
             }
@@ -139,6 +140,7 @@ public class DialogsListActivity extends AppCompatActivity {
                 newIntent.putExtra("ChatId", intent.getStringExtra("ChatId"));
                 newIntent.putExtra("ChatName", intent.getStringExtra("ChatName"));
                 newIntent.putExtra("Created", true);
+
                 buttonNames.add(intent.getStringExtra("ChatName"));
                 chatIds.add(intent.getStringExtra("ChatId"));
 

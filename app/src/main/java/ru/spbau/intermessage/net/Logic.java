@@ -107,7 +107,6 @@ public class Logic implements WLogic {
 
     @Override
     public ByteVector feed(ByteVector packet) {
-        System.err.println("Logic" + state);
         ByteVector res = null;
         switch (state) {
         case 0: res = feed0(packet);

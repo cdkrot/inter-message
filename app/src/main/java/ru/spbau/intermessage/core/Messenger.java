@@ -74,11 +74,9 @@ public class Messenger {
             identity.writePubkey(writer);
 
             ReadHelper reader = new ReadHelper(writer.getData());
-            System.err.println(reader.readString());
             RSAPublicKey kk = ID.readPubkey(reader);
 
             if (!kk.equals(identity.pubkey) || reader.available() != 0) {
-                System.err.println("FIASCO");
                 throw new RuntimeException("EPIC");
             }
         }
@@ -90,11 +88,9 @@ public class Messenger {
 
             ByteVector rtt = identity.decode(ID.encode(identity.pubkey, data));
             if (!rtt.equals(data)) {
-                System.err.println("The fiasco");
                 throw new RuntimeException("Self test failed");
             }
         }
-        System.err.println("OK");
     }
 
     protected static class RequestCommon {
@@ -410,11 +406,9 @@ public class Messenger {
     }
     
     public boolean syncWith(User u) {
-        System.err.println("==================== TRY SYNC ===========================");
         if (!setBusy(u))
             return false;
         try {
-            System.err.println("==================== SYNC ===========================");
             network.create(storage.get("user.location." + u.publicKey).getString(), new ECLogic(new ServerLogic(this), this, u));
             return true;
         } catch (IOException ex) {
@@ -428,8 +422,6 @@ public class Messenger {
     }
 
     public boolean registerMessage(Chat ch, User u, int id, Message m) {
-        System.err.println("Recieved new(?) message " + m.type);
-        
         if (storage.get("chatname." + ch.id).getType() != IStorage.ObjectType.STRING)
             storage.get("chatname." + ch.id).setString("new chat");
         

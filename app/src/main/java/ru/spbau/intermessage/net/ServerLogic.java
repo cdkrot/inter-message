@@ -61,7 +61,6 @@ public class ServerLogic implements WLogic {
         subid = reader.readInt();
 
         int r = msg.needMessage(chat, owner, subid);
-        System.err.println("Server logic [1], responce: " + r);
         if (r == -1) {
             return null; // invalid.
         } else {
@@ -94,7 +93,6 @@ public class ServerLogic implements WLogic {
 
     @Nullable
     public ByteVector feed(ByteVector packet) {
-        System.err.println("Server Logic" + state);
         ByteVector res = null;
 
         switch (state) {

@@ -36,7 +36,9 @@ public class SettingsActivity extends AppCompatActivity {
                     SharedPreferences.Editor ed = sharedPreferences.edit();
                     ed.putString(PREF_NAME, enteredName);
                     ed.apply();
+
                     Controller.changeUserName(enteredName);
+
                     Toast.makeText(SettingsActivity.this, "Name is set", Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(SettingsActivity.this, "Incorrect name", Toast.LENGTH_LONG).show();

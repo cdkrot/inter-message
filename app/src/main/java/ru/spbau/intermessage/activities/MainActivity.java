@@ -87,6 +87,7 @@ public class MainActivity extends AppCompatActivity {
                         SharedPreferences.Editor ed = sharedPreferences.edit();
                         ed.putString(PREF_NAME, enteredName);
                         ed.apply();
+
                         Controller.changeUserName(enteredName);
                     } else {
                         Toast.makeText(MainActivity.this, "Incorrect name", Toast.LENGTH_LONG).show();

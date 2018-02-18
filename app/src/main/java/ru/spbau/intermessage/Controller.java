@@ -136,7 +136,6 @@ public class Controller extends IntentService {
     }
 
     private static ID getId() {
-        //return ID.create();
         SharedPreferences sharedPreferences = Intermessage.getAppContext().getSharedPreferences("preferences", MODE_PRIVATE);
         String publicKey = sharedPreferences.getString("publicKey", "trustno1");
         String privateKey = sharedPreferences.getString("privateKey", "beliveinlie");
