@@ -11,6 +11,7 @@ public class Intermessage extends Application implements Application.ActivityLif
     private static Context context;
 
     private static boolean paused = false;
+    private static boolean invalidated = false;
 
     public void onCreate() {
         super.onCreate();
@@ -24,6 +25,16 @@ public class Intermessage extends Application implements Application.ActivityLif
 
     public static boolean isPaused() {
         return paused;
+    }
+
+    public static boolean invalidated() {
+        boolean result = invalidated;
+        invalidated = false;
+        return result;
+    }
+
+    public static void invalidateMessages() {
+        invalidated = true;
     }
 
     @Override

@@ -8,6 +8,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import ru.spbau.intermessage.Controller;
+import ru.spbau.intermessage.Intermessage;
 import ru.spbau.intermessage.R;
 
 public class SettingsActivity extends AppCompatActivity {
@@ -37,6 +38,7 @@ public class SettingsActivity extends AppCompatActivity {
                     ed.putString(PREF_NAME, enteredName);
                     ed.apply();
 
+                    Intermessage.invalidateMessages();
                     Controller.changeUserName(enteredName);
 
                     Toast.makeText(SettingsActivity.this, "Name is set", Toast.LENGTH_SHORT).show();
