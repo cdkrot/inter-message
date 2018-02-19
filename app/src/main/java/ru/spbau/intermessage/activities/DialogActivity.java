@@ -71,7 +71,7 @@ public class DialogActivity extends AppCompatActivity {
         whereResult = null;
 
         String id = creatorIntent.getStringExtra("ChatId");
-        if (chatId == null || !chatId.equals(id) || Intermessage.invalidated()) {
+        if (Intermessage.invalidated() || chatId == null || !chatId.equals(id)) {
             chatId = id;
             messages.clear();
         }
