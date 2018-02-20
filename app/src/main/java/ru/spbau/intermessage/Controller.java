@@ -69,7 +69,7 @@ public class Controller extends IntentService {
 
     static {
         try {
-            messenger = new Messenger(new InMemoryStorage(), getId());
+            messenger = new Messenger(new Storage(), getId());
         } catch (java.io.IOException ex) {
             throw new RuntimeException(ex);
         }

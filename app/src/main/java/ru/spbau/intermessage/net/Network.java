@@ -6,9 +6,9 @@ import ru.spbau.intermessage.store.IStorage;
 import java.io.IOException;
 
 public interface Network {
-    public void begin(Messenger msg, IStorage store) throws IOException;
-    public void create(String addr, ILogic logic) throws IOException;
-    public void work() throws IOException;
-    public void interrupt();
-    public void close() throws IOException;
+    void begin(Messenger msg, IStorage store) throws IOException;
+    void create(String addr, ILogic logic) throws IOException;
+    void work() throws IOException;
+    void interrupt();
+    void close() throws IOException;
 }

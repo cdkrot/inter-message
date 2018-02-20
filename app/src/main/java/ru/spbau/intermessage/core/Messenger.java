@@ -161,7 +161,6 @@ public class Messenger {
     public void sendMessage(Chat chat, Message message) {
         postRequest(new RunnableRequest() {
                 public void run() {
-                    System.err.println("Messenger: sending message");
                     doSendMessage(chat, message);
                 }
             });

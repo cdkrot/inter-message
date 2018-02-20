@@ -92,6 +92,13 @@ public class ID {
     public ByteVector decode(ByteVector src) {
         try {
             ReadHelper reader = new ReadHelper(src);
+            if (reader.available() < 16)
+                return null;
+
+            byte[] iv = new byte[16];
+            for (int i = 0; i != 16; ++i)
+                iv[i] = reader.readByte();
+
             byte[] aesbytes = reader.readBytes();
             if (aesbytes == null)
                 return null;
@@ -99,8 +106,9 @@ public class ID {
             Cipher rsa = Cipher.getInstance("RSA");
             rsa.init(Cipher.DECRYPT_MODE, privkey);
 
-            Cipher aesCipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-            aesCipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(rsa.doFinal(aesbytes), "AES"));
+            Cipher aesCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            aesCipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(rsa.doFinal(aesbytes), "AES"),
+                    new IvParameterSpec(iv));
 
             byte[] data = reader.readBytes();
             if (data == null || reader.available() > 0)
@@ -119,12 +127,14 @@ public class ID {
 
         try {
             WriteHelper writer = new WriteHelper(new ByteVector());
+            byte[] iv = ID.getSecureRandom(16);
+            writer.writeBytesSimple(iv);
 
             Cipher rsa = Cipher.getInstance("RSA");
 
             SecretKey aeskey = aesKeyGen.generateKey();
-            Cipher aesCipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-            aesCipher.init(Cipher.ENCRYPT_MODE, aeskey);
+            Cipher aesCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            aesCipher.init(Cipher.ENCRYPT_MODE, aeskey, new IvParameterSpec(iv));
 
             rsa.init(Cipher.ENCRYPT_MODE, pub);
             writer.writeBytes(rsa.doFinal(aeskey.getEncoded()));
@@ -191,4 +201,4 @@ public class ID {
             return null;
         }
     }
-};
+}

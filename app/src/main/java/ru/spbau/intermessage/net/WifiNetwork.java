@@ -295,7 +295,7 @@ public class WifiNetwork implements Network {
             
             while (iter.hasNext()) {
                 try {
-                    Thread.currentThread().sleep(100);
+                    Thread.sleep(100);
                 } catch (InterruptedException ex) {}
 
                 SelectionKey s = iter.next();

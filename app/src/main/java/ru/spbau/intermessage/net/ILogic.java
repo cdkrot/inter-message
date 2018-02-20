@@ -8,10 +8,10 @@ public interface ILogic {
     /** return null to close or response to send.
      */
     @Nullable
-    public ByteVector feed(ByteVector packet);
+    ByteVector feed(ByteVector packet);
 
     /** connection is closed
      * (either by us or the other side).
      */
-    public void disconnect();
+    void disconnect();
 };

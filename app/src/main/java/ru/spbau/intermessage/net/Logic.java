@@ -62,8 +62,6 @@ public class Logic implements WLogic {
 
     @Nullable
     public ByteVector feed0(ByteVector packet) {
-        // TODO: add security check here.
-
         ReadHelper reader = new ReadHelper(packet);
         String op = reader.readString();
         if (op == null || !op.equals("SYNC") || reader.available() > 0)
@@ -112,19 +110,13 @@ public class Logic implements WLogic {
 
     @Override
     public ByteVector feed(ByteVector packet) {
-        ByteVector res = null;
         switch (state) {
-        case 0: res = feed0(packet);
-        break;
-        case 1: res = feed1(packet);
-        break;
-        case 2: res = feed2(packet);
-        break;
+            case 0: return feed0(packet);
+            case 1: return feed1(packet);
+            case 2: return feed2(packet);
         }
 
-        if (res == null)
-            disconnect();
-        return res;
+        return null;
     }
 
     @Override

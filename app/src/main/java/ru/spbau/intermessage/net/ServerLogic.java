@@ -116,23 +116,15 @@ public class ServerLogic implements WLogic {
 
     @Nullable
     public ByteVector feed(ByteVector packet) {
-        ByteVector res = null;
-
         switch (state) {
-            case 0: res = feed0(packet);
-            break;
-            case 1: res = feed1(packet);
-            break;
-            case 2: res = feed2(packet);
-            break;
+            case 0: return feed0(packet);
+            case 1: return feed1(packet);
+            case 2: return feed2(packet);
         }
 
-        if (res == null)
-            disconnect();
-
-        return res;
+        return null;
     }
 
     public void disconnect() {
     }
-};
+}

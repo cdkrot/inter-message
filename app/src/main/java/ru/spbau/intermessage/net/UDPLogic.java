@@ -11,7 +11,7 @@ public class UDPLogic {
     private Messenger msg;
     private long lastTM = 0;
 
-    private static final long DELTA = 3 * 1000;
+    private static final long DELTA = 2 * 1000;
     private static final byte[] HEAD = {85, 83, 69, 82};
     
     public UDPLogic(Messenger msg) {

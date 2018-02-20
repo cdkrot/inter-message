@@ -200,13 +200,4 @@ public class InMemoryStorage implements IStorage {
             }
         };
     }
-
-    public void dump() {
-        System.err.println("BEGIN DUMP");
-        for (Map.Entry<String, ObjectContainer> entry: kv.entrySet())
-            System.err.println(entry.getKey() + " -> " + entry.getValue().toString());
-        for (Map.Entry<String, ListContainer> entry: lists.entrySet()) {
-            System.err.println("L " + entry.getKey() + " -> " + entry.getValue().data.size());
-        }
-    }
 }
