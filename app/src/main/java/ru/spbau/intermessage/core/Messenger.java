@@ -54,8 +54,8 @@ public class Messenger {
 
                     if (r instanceof RunnableRequest)
                         ((RunnableRequest) (r)).run();
-                    else
-                        handleRequest(r);
+                    // else
+                    //     handleRequest(r);
 
                     r.complete();
                 }
@@ -67,30 +67,6 @@ public class Messenger {
                 }
             }
         }.start();
-
-        {
-            WriteHelper writer = new WriteHelper(new ByteVector());
-            writer.writeString("lol kek cheburek");
-            identity.writePubkey(writer);
-
-            ReadHelper reader = new ReadHelper(writer.getData());
-            RSAPublicKey kk = ID.readPubkey(reader);
-
-            if (!kk.equals(identity.pubkey) || reader.available() != 0) {
-                throw new RuntimeException("EPIC");
-            }
-        }
-
-        {
-            ByteVector data = new ByteVector();
-            for (int i = 0; i != 800; ++i)
-                data.pushBack((byte)(i * i));
-
-            ByteVector rtt = identity.decode(ID.encode(identity.pubkey, data));
-            if (!rtt.equals(data)) {
-                throw new RuntimeException("Self test failed");
-            }
-        }
     }
 
     protected static class RequestCommon {
@@ -116,38 +92,21 @@ public class Messenger {
     protected abstract static class RunnableRequest extends RequestCommon {
         public abstract void run();
     }
-    
-    private static class ListenerRequest extends RequestCommon {
-        public ListenerRequest(boolean a, EventListener l) {
-            add = a;
-            listener = l;
-        }
-        
-        public boolean add;
-        public EventListener listener;
-    };
 
-    private static class SendMessageRequest extends RequestCommon {
-        public SendMessageRequest(Chat ch, Message msg) {
-            chat = ch;
-            message = msg;
-        }
+    protected abstract static class InvokableRequest<R> extends RunnableRequest {
+        public R result = null;
+
+        public abstract R invoke();
         
-        public Chat chat;
-        public Message message;
+        public void run() {
+            result = invoke();
+        }
     }
 
-    private static class ChatCreateRequest extends RequestCommon {
-        public ChatCreateRequest(ArrayList<User> lst, String cn) {
-            users = lst;
-            chatname = cn;
-        }
-        
-        public Chat result;
-        public String chatname;
-        public ArrayList<User> users;
-    }
-
+    /**
+     * Pushes request to the queue
+     * @param req Request to add
+     */
     protected void postRequest(RequestCommon req) {
         synchronized (queue) {
             queue.add(req);
@@ -157,55 +116,65 @@ public class Messenger {
         }
     }
 
-    public void close() {
-        postRequest(null);
+    /**
+     * Pushes request to the messenger queue and waits for it's completion.
+     * @param req Request to push
+     */
+    protected void runRequest(RunnableRequest req) {
+        postRequest(req);
+        req.waitCompletion();
     }
 
-    
-    protected void handleRequest(RequestCommon req) {
-        System.out.println(req.toString());
-        
-        if (req instanceof ListenerRequest) {
-            ListenerRequest reqc = (ListenerRequest)req;
-            if (reqc.add)
-                listeners.add(reqc.listener);
-            else
-                listeners.remove(reqc.listener);
-        }
-
-        if (req instanceof SendMessageRequest) {
-            System.out.println("Messenger: trying to send");
-            SendMessageRequest reqc = (SendMessageRequest)req;
-
-            doSendMessage(reqc.chat, reqc.message);
-        }
-
-        if (req instanceof ChatCreateRequest) {
-            System.out.println("Messenger: creating chat");
-            ChatCreateRequest reqc = (ChatCreateRequest)req;
-
-            reqc.result = doCreateChat(reqc.users);
-            doSendMessage(reqc.result, getChangeChatName(reqc.result, reqc.chatname));
-        }
-    }
-        
-    public void registerEventListener(EventListener listener) {
-        postRequest(new ListenerRequest(true, listener));
-    }
-    
-    public void deleteEventListener(EventListener listener) {
-        postRequest(new ListenerRequest(false, listener));
-    }
-    
-    public void sendMessage(Chat chat, Message message) {
-        postRequest(new SendMessageRequest(chat, message));
-    }
-
-    public Chat createChat(String chatname, ArrayList<User> users) {
-        ChatCreateRequest req = new ChatCreateRequest(users, chatname);
+    /**
+     * Pushes InvokableRequest to the messenger queue,
+     * Waits for it's completion and returns the result
+     * @param <R> Request type
+     * @param req Request to run
+     * @return R Request result.
+     */
+    protected <R> R invokeRequest(InvokableRequest<R> req) {
         postRequest(req);
         req.waitCompletion();
         return req.result;
+    }
+    
+    public void close() {
+        postRequest(null); // termination request
+    }
+
+    public void registerEventListener(EventListener listener) {
+        runRequest(new RunnableRequest() {
+                public void run() {
+                    listeners.add(listener);
+                }
+            });
+    }
+    
+    public void deleteEventListener(EventListener listener) {
+        runRequest(new RunnableRequest() {
+                public void run() {
+                    listeners.remove(listener);
+                }
+            });
+    }
+    
+    public void sendMessage(Chat chat, Message message) {
+        postRequest(new RunnableRequest() {
+                public void run() {
+                    System.err.println("Messenger: sending message");
+                    doSendMessage(chat, message);
+                }
+            });
+    }
+
+    public Chat createChat(String chatname, ArrayList<User> users) {
+        return invokeRequest(new InvokableRequest<Chat>() {
+                public Chat invoke() {
+                    Chat chat = doCreateChat(users);
+                    doSendMessage(chat, getChangeChatName(chat, chatname));
+                    return chat;
+                }
+            });
     }
 
     public void changeUserName(String newname) {
@@ -288,50 +257,41 @@ public class Messenger {
     }
 
     public List<Pair<User, String>> getUsersNearby() {
-        List<Pair<User, String>> res = new ArrayList<Pair<User, String>>();
-        
-        RunnableRequest r = new RunnableRequest() {
-                public void run() {
+        return invokeRequest(new InvokableRequest<List<Pair<User, String>>>() {
+                public List<Pair<User, String>> invoke() {
+                    List<Pair<User, String>> res = new ArrayList<Pair<User, String>>();
+                    
                     for (String str: storage.getMatching("user.location.")) {
                         User u = new User(str.substring("user.location.".length()));
                         res.add(new Pair<User, String>(u, doGetUserName(u)));
                     }
-                }
-            };
 
-        postRequest(r);
-        r.waitCompletion();
-        
-        return res;
+                    return res;
+                }
+            });
     }
 
     public List<Pair<User, String>> getUsersInChat(Chat chat) {
-        List<Pair<User, String>> res = new ArrayList<Pair<User, String>>();
-        
-        RunnableRequest r = new RunnableRequest() {
-                public void run() {
+        return invokeRequest(new InvokableRequest<List<Pair<User,String>>>() {
+                public List<Pair<User, String>> invoke() {
+                    List<Pair<User, String>> res = new ArrayList<Pair<User, String>>();
                     for (User u: getChatMembers(chat))
                         res.add(new Pair(u, doGetUserName(u)));
+                    return res;
                 }
-            };
-
-        postRequest(r);
-        r.waitCompletion();
-    
-        return res;
+            });
     }
 
     public void deleteChat(Chat chat) {
-        RunnableRequest r = new RunnableRequest() {
+        runRequest(new RunnableRequest() {
                 public void run() {
                     doSendMessage(chat, newMessage("!leave", System.currentTimeMillis() / 1000, ID.getSecureRandom(32)));
                 }
-            };
-
-        postRequest(r);
-        r.waitCompletion();
+            });
     }
-    /* Methods below must be run within
+    
+    /* 
+     * Methods below must be run within
      * Messenger's thread,
      * So they shouldn't be called directly from UI's code.
      */
@@ -415,6 +375,7 @@ public class Messenger {
             network.create(storage.get("user.location." + u.publicKey).getString(), new ECLogic(new ServerLogic(this), this, u));
             return true;
         } catch (IOException ex) {
+            setNotBusy(u);
             return false;
         }
     }
